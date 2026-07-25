@@ -1,0 +1,331 @@
+{
+  "version": "2026-07-14",
+  "fuente_general": "EPPO Global Database, PlantVillage, Corpoica-ICA, FAO",
+  "descripcion": "Catálogo extendido de patologías agrícolas con relación por especie botánica. Se carga vía botón 'Actualizar' en la pantalla Patologías. Merge idempotente por nombre_comun+nombre_cientifico.",
+  "patologias": [
+    {
+      "nombre_comun": "Roya",
+      "nombre_cientifico": "Puccinia spp.",
+      "tipo": "hongo",
+      "sintomas": "Pústulas anaranjadas a marrones en el envés de las hojas. Reducción del área fotosintética y de rendimiento.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Zea mays L.", "Zea mays", "Coffea arabica", "Triticum aestivum", "Phaseolus vulgaris"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Antracnosis",
+      "nombre_cientifico": "Colletotrichum spp.",
+      "tipo": "hongo",
+      "sintomas": "Lesiones circulares hundidas en frutos, hojas y tallos. Frecuente en climas cálidos y húmedos.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Phaseolus vulgaris", "Carica papaya", "Capsicum annuum", "Solanum lycopersicum", "Mangifera indica", "Fragaria x ananassa"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Tizón tardío",
+      "nombre_cientifico": "Phytophthora infestans",
+      "tipo": "hongo",
+      "sintomas": "Manchas necróticas en hojas con halo pálido; pudrición marrón en tubérculos y frutos.",
+      "fuente": "EPPO/PlantVillage",
+      "especies_afectadas": ["Solanum tuberosum", "Solanum lycopersicum", "Capsicum annuum"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Tizón temprano",
+      "nombre_cientifico": "Alternaria solani",
+      "tipo": "hongo",
+      "sintomas": "Manchas concéntricas en anillos (ojo de gallo) en hojas viejas, avanza hacia arriba.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Solanum tuberosum", "Solanum lycopersicum"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Virus mancha anillada",
+      "nombre_cientifico": "Papaya ringspot virus",
+      "tipo": "virus",
+      "sintomas": "Anillos concéntricos amarillos en frutos y hojas; distorsión foliar.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Carica papaya", "Cucurbita pepo", "Cucurbita maxima"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Mosca blanca",
+      "nombre_cientifico": "Bemisia tabaci",
+      "tipo": "plaga",
+      "sintomas": "Colonias en el envés de las hojas; produce fumagina y transmite virus (TYLCV, ToMoV).",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Capsicum annuum", "Phaseolus vulgaris", "Solanum lycopersicum", "Cucurbita pepo", "Gossypium hirsutum", "Manihot esculenta"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Pulgón verde",
+      "nombre_cientifico": "Myzus persicae",
+      "tipo": "plaga",
+      "sintomas": "Colonias en brotes tiernos; produce melaza y transmite más de 100 virus vegetales.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Solanum tuberosum", "Solanum lycopersicum", "Capsicum annuum", "Brassica oleracea", "Prunus persica"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Trips",
+      "nombre_cientifico": "Frankliniella occidentalis",
+      "tipo": "plaga",
+      "sintomas": "Manchas plateadas en hojas y flores; transmite tospovirus (TSWV).",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Capsicum annuum", "Solanum lycopersicum", "Fragaria x ananassa", "Rosa hybrida"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Gusano cogollero",
+      "nombre_cientifico": "Spodoptera frugiperda",
+      "tipo": "plaga",
+      "sintomas": "Larvas devoran el cogollo de la planta, dejando aserrín característico.",
+      "fuente": "FAO-ICA",
+      "especies_afectadas": ["Zea mays L.", "Zea mays", "Oryza sativa", "Sorghum bicolor"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Broca del café",
+      "nombre_cientifico": "Hypothenemus hampei",
+      "tipo": "plaga",
+      "sintomas": "Pequeño escarabajo perfora los frutos; larvas destruyen el grano.",
+      "fuente": "Cenicafé",
+      "especies_afectadas": ["Coffea arabica", "Coffea canephora"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Roya del café",
+      "nombre_cientifico": "Hemileia vastatrix",
+      "tipo": "hongo",
+      "sintomas": "Manchas amarillo-anaranjadas polvorientas en el envés de las hojas; defoliación severa.",
+      "fuente": "Cenicafé/FAO",
+      "especies_afectadas": ["Coffea arabica", "Coffea canephora"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Sigatoka negra",
+      "nombre_cientifico": "Mycosphaerella fijiensis",
+      "tipo": "hongo",
+      "sintomas": "Rayas negras longitudinales que se necrosan; reduce fotosíntesis y peso del racimo.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Musa acuminata", "Musa x paradisiaca"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Fusarium raza 4 tropical (TR4)",
+      "nombre_cientifico": "Fusarium oxysporum f. sp. cubense",
+      "tipo": "hongo",
+      "sintomas": "Marchitez vascular, amarillamiento y colapso de la planta. Persiste en el suelo décadas.",
+      "fuente": "EPPO/ICA",
+      "especies_afectadas": ["Musa acuminata", "Musa x paradisiaca"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Oidio",
+      "nombre_cientifico": "Erysiphe cichoracearum",
+      "tipo": "hongo",
+      "sintomas": "Polvo blanco en hojas, tallos y frutos; deshidratación y caída prematura.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Cucurbita pepo", "Cucurbita maxima", "Cucumis sativus", "Solanum lycopersicum"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Mildiu",
+      "nombre_cientifico": "Peronospora spp.",
+      "tipo": "hongo",
+      "sintomas": "Manchas amarillas en el haz y pelusa blanquecina-grisácea en el envés.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Lactuca sativa", "Brassica oleracea", "Allium cepa", "Cucumis sativus"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Botritis (moho gris)",
+      "nombre_cientifico": "Botrytis cinerea",
+      "tipo": "hongo",
+      "sintomas": "Manchas marrones cubiertas de moho gris-parduzco; ataca flores, frutos y hojas senescentes.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Fragaria x ananassa", "Vitis vinifera", "Rosa hybrida", "Solanum lycopersicum", "Capsicum annuum"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Mancha bacteriana",
+      "nombre_cientifico": "Xanthomonas campestris",
+      "tipo": "bacteria",
+      "sintomas": "Lesiones necróticas angulares limitadas por nervaduras; puede tener halo amarillo.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Solanum lycopersicum", "Capsicum annuum", "Brassica oleracea"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Marchitez bacteriana",
+      "nombre_cientifico": "Ralstonia solanacearum",
+      "tipo": "bacteria",
+      "sintomas": "Marchitez rápida sin amarillamiento previo; oscurecimiento de vasos.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Solanum tuberosum", "Solanum lycopersicum", "Musa acuminata", "Capsicum annuum"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Nematodo agallador",
+      "nombre_cientifico": "Meloidogyne spp.",
+      "tipo": "plaga",
+      "sintomas": "Agallas (nudos) en raíces; enanismo, clorosis y bajo rendimiento.",
+      "fuente": "EPPO/FAO",
+      "especies_afectadas": ["Solanum lycopersicum", "Capsicum annuum", "Cucumis sativus", "Musa acuminata", "Carica papaya"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Minador de la hoja",
+      "nombre_cientifico": "Liriomyza spp.",
+      "tipo": "plaga",
+      "sintomas": "Galerías serpenteantes blancas en el interior de las hojas.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Solanum lycopersicum", "Cucumis sativus", "Phaseolus vulgaris"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Ácaros",
+      "nombre_cientifico": "Tetranychus urticae",
+      "tipo": "plaga",
+      "sintomas": "Puntitos amarillos en el haz, telarañas finas en el envés; deshidratación.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Fragaria x ananassa", "Phaseolus vulgaris", "Solanum lycopersicum", "Rosa hybrida", "Vitis vinifera"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Virus del enrollamiento amarillo (TYLCV)",
+      "nombre_cientifico": "Tomato yellow leaf curl virus",
+      "tipo": "virus",
+      "sintomas": "Enrollamiento hacia arriba y amarillamiento de bordes; enanismo. Transmitido por mosca blanca.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Solanum lycopersicum", "Capsicum annuum", "Phaseolus vulgaris"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Virus del bronceado del tomate (TSWV)",
+      "nombre_cientifico": "Tomato spotted wilt virus",
+      "tipo": "virus",
+      "sintomas": "Manchas bronceadas circulares, necrosis en tallos y peciolos. Transmitido por trips.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Solanum lycopersicum", "Capsicum annuum", "Solanum tuberosum", "Lactuca sativa"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Chinche apestoso",
+      "nombre_cientifico": "Nezara viridula",
+      "tipo": "plaga",
+      "sintomas": "Manchas amarillo-cafés en frutos y granos; deformación de vainas.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Glycine max", "Phaseolus vulgaris", "Solanum lycopersicum"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Muerte descendente",
+      "nombre_cientifico": "Ceratocystis fimbriata",
+      "tipo": "hongo",
+      "sintomas": "Marchitez y muerte descendente de ramas; oscurecimiento vascular.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Coffea arabica", "Mangifera indica", "Ipomoea batatas"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Cercospora",
+      "nombre_cientifico": "Cercospora spp.",
+      "tipo": "hongo",
+      "sintomas": "Manchas circulares grisáceas con borde marrón en hojas; defoliación en severidad alta.",
+      "fuente": "EPPO",
+      "especies_afectadas": ["Coffea arabica", "Phaseolus vulgaris", "Beta vulgaris", "Glycine max"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Deficiencia de nitrógeno",
+      "nombre_cientifico": "Deficiencia nutricional — N",
+      "tipo": "nutricional",
+      "sintomas": "Clorosis general uniforme empezando por hojas viejas; enanismo.",
+      "fuente": "FAO",
+      "especies_afectadas": ["Zea mays L.", "Zea mays", "Solanum lycopersicum", "Capsicum annuum", "Phaseolus vulgaris", "Coffea arabica", "Musa acuminata"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Deficiencia de potasio",
+      "nombre_cientifico": "Deficiencia nutricional — K",
+      "tipo": "nutricional",
+      "sintomas": "Amarillamiento marginal e interveinal de hojas viejas; frutos pequeños.",
+      "fuente": "FAO",
+      "especies_afectadas": ["Solanum lycopersicum", "Musa acuminata", "Solanum tuberosum", "Capsicum annuum"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Podredumbre apical (blossom-end rot)",
+      "nombre_cientifico": "Deficiencia nutricional — Ca",
+      "tipo": "nutricional",
+      "sintomas": "Mancha oscura hundida en el extremo apical del fruto; ligada a estrés hídrico.",
+      "fuente": "FAO",
+      "especies_afectadas": ["Solanum lycopersicum", "Capsicum annuum", "Cucurbita pepo"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Estrés hídrico",
+      "nombre_cientifico": "Condición abiótica — sequía",
+      "tipo": "abiotica",
+      "sintomas": "Marchitez, enrollamiento de hojas, caída de flores y frutos.",
+      "fuente": "FAO",
+      "especies_afectadas": ["Zea mays L.", "Zea mays", "Coffea arabica", "Phaseolus vulgaris", "Musa acuminata"],
+      "prevalencia": "media"
+    },
+    {
+      "nombre_comun": "Hormiga arriera común",
+      "nombre_cientifico": "Atta cephalotes",
+      "tipo": "plaga",
+      "sintomas": "Defoliación por corte de hojas jóvenes. Fragmentos foliares en sendero visible hacia el nido. Montículos de tierra suelta.",
+      "fuente": "ICA / Cenicafé",
+      "especies_afectadas": ["Coffea arabica", "Zea mays L.", "Zea mays", "Phaseolus vulgaris", "Carica papaya", "Musa acuminata", "Citrus sinensis", "Solanum lycopersicum", "Capsicum annuum"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Hormiga culona",
+      "nombre_cientifico": "Atta laevigata",
+      "tipo": "plaga",
+      "sintomas": "Defoliación intensa; corta hojas de gran variedad de cultivos. Reinas aladas ('hormigas culonas') se recolectan tradicionalmente en Santander.",
+      "fuente": "ICA / Corpoica",
+      "especies_afectadas": ["Coffea arabica", "Zea mays L.", "Zea mays", "Phaseolus vulgaris", "Musa acuminata", "Citrus sinensis", "Manihot esculenta"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Hormiga arriera de tierras bajas",
+      "nombre_cientifico": "Atta colombica",
+      "tipo": "plaga",
+      "sintomas": "Defoliación acelerada, especialmente en cultivos de tierras bajas y bosques húmedos. Nidos grandes con múltiples cámaras.",
+      "fuente": "ICA",
+      "especies_afectadas": ["Musa acuminata", "Musa x paradisiaca", "Coffea arabica", "Citrus sinensis", "Carica papaya", "Manihot esculenta"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Bibijagua",
+      "nombre_cientifico": "Atta sexdens",
+      "tipo": "plaga",
+      "sintomas": "Corte de hojas frescas de amplia gama de plantas cultivadas y silvestres. Impacto ecológico significativo en ecosistemas neotropicales.",
+      "fuente": "ICA / FAO",
+      "especies_afectadas": ["Coffea arabica", "Zea mays L.", "Zea mays", "Phaseolus vulgaris", "Citrus sinensis", "Musa acuminata", "Manihot esculenta"],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Hormiga arriera de pastizales",
+      "nombre_cientifico": "Acromyrmex landolti",
+      "tipo": "plaga",
+      "sintomas": "Cortadora en pastizales y cultivos anuales. Coloniza áreas abiertas y sabanas. Nidos con montículos de tierra suelta característicos.",
+      "fuente": "ICA / Corpoica",
+      "especies_afectadas": ["Zea mays L.", "Zea mays", "Oryza sativa", "Sorghum bicolor", "Cynodon dactylon", "Brachiaria spp."],
+      "prevalencia": "alta"
+    },
+    {
+      "nombre_comun": "Hormiga arriera espinosa",
+      "nombre_cientifico": "Acromyrmex octospinosus",
+      "tipo": "plaga",
+      "sintomas": "Cortadora de menor tamaño que Atta, pero con obreras espinosas. Nidos superficiales bajo hojarasca o raíces.",
+      "fuente": "ICA",
+      "especies_afectadas": ["Coffea arabica", "Musa acuminata", "Carica papaya", "Citrus sinensis", "Manihot esculenta"],
+      "prevalencia": "media"
+    }
+  ]
+}

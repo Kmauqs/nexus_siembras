@@ -1,0 +1,149 @@
+{
+  "@@locale": "es",
+  "appName": "NEXUS Siembras",
+  "loading": "Cargando…",
+  "cancel": "Cancelar",
+  "save": "Guardar",
+  "next": "Siguiente",
+  "edit": "Editar",
+  "delete": "Eliminar",
+  "new_": "Nuevo",
+  "confirm": "Confirmar",
+  "onbWelcome": "Bienvenido",
+  "onbSelectLang": "Selecciona el idioma",
+  "onbSelectStyle": "Estilo de interfaz",
+  "onbStyleAccessible": "Accesible",
+  "onbStyleAccessibleDesc": "Texto grande, una sola mano",
+  "onbStyleMaterial": "Material Design",
+  "onbStyleMaterialDesc": "Estándar moderno",
+  "onbPerms": "Permisos",
+  "onbPermCamera": "Cámara — fotos de cultivos y patologías",
+  "onbPermFiles": "Archivos — subir logo del predio, importar CSV",
+  "onbPermLocation": "Localización — coordenadas GNSS del lote",
+  "onbStart": "Empezar",
+  "menuHome": "Inicio",
+  "menuMap": "Mapa",
+  "menuAdd": "Agregar cultivo",
+  "menuCrops": "Ver cultivos",
+  "menuSchedule": "Cronograma",
+  "menuInventory": "Inventario",
+  "menuPurchases": "Compras",
+  "menuPlants": "Plantas",
+  "menuSuppliers": "Proveedores",
+  "menuPathologies": "Patologías",
+  "menuSettings": "Configuración",
+  "menuTrash": "Papelera",
+  "dashActiveCrops": "Cultivos activos",
+  "dashAlerts": "Alertas",
+  "dashNextHarvests": "Próximas cosechas",
+  "dashInventoryItems": "Ítems en inventario",
+  "dashUpcomingAlerts": "Alertas próximas",
+  "dashNextEvents": "Próximos eventos",
+  "dashFarmPurchases": "Compras año fiscal {year}",
+  "@dashFarmPurchases": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "dashManHours": "Horas hombre año fiscal {year}",
+  "@dashManHours": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "farmSelect": "Predio:",
+  "farmName": "Nombre del predio",
+  "farmOwner": "Propietario",
+  "farmCountry": "País",
+  "farmRegion": "Región",
+  "farmMunicipality": "Municipio",
+  "farmLogo": "Logotipo del predio",
+  "cropPlant": "Planta",
+  "cropLot": "Nombre del lote",
+  "cropSownDate": "Fecha de siembra",
+  "cropTransplantDate": "Fecha de trasplante",
+  "cropArea": "Área",
+  "cropUnit": "Unidad",
+  "cropSeedQty": "Cantidad semilla",
+  "cropNotes": "Notas",
+  "cropHH": "Horas-hombre iniciales (HH)",
+  "cropHourCost": "Costo por hora",
+  "cfgStyle": "Estilo de interfaz",
+  "cfgLang": "Idioma",
+  "cfgUnits": "Sistema de unidades",
+  "cfgCurrency": "Moneda",
+  "cfgSync": "Sincronización en la nube",
+  "emptyCrops": "Aún no hay cultivos en este predio",
+  "emptyInventory": "Sin ítems en inventario",
+  "emptyPurchases": "Sin compras registradas",
+  "emptySuppliers": "Sin proveedores",
+  "emptyPlants": "Sin plantas en el catálogo",
+  "emptyPathologies": "Sin patologías cargadas",
+  "emptyTrash": "La papelera está vacía",
+  "msgSaved": "Guardado",
+  "msgDeleted": "Movido a la papelera",
+  "msgRecovered": "Recuperado",
+  "msgConfirmDel": "¿Mover a la papelera?",
+  "msgConfirmHard": "¿Eliminar permanentemente?",
+  "menuWizard": "Asistente paso a paso",
+  "menuReports": "Reportes",
+  "menuSoil": "Análisis de suelo",
+  "menuConditions": "Condiciones del predio",
+  "menuFarms": "Administración de predios",
+  "menuAccount": "Cuenta / Sincronización",
+  "menuTitle": "Menú",
+  "add": "Agregar",
+  "close": "Cerrar",
+  "back": "Anterior",
+  "finish": "Finalizar",
+  "search": "Buscar",
+  "refresh": "Refrescar",
+  "share": "Compartir",
+  "view": "Ver",
+  "export": "Exportar",
+  "import": "Importar",
+  "verify": "Verificar",
+  "syncNow": "Sincronizar ahora",
+  "optional": "Opcional",
+  "required": "Obligatorio",
+  "readOnly": "Solo lectura",
+  "noData": "Sin datos.",
+  "error": "Error",
+  "reportsGenerate": "Generar reportes",
+  "reportsGenerated": "Reportes generados",
+  "reportsLogo": "Logotipo del encabezado",
+  "reportsLogs": "Logs de diagnóstico",
+  "reportsClearCache": "Limpiar caché y logs",
+  "reportsConsolidated": "CONSOLIDADO — todos los anteriores en un PDF",
+  "wizardTitle": "Asistente",
+  "wizardStepOf": "Paso {n} de {total}",
+  "@wizardStepOf": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardExit": "Salir (el avance se conserva)",
+  "wizardComplete": "Completa este paso para continuar",
+  "wizardFinishMap": "Finalizar en el mapa",
+  "wizardSkip": "Omitir",
+  "syncOk": "Sincronización correcta",
+  "syncPending": "{n} cambio(s) pendiente(s) por sincronizar",
+  "@syncPending": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "noSession": "No hay sesión iniciada",
+  "offlineMode": "Modo local"
+}

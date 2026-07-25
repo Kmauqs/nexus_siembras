@@ -1,0 +1,149 @@
+{
+  "@@locale": "en",
+  "appName": "NEXUS Siembras",
+  "loading": "Loading…",
+  "cancel": "Cancel",
+  "save": "Save",
+  "next": "Next",
+  "edit": "Edit",
+  "delete": "Delete",
+  "new_": "New",
+  "confirm": "Confirm",
+  "onbWelcome": "Welcome",
+  "onbSelectLang": "Select language",
+  "onbSelectStyle": "Interface style",
+  "onbStyleAccessible": "Accessible",
+  "onbStyleAccessibleDesc": "Large text, one-handed use",
+  "onbStyleMaterial": "Material Design",
+  "onbStyleMaterialDesc": "Modern standard",
+  "onbPerms": "Permissions",
+  "onbPermCamera": "Camera — crop and pathology photos",
+  "onbPermFiles": "Files — farm logo, CSV import",
+  "onbPermLocation": "Location — plot GNSS coordinates",
+  "onbStart": "Start",
+  "menuHome": "Home",
+  "menuMap": "Map",
+  "menuAdd": "Add crop",
+  "menuCrops": "View crops",
+  "menuSchedule": "Schedule",
+  "menuInventory": "Inventory",
+  "menuPurchases": "Purchases",
+  "menuPlants": "Plants",
+  "menuSuppliers": "Suppliers",
+  "menuPathologies": "Pathologies",
+  "menuSettings": "Settings",
+  "menuTrash": "Trash",
+  "dashActiveCrops": "Active crops",
+  "dashAlerts": "Alerts",
+  "dashNextHarvests": "Upcoming harvests",
+  "dashInventoryItems": "Inventory items",
+  "dashUpcomingAlerts": "Upcoming alerts",
+  "dashNextEvents": "Upcoming events",
+  "dashFarmPurchases": "Purchases fiscal year {year}",
+  "@dashFarmPurchases": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "dashManHours": "Man-hours fiscal year {year}",
+  "@dashManHours": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "farmSelect": "Farm:",
+  "farmName": "Farm name",
+  "farmOwner": "Owner",
+  "farmCountry": "Country",
+  "farmRegion": "Region",
+  "farmMunicipality": "Municipality",
+  "farmLogo": "Farm logo",
+  "cropPlant": "Plant",
+  "cropLot": "Lot name",
+  "cropSownDate": "Sowing date",
+  "cropTransplantDate": "Transplant date",
+  "cropArea": "Area",
+  "cropUnit": "Unit",
+  "cropSeedQty": "Seed amount",
+  "cropNotes": "Notes",
+  "cropHH": "Initial man-hours (MH)",
+  "cropHourCost": "Hourly cost",
+  "cfgStyle": "Interface style",
+  "cfgLang": "Language",
+  "cfgUnits": "Unit system",
+  "cfgCurrency": "Currency",
+  "cfgSync": "Cloud sync",
+  "emptyCrops": "No crops in this farm yet",
+  "emptyInventory": "No inventory items",
+  "emptyPurchases": "No purchases",
+  "emptySuppliers": "No suppliers",
+  "emptyPlants": "No plants",
+  "emptyPathologies": "No pathologies",
+  "emptyTrash": "Trash is empty",
+  "msgSaved": "Saved",
+  "msgDeleted": "Moved to trash",
+  "msgRecovered": "Restored",
+  "msgConfirmDel": "Move to trash?",
+  "msgConfirmHard": "Delete permanently?",
+  "menuWizard": "Step-by-step assistant",
+  "menuReports": "Reports",
+  "menuSoil": "Soil analysis",
+  "menuConditions": "Farm conditions",
+  "menuFarms": "Farm management",
+  "menuAccount": "Account / Sync",
+  "menuTitle": "Menu",
+  "add": "Add",
+  "close": "Close",
+  "back": "Back",
+  "finish": "Finish",
+  "search": "Search",
+  "refresh": "Refresh",
+  "share": "Share",
+  "view": "View",
+  "export": "Export",
+  "import": "Import",
+  "verify": "Verify",
+  "syncNow": "Sync now",
+  "optional": "Optional",
+  "required": "Required",
+  "readOnly": "Read only",
+  "noData": "No data.",
+  "error": "Error",
+  "reportsGenerate": "Generate reports",
+  "reportsGenerated": "Generated reports",
+  "reportsLogo": "Header logo",
+  "reportsLogs": "Diagnostic logs",
+  "reportsClearCache": "Clear cache and logs",
+  "reportsConsolidated": "CONSOLIDATED — all of the above in one PDF",
+  "wizardTitle": "Assistant",
+  "wizardStepOf": "Step {n} of {total}",
+  "@wizardStepOf": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardExit": "Exit (progress is kept)",
+  "wizardComplete": "Complete this step to continue",
+  "wizardFinishMap": "Finish on the map",
+  "wizardSkip": "Skip",
+  "syncOk": "Sync successful",
+  "syncPending": "{n} pending change(s) to sync",
+  "@syncPending": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "noSession": "Not signed in",
+  "offlineMode": "Local mode"
+}

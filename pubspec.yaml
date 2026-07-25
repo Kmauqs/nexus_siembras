@@ -1,0 +1,121 @@
+name: nexus_siembras
+description: NEXUS Siembras — Control agropecuario para pequeños productores.
+publish_to: 'none'
+version: 0.2.0
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Estado
+  flutter_riverpod: ^2.5.1
+
+  # Routing
+  go_router: ^14.2.7
+
+  # Persistencia local
+  drift: ^2.20.0
+  # Auditoría S4: sqlite3_flutter_libs → sqlcipher_flutter_libs (BD cifrada).
+  sqlcipher_flutter_libs: ^0.6.4
+  sqlite3: ^2.4.6  # uso directo en db_connection_native (migración a cifrado)
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Auditoría S2/S3/S4: pinning TLS, clave de BD en Keystore/DPAPI.
+  crypto: ^3.0.3
+  # ^10.2: su implementación Windows usa win32 v6 (compatible con
+  # share_plus 13); en v9 exigía win32 v5 y el solver fallaba.
+  flutter_secure_storage: ^10.2.0
+
+  # Auditoría S5: re-encodificación de fotos (elimina EXIF/GPS).
+  image: ^4.2.0
+
+  # Sync en la nube (offline-first)
+  supabase_flutter: ^2.16.0
+
+  # Env config
+  flutter_dotenv: ^5.1.0
+
+  # UI / Animaciones
+  lottie: ^3.1.2
+
+  # Localizaciones (pineado por flutter_localizations)
+  intl: ^0.20.2
+
+  # Utilidades
+  uuid: ^4.4.2
+  collection: ^1.18.0
+  http: ^1.2.2
+
+  # GNSS / Cámara / Archivos
+  geolocator: ^12.0.0
+  image_picker: ^1.1.2
+  # 12.0.0-beta: es la línea que soporta AGP 9 (este proyecto usa AGP 9.0.1
+  # + Gradle 9.1) y está migrada a Built-in Kotlin. Con la 11.x el módulo
+  # Android no aporta FilePickerPlugin y falla GeneratedPluginRegistrant.
+  # Usa win32 ^6, igual que share_plus 13 y flutter_secure_storage_windows
+  # 4.2.x — todo el bloque queda alineado en win32 v6.
+  file_picker: ^12.0.0-beta.7
+  permission_handler: ^11.3.1
+
+  # Mapa (Fase 2e+)
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # Reportes
+  pdf: ^3.11.1
+  printing: ^5.13.2
+  csv: ^6.0.0
+  excel: ^4.0.6
+  # Compartir reportes/logs con apps externas (pantalla Reportes, B8+).
+  # ^13.1: win32 v6 + Built-in Kotlin (quita el WARNING de KGP).
+  share_plus: ^13.1.0
+
+  # Notificaciones locales (Fase 3c)
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+
+  # Detección de red (Fase 3d — auto-retry sync al volver online)
+  connectivity_plus: ^6.0.5
+
+  # Versión de la app en runtime (menú y reportes). ^10: win32 v6, en
+  # línea con file_picker 12, share_plus 13 y flutter_secure_storage 10.
+  package_info_plus: ^10.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+  # Generación código Drift
+  drift_dev: ^2.20.0
+  build_runner: ^2.4.11
+
+flutter:
+  uses-material-design: true
+
+  # generate: true  # Desactivado: el chequeo de gen_l10n de Flutter en Windows genera
+  # falsos "no read/write" incluso con permisos OK. Usaremos i18n runtime (easy_localization o
+  # cargador propio de ARB) en Fase 2f. Por ahora los strings quedan en español.
+
+  assets:
+    - .env
+    - assets/images/
+    - assets/animations/
+    - assets/data/
+    # ARB de i18n: se cargan en runtime con AppLocalizations (Fase B4).
+    # No se usa gen_l10n por el bug de permisos en Windows (ver arriba).
+    - lib/l10n/
+
+  # fonts:  # Comentado hasta que descarguemos las fuentes reales
+  #   - family: NexusSans
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700

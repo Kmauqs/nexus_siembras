@@ -1,0 +1,2292 @@
+{
+  "version": "2026-07-20",
+  "descripcion": "Catálogo de tratamientos por patología con priorización por país. Prioriza prácticas preventivas: culturales, biológicas y orgánicas sobre las químicas.",
+  "fuente_general": "ICA, FAO, Corpoica, Cenicafé, INTA, IPM Coalition",
+  "tratamientos": [
+    {
+      "patologia_nombre": "Roya",
+      "patologia_cientifico": "Puccinia spp.",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Rotación de cultivos",
+      "descripcion": "Rotar con Poaceae no susceptibles durante 2-3 ciclos para interrumpir el ciclo del patógeno.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Roya",
+      "patologia_cientifico": "Puccinia spp.",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes",
+      "descripcion": "Usar variedades con genes de resistencia disponibles (ej. híbridos ICA con Sr24, Sr36).",
+      "sostenibilidad": "alta",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Roya",
+      "patologia_cientifico": "Puccinia spp.",
+      "pais_iso2": "CO",
+      "tipo": "quimico",
+      "nombre_corto": "Fungicida triazol",
+      "descripcion": "Aplicar triazol (tebuconazol o propiconazol) al detectar primeros síntomas. Solo si la incidencia supera el 10%.",
+      "productos": [
+        "Tebuconazol 25% EW",
+        "Propiconazol 25% EC"
+      ],
+      "dosis": "0.5 L/ha",
+      "frecuencia": "Cada 15-21 días, máx 2 aplicaciones por ciclo",
+      "sostenibilidad": "baja",
+      "fuente": "ICA registro plaguicidas"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Renovación con variedades resistentes",
+      "descripcion": "Sembrar variedades Castillo o Cenicafé 1 (resistentes) en zonas afectadas. Manejo de sombra al 30-40%.",
+      "sostenibilidad": "alta",
+      "fuente": "Cenicafé"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Sombra moderada 30-40%. Fertilización balanceada N-P-K para reducir estrés y susceptibilidad.",
+      "sostenibilidad": "alta",
+      "fuente": "Cenicafé"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Aplicación de Lecanicillium lecanii",
+      "descripcion": "Hongo entomopatógeno con acción hiperparásita sobre uredosporas de la roya. Aplicación foliar.",
+      "productos": [
+        "Lecanicillium lecanii formulado"
+      ],
+      "dosis": "2 g/L",
+      "frecuencia": "Cada 15 días en época lluviosa",
+      "sostenibilidad": "alta",
+      "fuente": "Cenicafé"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Semilla certificada + eliminación de residuos",
+      "descripcion": "Usar semilla libre del patógeno. Eliminar frutos y hojas caídas para reducir inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO / ICA"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Trichoderma spp. al suelo",
+      "descripcion": "Aplicación al surco de siembra para competencia con Colletotrichum. Mejora fitosanidad general del suelo.",
+      "productos": [
+        "Trichoderma harzianum WP",
+        "Trichoderma viride"
+      ],
+      "dosis": "1 kg/ha (1x10^9 UFC/g)",
+      "frecuencia": "Al momento de siembra y a los 30 días",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Extracto de canela + neem",
+      "descripcion": "Extracto acuoso de canela (aldehído cinámico) combinado con aceite de neem. Efecto fungistático leve.",
+      "dosis": "5 mL/L",
+      "frecuencia": "Semanal como preventivo",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": "CO",
+      "tipo": "quimico",
+      "nombre_corto": "Mancozeb preventivo",
+      "descripcion": "Fungicida de contacto de amplio espectro. Aplicar al 10% de floración/fructificación.",
+      "productos": [
+        "Mancozeb 80% WP"
+      ],
+      "dosis": "2.5 kg/ha",
+      "frecuencia": "Cada 10-14 días, hasta 4 aplicaciones",
+      "sostenibilidad": "baja",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Aporque alto + drenaje",
+      "descripcion": "Aporque alto para evitar contacto de tubérculos con esporas. Camellones que faciliten el drenaje.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes",
+      "descripcion": "Sembrar variedades con resistencia horizontal (ej. Diacol Capiro en CO).",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "CO",
+      "tipo": "quimico",
+      "nombre_corto": "Fungicida sistémico curativo",
+      "descripcion": "Cymoxanil + mancozeb. Usar únicamente ante confirmación y siguiendo monitoreo de umbrales.",
+      "productos": [
+        "Cymoxanil 8% + Mancozeb 64% WP"
+      ],
+      "dosis": "2 kg/ha",
+      "frecuencia": "Cada 7-10 días si persisten condiciones (>90% HR + 18-22°C)",
+      "sostenibilidad": "baja",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Tizón temprano",
+      "patologia_cientifico": "Alternaria solani",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Rotación con no-solanáceas",
+      "descripcion": "Rotar mínimo 2 años con cereales o leguminosas. Evitar solanáceas consecutivas.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Trampas amarillas pegajosas",
+      "descripcion": "Instalar 25 trampas/ha para monitoreo y captura masiva. Reponer cada 20-30 días.",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa (parasitoide)",
+      "descripcion": "Liberación de parasitoides que atacan ninfas. Efectivo en invernadero y campo abierto con umbrales bajos.",
+      "productos": [
+        "Encarsia formosa comercial"
+      ],
+      "dosis": "1-3 individuos/planta según infestación",
+      "frecuencia": "Cada 15 días",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Aceite de neem",
+      "descripcion": "Azadiractina interfiere con la muda de ninfas. Aplicación al envés en horas frescas.",
+      "productos": [
+        "Aceite de neem 1500 ppm"
+      ],
+      "dosis": "3-5 mL/L",
+      "frecuencia": "Semanal por 3-4 semanas",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "CO",
+      "tipo": "quimico",
+      "nombre_corto": "Imidacloprid sistémico",
+      "descripcion": "Neonicotinoide sistémico. Uso restringido — respetar franja de floración por polinizadores.",
+      "productos": [
+        "Imidacloprid 20% SL"
+      ],
+      "dosis": "0.4-0.5 L/ha",
+      "frecuencia": "Solo con presencia > umbral (5 adultos/hoja)",
+      "sostenibilidad": "baja",
+      "notas": "Rotar modos de acción cada 2 aplicaciones. Restricciones ambientales.",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Pulgón verde",
+      "patologia_cientifico": "Myzus persicae",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Coccinélidos y crisopas",
+      "descripcion": "Conservar poblaciones de Cycloneda sanguinea, Hippodamia convergens y Chrysoperla spp.",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Pulgón verde",
+      "patologia_cientifico": "Myzus persicae",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico",
+      "descripcion": "Solución jabonosa para romper tensión superficial y ahogar ninfas.",
+      "dosis": "5-10 g/L",
+      "frecuencia": "Cada 5 días si persiste",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Trips",
+      "patologia_cientifico": "Frankliniella occidentalis",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Trampas azules",
+      "descripcion": "25-30 trampas/ha color azul para monitoreo y captura. Riego por aspersión reduce poblaciones.",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Trips",
+      "patologia_cientifico": "Frankliniella occidentalis",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Orius spp. depredador",
+      "descripcion": "Chinches depredadores adultos y ninfas. Muy efectivos en invernadero.",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Trichogramma pretiosum",
+      "descripcion": "Parasitoide de huevos. Liberar al detectar posturas o durante primeras 2 semanas post-siembra.",
+      "productos": [
+        "Trichogramma pretiosum"
+      ],
+      "dosis": "50000 individuos/ha",
+      "frecuencia": "3 liberaciones cada 8-10 días",
+      "sostenibilidad": "alta",
+      "fuente": "ICA / Corpoica"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis",
+      "descripcion": "Bacteria que produce delta-endotoxinas contra larvas jóvenes. Aplicación al cogollo.",
+      "productos": [
+        "Bt var. kurstaki WP"
+      ],
+      "dosis": "0.5-1 kg/ha",
+      "frecuencia": "Semanal según monitoreo",
+      "sostenibilidad": "alta",
+      "fuente": "FAO / ICA"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re-Re-Re (recolección)",
+      "descripcion": "Recolectar TODOS los frutos maduros, sobremaduros y secos del árbol y del suelo cada cosecha. Reduce >90% la broca.",
+      "sostenibilidad": "alta",
+      "fuente": "Cenicafé"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "CO",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Hongo entomopatógeno. Aplicación foliar al iniciar penetración de broca en el fruto.",
+      "productos": [
+        "Beauveria bassiana WP"
+      ],
+      "dosis": "1 kg/ha (1x10^12 conidios/g)",
+      "frecuencia": "Cada 15 días durante fructificación",
+      "sostenibilidad": "alta",
+      "fuente": "Cenicafé"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "CO",
+      "tipo": "biologico",
+      "nombre_corto": "Trampas con alcoholes (methanol+etanol)",
+      "descripcion": "Trampas con atrayente alcohólico 1:1 methanol:etanol. Monitoreo y captura masiva.",
+      "dosis": "30-40 trampas/ha",
+      "frecuencia": "Reponer alcohol cada 30 días",
+      "sostenibilidad": "alta",
+      "fuente": "Cenicafé"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje sanitario",
+      "descripcion": "Eliminar hojas con síntomas cada 10-15 días. Trozar y esparcir para acelerar descomposición.",
+      "sostenibilidad": "alta",
+      "fuente": "Cenicafé / FAO"
+    },
+    {
+      "patologia_nombre": "Oidio",
+      "patologia_cientifico": "Erysiphe cichoracearum",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Bicarbonato de potasio",
+      "descripcion": "Solución al 0.5% con aceite mineral como surfactante. Cambia el pH foliar y afecta el hongo.",
+      "dosis": "5 g/L + 2 mL aceite/L",
+      "frecuencia": "Semanal",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Botritis (moho gris)",
+      "patologia_cientifico": "Botrytis cinerea",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Ventilación + reducir HR",
+      "descripcion": "Aumentar espaciamiento entre plantas. En invernadero mantener HR < 85%. Regar por goteo, no aspersión.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Mancha bacteriana",
+      "patologia_cientifico": "Xanthomonas campestris",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Semilla certificada + desinfección de herramientas",
+      "descripcion": "La bacteria persiste en residuos y se transmite por herramientas. Desinfectar con hipoclorito 1% entre plantas.",
+      "sostenibilidad": "alta",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Marchitez bacteriana",
+      "patologia_cientifico": "Ralstonia solanacearum",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Rotación larga + drenaje",
+      "descripcion": "Rotar 4-5 años con no-solanáceas. Mejorar drenaje del suelo (la bacteria prospera en encharcamiento).",
+      "sostenibilidad": "alta",
+      "fuente": "FAO / ICA"
+    },
+    {
+      "patologia_nombre": "Nematodo agallador",
+      "patologia_cientifico": "Meloidogyne spp.",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Solarización del suelo",
+      "descripcion": "Cubrir suelo húmedo con plástico transparente durante 4-6 semanas en verano. Reduce >80% poblaciones.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Nematodo agallador",
+      "patologia_cientifico": "Meloidogyne spp.",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Paecilomyces lilacinus",
+      "descripcion": "Hongo nematófago que parasita huevos y hembras. Aplicación al surco.",
+      "productos": [
+        "Paecilomyces lilacinus WP"
+      ],
+      "dosis": "5 kg/ha",
+      "frecuencia": "Al preparar el suelo",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Ácaros",
+      "patologia_cientifico": "Tetranychus urticae",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Phytoseiulus persimilis",
+      "descripcion": "Ácaro depredador altamente específico. Liberación al detectar primeras colonias en el envés.",
+      "productos": [
+        "Phytoseiulus persimilis"
+      ],
+      "dosis": "10-20 individuos/m²",
+      "frecuencia": "1-2 liberaciones",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Ácaros",
+      "patologia_cientifico": "Tetranychus urticae",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Aceite de neem",
+      "descripcion": "Aceite al 0.5% asfixia ninfas y adultos. Aplicar al envés en horas frescas.",
+      "dosis": "5 mL/L",
+      "frecuencia": "Cada 5-7 días por 3 aplicaciones",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Virus del enrollamiento amarillo (TYLCV)",
+      "patologia_cientifico": "Tomato yellow leaf curl virus",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Control del vector (mosca blanca)",
+      "descripcion": "Sin cura una vez infectado. Control estricto de mosca blanca antes de siembra y en primeras 4 semanas.",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Virus del bronceado del tomate (TSWV)",
+      "patologia_cientifico": "Tomato spotted wilt virus",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Control de trips + eliminación de malezas hospedantes",
+      "descripcion": "Trips es vector. Eliminar malezas reservorio (Datura, Sonchus). Barreras de maíz alrededor.",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Deficiencia de nitrógeno",
+      "patologia_cientifico": "Deficiencia nutricional — N",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Compost + leguminosas de cobertura",
+      "descripcion": "Aplicar compost maduro (2-4 t/ha). Sembrar leguminosas (frijol de cobertura, mucuna) para fijación biológica de N.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Deficiencia de potasio",
+      "patologia_cientifico": "Deficiencia nutricional — K",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Ceniza de madera + sulfato de K",
+      "descripcion": "Ceniza de madera aporta K y Ca (aplicar solo en suelos ácidos). Sulfato de potasio en cultivos exigentes.",
+      "dosis": "200-400 kg K2SO4/ha según análisis",
+      "sostenibilidad": "media",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Podredumbre apical (blossom-end rot)",
+      "patologia_cientifico": "Deficiencia nutricional — Ca",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Riego uniforme + calcio foliar",
+      "descripcion": "Es un desorden por estrés hídrico + baja movilidad del calcio. Riego uniforme (evitar fluctuaciones) y aplicaciones foliares de nitrato de calcio 2%.",
+      "dosis": "20 g/L nitrato Ca",
+      "frecuencia": "Cada 7 días desde floración",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Estrés hídrico",
+      "patologia_cientifico": "Condición abiótica — sequía",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Mulching + riego por goteo",
+      "descripcion": "Cobertura vegetal muerta (mulching) reduce evaporación. Riego por goteo optimiza uso del agua.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera común",
+      "patologia_cientifico": "Atta cephalotes",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Localizar y destruir el nido",
+      "descripcion": "Rastrear el sendero de forrajeo hasta el nido principal. Abrir cámaras y destruir el jardín de hongos (fuente de alimento). Puede requerir excavación de 1-2 m.",
+      "sostenibilidad": "media",
+      "fuente": "Cenicafé"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera común",
+      "patologia_cientifico": "Atta cephalotes",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Hongo Beauveria bassiana / Metarhizium",
+      "descripcion": "Aplicación de conidios en las entradas del nido y sobre obreras forrajeras. Infecta hormigas y desestabiliza la colonia.",
+      "productos": [
+        "Beauveria bassiana WP",
+        "Metarhizium anisopliae WP"
+      ],
+      "dosis": "5-10 g/L en agua azucarada como cebo",
+      "frecuencia": "Aplicación única al nido, repetir a los 15 días si hay reactivación",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera común",
+      "patologia_cientifico": "Atta cephalotes",
+      "pais_iso2": "CO",
+      "tipo": "quimico",
+      "nombre_corto": "Cebos con fipronil (Mirex-S)",
+      "descripcion": "Cebos granulados con fipronil. Las obreras los transportan al nido y contaminan a la reina y al jardín de hongos.",
+      "productos": [
+        "Fipronil 0.3% cebo granulado"
+      ],
+      "dosis": "10 g por m² de entrada de nido",
+      "frecuencia": "Aplicación única; repetir en 15 días si persiste actividad",
+      "sostenibilidad": "baja",
+      "notas": "Producto restringido para no polinizadores. Aplicar SOLO en las entradas del nido, nunca esparcido.",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Hormiga culona",
+      "patologia_cientifico": "Atta laevigata",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Trampas de reinas aladas (vuelo nupcial)",
+      "descripcion": "Durante el vuelo nupcial (mayo-junio en Santander) capturar reinas con trampas de luz. Reduce fundación de nuevas colonias.",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica / tradicional"
+    },
+    {
+      "patologia_nombre": "Hormiga culona",
+      "patologia_cientifico": "Atta laevigata",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Trichoderma en el jardín de hongos",
+      "descripcion": "Aplicar suspensión de Trichoderma en las cámaras del nido. Compite con Leucoagaricus (el hongo simbionte que alimenta la colonia).",
+      "productos": [
+        "Trichoderma harzianum WP"
+      ],
+      "dosis": "10 g/L, aplicar 500 mL por cámara accesible",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera de tierras bajas",
+      "patologia_cientifico": "Atta colombica",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Barreras físicas en tallos jóvenes",
+      "descripcion": "Cinta adhesiva doble (tanglefoot) o mangas de plástico untadas con grasa alrededor del tallo. Impide acceso a hojas jóvenes en cultivos individuales de alto valor.",
+      "sostenibilidad": "alta",
+      "fuente": "IPM Coalition"
+    },
+    {
+      "patologia_nombre": "Bibijagua",
+      "patologia_cientifico": "Atta sexdens",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Cebos con hongo Metarhizium",
+      "descripcion": "Cebos secos impregnados con conidios de Metarhizium anisopliae, aceptados como alimento por las forrajeras.",
+      "productos": [
+        "Metarhizium anisopliae + salvado + azúcar"
+      ],
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera de pastizales",
+      "patologia_cientifico": "Acromyrmex landolti",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Rotación pastoreo + siembra de leguminosas",
+      "descripcion": "En pastizales, rotar con cultivos de leguminosas (Arachis pintoi) que Acromyrmex evita. Reduce fundación de nidos nuevos.",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera espinosa",
+      "patologia_cientifico": "Acromyrmex octospinosus",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria en nidos superficiales",
+      "descripcion": "Sus nidos superficiales bajo hojarasca facilitan la aplicación directa de Beauveria bassiana en polvo.",
+      "productos": [
+        "Beauveria bassiana WP"
+      ],
+      "dosis": "5 g por nido",
+      "sostenibilidad": "alta",
+      "fuente": "Corpoica"
+    },
+    {
+      "patologia_nombre": "Tizón temprano",
+      "patologia_cientifico": "Alternaria solani",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Eliminación de hojas basales",
+      "descripcion": "Retirar y destruir las hojas inferiores en contacto con el suelo, principal vía de infección por salpicadura. Mantener 40-50 cm libres en el tallo.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Tizón temprano",
+      "patologia_cientifico": "Alternaria solani",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Acolchado (mulch)",
+      "descripcion": "Cubrir el suelo con material vegetal seco para evitar la salpicadura de esporas desde el suelo hacia el follaje.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje fitosanitario",
+      "descripcion": "Cortar y retirar semanalmente las hojas con más del 30% de área afectada. Es la práctica preventiva de mayor impacto y reduce la presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Drenaje y densidad de siembra",
+      "descripcion": "Mantener drenajes limpios y densidad que permita ventilación entre plantas; la humedad estancada acelera el ciclo del hongo.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Oidio",
+      "patologia_cientifico": "Erysiphe spp.",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus subtilis",
+      "descripcion": "Aplicación foliar preventiva de Bacillus subtilis, que coloniza la superficie de la hoja y compite con el patógeno.",
+      "frecuencia": "Cada 7-14 días desde el inicio de la etapa susceptible",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Botritis (moho gris)",
+      "patologia_cientifico": "Botrytis cinerea",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Manejo de humedad y ventilación",
+      "descripcion": "Regar por goteo (evitar mojar el follaje), ampliar la distancia entre plantas y ventilar invernaderos en las primeras horas del día.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Botritis (moho gris)",
+      "patologia_cientifico": "Botrytis cinerea",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Trichoderma harzianum",
+      "descripcion": "Aplicación preventiva de Trichoderma sobre flores y heridas de poda, donde el hongo suele iniciar la infección.",
+      "frecuencia": "En floración y después de cada poda",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Mancha bacteriana",
+      "patologia_cientifico": "Xanthomonas spp.",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Semilla certificada y desinfección",
+      "descripcion": "Usar semilla certificada libre del patógeno y desinfectar herramientas de poda entre plantas; la bacteria se transmite por semilla y por heridas.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Mancha bacteriana",
+      "patologia_cientifico": "Xanthomonas spp.",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "No trabajar con follaje mojado",
+      "descripcion": "Evitar labores culturales con las plantas húmedas: la dispersión bacteriana ocurre principalmente por agua y contacto.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Marchitez bacteriana",
+      "patologia_cientifico": "Ralstonia solanacearum",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Rotación larga y drenaje",
+      "descripcion": "Rotar 3-4 años con gramíneas no hospederas y asegurar drenaje: la bacteria persiste en suelos húmedos y encharcados.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Marchitez bacteriana",
+      "patologia_cientifico": "Ralstonia solanacearum",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Eliminación de plantas enfermas",
+      "descripcion": "Arrancar y destruir (no compostar) las plantas marchitas junto con el suelo adherido a la raíz, para frenar la dispersión en el lote.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Virus del enrollamiento amarillo (TYLCV)",
+      "patologia_cientifico": "TYLCV",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Barreras físicas y control del vector",
+      "descripcion": "Mallas antiinsecto en semillero e invernadero y trampas amarillas: el virus no se cura, todo el manejo es preventivo sobre la mosca blanca.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Virus del enrollamiento amarillo (TYLCV)",
+      "patologia_cientifico": "TYLCV",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Período libre de cultivo",
+      "descripcion": "Dejar 4-6 semanas sin cultivos hospederos ni malezas entre ciclos para romper la cadena de transmisión virus-vector.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Virus del bronceado del tomate (TSWV)",
+      "patologia_cientifico": "TSWV",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Manejo de trips y malezas",
+      "descripcion": "Eliminar malezas hospederas del borde del lote y monitorear trips con trampas azules; el trips es el único vector del virus.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Nematodo agallador",
+      "patologia_cientifico": "Meloidogyne spp.",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Enmiendas orgánicas",
+      "descripcion": "Incorporar materia orgánica bien descompuesta y abonos verdes (crotalaria, tagetes) que reducen poblaciones y favorecen enemigos naturales.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Deficiencia de nitrógeno",
+      "patologia_cientifico": "Deficiencia nutricional",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Abonos verdes leguminosos",
+      "descripcion": "Sembrar leguminosas (frijol terciopelo, crotalaria) como abono verde e incorporarlas antes de floración para fijar nitrógeno biológicamente.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Deficiencia de potasio",
+      "patologia_cientifico": "Deficiencia nutricional",
+      "pais_iso2": null,
+      "tipo": "organico",
+      "nombre_corto": "Ceniza vegetal y compost",
+      "descripcion": "Aplicar ceniza de madera tamizada (rica en potasio) o compost maduro. Verificar pH del suelo antes: la ceniza lo eleva.",
+      "dosis": "0.5-1 kg/planta de compost maduro",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Podredumbre apical (blossom-end rot)",
+      "patologia_cientifico": "Trastorno fisiológico",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Riego uniforme",
+      "descripcion": "Mantener humedad constante en el suelo: el trastorno se debe a fallas en el transporte de calcio por riego irregular, no a un patógeno.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Estrés hídrico",
+      "patologia_cientifico": "Trastorno fisiológico",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Cobertura y sombra temporal",
+      "descripcion": "Acolchado del suelo y sombra parcial en horas pico reducen la evapotranspiración durante períodos secos.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Poda de aireación",
+      "descripcion": "Podar para abrir el dosel y favorecer secado rápido del follaje; el hongo requiere humedad prolongada sobre el tejido para infectar.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Ácaros",
+      "patologia_cientifico": "Tetranychus spp.",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Ácaros depredadores",
+      "descripcion": "Liberar Phytoseiulus persimilis o Neoseiulus californicus al detectar los primeros focos; control biológico clásico en hortalizas y frutales.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Trips",
+      "patologia_cientifico": "Frankliniella spp.",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Ácaros depredadores de trips",
+      "descripcion": "Liberar Amblyseius swirskii o Orius spp. de forma preventiva en invernadero, antes de que la población de trips se establezca.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Pulgón verde",
+      "patologia_cientifico": "Myzus persicae",
+      "pais_iso2": null,
+      "tipo": "biologico",
+      "nombre_corto": "Crisopas y mariquitas",
+      "descripcion": "Conservar y liberar Chrysoperla carnea y coccinélidos; una sola larva de crisopa consume cientos de pulgones durante su desarrollo.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Pulgón verde",
+      "patologia_cientifico": "Myzus persicae",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Franjas de flores (refugios)",
+      "descripcion": "Sembrar franjas florales en los bordes para albergar enemigos naturales durante todo el ciclo del cultivo.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": null,
+      "tipo": "cultural",
+      "nombre_corto": "Trampas amarillas y monitoreo",
+      "descripcion": "Instalar trampas cromáticas amarillas para monitoreo y captura masiva; permite decidir intervenciones con base en umbrales reales.",
+      "sostenibilidad": "alta",
+      "fuente": "FAO"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "MX",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Programas de renovación con variedades tolerantes en Chiapas y Veracruz.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA / INIFAP"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "MX",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA / INIFAP"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "GT",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Recomendación regional de ANACAFE tras la epidemia de roya de 2012-2013.",
+      "sostenibilidad": "alta",
+      "fuente": "ANACAFE"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "GT",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "ANACAFE"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "HN",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Programa nacional de renovación de cafetales con variedades tolerantes.",
+      "sostenibilidad": "alta",
+      "fuente": "IHCAFE"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "HN",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "IHCAFE"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "CR",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Manejo integrado promovido por ICAFE con énfasis en nutrición balanceada.",
+      "sostenibilidad": "alta",
+      "fuente": "ICAFE"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "CR",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "ICAFE"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "NI",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Renovación con variedades tolerantes y manejo de sombra.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA Nicaragua"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "NI",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA Nicaragua"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "SV",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Regulación de sombra y nutrición para reducir severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "CENTA / PROCAFE"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "SV",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "CENTA / PROCAFE"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Manejo en café de altura con variedades Catimor tolerantes.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú / INIA"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú / INIA"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "EC",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Recomendación de INIAP para zonas cafeteras de altura.",
+      "sostenibilidad": "alta",
+      "fuente": "Agrocalidad / INIAP"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "EC",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "Agrocalidad / INIAP"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "BR",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades tolerantes y renovación",
+      "descripcion": "Renovar lotes con variedades tolerantes registradas en el país y eliminar cafetales viejos, que son fuente de inóculo. Monitoreo de incidencia y manejo preventivo en cafetales tecnificados.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Roya del café",
+      "patologia_cientifico": "Hemileia vastatrix",
+      "pais_iso2": "BR",
+      "tipo": "cultural",
+      "nombre_corto": "Regulación de sombra y nutrición",
+      "descripcion": "Regular la sombra (30-40%) y mantener nutrición balanceada, en especial potasio: los cafetales desnutridos y muy sombreados presentan mayor severidad.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "MX",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re (recolección y repase)",
+      "descripcion": "Recolección oportuna y repase de todos los frutos maduros y secos del árbol y del suelo: elimina el refugio donde la broca completa su ciclo entre cosechas.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "MX",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Aspersión del hongo entomopatógeno Beauveria bassiana sobre frutos en los picos de vuelo de la broca, detectados con trampas de alcohol.",
+      "frecuencia": "Según monitoreo con trampas; repetir tras lluvias fuertes",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "GT",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re (recolección y repase)",
+      "descripcion": "Recolección oportuna y repase de todos los frutos maduros y secos del árbol y del suelo: elimina el refugio donde la broca completa su ciclo entre cosechas.",
+      "sostenibilidad": "alta",
+      "fuente": "ANACAFE"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "GT",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Aspersión del hongo entomopatógeno Beauveria bassiana sobre frutos en los picos de vuelo de la broca, detectados con trampas de alcohol.",
+      "frecuencia": "Según monitoreo con trampas; repetir tras lluvias fuertes",
+      "sostenibilidad": "alta",
+      "fuente": "ANACAFE"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "HN",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re (recolección y repase)",
+      "descripcion": "Recolección oportuna y repase de todos los frutos maduros y secos del árbol y del suelo: elimina el refugio donde la broca completa su ciclo entre cosechas.",
+      "sostenibilidad": "alta",
+      "fuente": "IHCAFE"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "HN",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Aspersión del hongo entomopatógeno Beauveria bassiana sobre frutos en los picos de vuelo de la broca, detectados con trampas de alcohol.",
+      "frecuencia": "Según monitoreo con trampas; repetir tras lluvias fuertes",
+      "sostenibilidad": "alta",
+      "fuente": "IHCAFE"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "CR",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re (recolección y repase)",
+      "descripcion": "Recolección oportuna y repase de todos los frutos maduros y secos del árbol y del suelo: elimina el refugio donde la broca completa su ciclo entre cosechas.",
+      "sostenibilidad": "alta",
+      "fuente": "ICAFE"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "CR",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Aspersión del hongo entomopatógeno Beauveria bassiana sobre frutos en los picos de vuelo de la broca, detectados con trampas de alcohol.",
+      "frecuencia": "Según monitoreo con trampas; repetir tras lluvias fuertes",
+      "sostenibilidad": "alta",
+      "fuente": "ICAFE"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re (recolección y repase)",
+      "descripcion": "Recolección oportuna y repase de todos los frutos maduros y secos del árbol y del suelo: elimina el refugio donde la broca completa su ciclo entre cosechas.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "PE",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Aspersión del hongo entomopatógeno Beauveria bassiana sobre frutos en los picos de vuelo de la broca, detectados con trampas de alcohol.",
+      "frecuencia": "Según monitoreo con trampas; repetir tras lluvias fuertes",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "EC",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re (recolección y repase)",
+      "descripcion": "Recolección oportuna y repase de todos los frutos maduros y secos del árbol y del suelo: elimina el refugio donde la broca completa su ciclo entre cosechas.",
+      "sostenibilidad": "alta",
+      "fuente": "Agrocalidad"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "EC",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Aspersión del hongo entomopatógeno Beauveria bassiana sobre frutos en los picos de vuelo de la broca, detectados con trampas de alcohol.",
+      "frecuencia": "Según monitoreo con trampas; repetir tras lluvias fuertes",
+      "sostenibilidad": "alta",
+      "fuente": "Agrocalidad"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "BR",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re (recolección y repase)",
+      "descripcion": "Recolección oportuna y repase de todos los frutos maduros y secos del árbol y del suelo: elimina el refugio donde la broca completa su ciclo entre cosechas.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "BR",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Aspersión del hongo entomopatógeno Beauveria bassiana sobre frutos en los picos de vuelo de la broca, detectados con trampas de alcohol.",
+      "frecuencia": "Según monitoreo con trampas; repetir tras lluvias fuertes",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "NI",
+      "tipo": "cultural",
+      "nombre_corto": "Re-Re (recolección y repase)",
+      "descripcion": "Recolección oportuna y repase de todos los frutos maduros y secos del árbol y del suelo: elimina el refugio donde la broca completa su ciclo entre cosechas.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA Nicaragua"
+    },
+    {
+      "patologia_nombre": "Broca del café",
+      "patologia_cientifico": "Hypothenemus hampei",
+      "pais_iso2": "NI",
+      "tipo": "biologico",
+      "nombre_corto": "Beauveria bassiana",
+      "descripcion": "Aspersión del hongo entomopatógeno Beauveria bassiana sobre frutos en los picos de vuelo de la broca, detectados con trampas de alcohol.",
+      "frecuencia": "Según monitoreo con trampas; repetir tras lluvias fuertes",
+      "sostenibilidad": "alta",
+      "fuente": "INTA Nicaragua"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": "EC",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje y drenaje según preaviso",
+      "descripcion": "Deshoje sanitario semanal guiado por el sistema de preaviso biológico y mantenimiento de drenajes; reduce aplicaciones y presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "Agrocalidad / INIAP"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": "CR",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje y drenaje según preaviso",
+      "descripcion": "Deshoje sanitario semanal guiado por el sistema de preaviso biológico y mantenimiento de drenajes; reduce aplicaciones y presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "SFE / CORBANA"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": "PA",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje y drenaje según preaviso",
+      "descripcion": "Deshoje sanitario semanal guiado por el sistema de preaviso biológico y mantenimiento de drenajes; reduce aplicaciones y presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "MIDA / IDIAP"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje y drenaje según preaviso",
+      "descripcion": "Deshoje sanitario semanal guiado por el sistema de preaviso biológico y mantenimiento de drenajes; reduce aplicaciones y presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "ICA / AUGURA"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": "GT",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje y drenaje según preaviso",
+      "descripcion": "Deshoje sanitario semanal guiado por el sistema de preaviso biológico y mantenimiento de drenajes; reduce aplicaciones y presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "MAGA"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": "HN",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje y drenaje según preaviso",
+      "descripcion": "Deshoje sanitario semanal guiado por el sistema de preaviso biológico y mantenimiento de drenajes; reduce aplicaciones y presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Honduras / FHIA"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": "DO",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje y drenaje según preaviso",
+      "descripcion": "Deshoje sanitario semanal guiado por el sistema de preaviso biológico y mantenimiento de drenajes; reduce aplicaciones y presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "Ministerio de Agricultura / IDIAF"
+    },
+    {
+      "patologia_nombre": "Sigatoka negra",
+      "patologia_cientifico": "Mycosphaerella fijiensis",
+      "pais_iso2": "BR",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje y drenaje según preaviso",
+      "descripcion": "Deshoje sanitario semanal guiado por el sistema de preaviso biológico y mantenimiento de drenajes; reduce aplicaciones y presión de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "MX",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA / INIFAP"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "MX",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA / INIFAP"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "MX",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA / INIFAP"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "GT",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "ICTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "GT",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "ICTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "GT",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "ICTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "HN",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "DICTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "HN",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "DICTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "HN",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "DICTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "NI",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "INTA Nicaragua"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "NI",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA Nicaragua"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "NI",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA Nicaragua"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "AR",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "INTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "AR",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "AR",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "BR",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "BR",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "BR",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "BO",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "SENASAG"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "BO",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASAG"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "BO",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASAG"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "PY",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "IPTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "PY",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "IPTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "PY",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "IPTA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "CO",
+      "tipo": "biologico",
+      "nombre_corto": "Bacillus thuringiensis (Bt)",
+      "descripcion": "Aplicar Bt dirigido al cogollo en larvas pequeñas (primeros instares), al atardecer. Selectivo: respeta enemigos naturales.",
+      "frecuencia": "Al detectar 20% de plantas con daño fresco",
+      "sostenibilidad": "alta",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "CO",
+      "tipo": "biologico",
+      "nombre_corto": "Liberación de Trichogramma",
+      "descripcion": "Liberar avispas Trichogramma spp., parasitoides de huevos, al inicio de las posturas detectadas por monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Gusano cogollero",
+      "patologia_cientifico": "Spodoptera frugiperda",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Siembra sincronizada y refugios",
+      "descripcion": "Sembrar en ventanas concentradas con los vecinos y conservar franjas de vegetación: reduce el escalonamiento de generaciones de la plaga.",
+      "sostenibilidad": "alta",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Semilla sana y aporque alto",
+      "descripcion": "Usar tubérculo-semilla certificado y realizar aporque alto para proteger los tubérculos de las esporas que descienden con la lluvia.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú / INIA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes y monitoreo climático",
+      "descripcion": "Sembrar variedades con resistencia horizontal e intensificar el monitoreo cuando coincidan alta humedad relativa y temperaturas de 12-18 °C.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú / INIA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "BO",
+      "tipo": "cultural",
+      "nombre_corto": "Semilla sana y aporque alto",
+      "descripcion": "Usar tubérculo-semilla certificado y realizar aporque alto para proteger los tubérculos de las esporas que descienden con la lluvia.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASAG / PROINPA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "BO",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes y monitoreo climático",
+      "descripcion": "Sembrar variedades con resistencia horizontal e intensificar el monitoreo cuando coincidan alta humedad relativa y temperaturas de 12-18 °C.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASAG / PROINPA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "EC",
+      "tipo": "cultural",
+      "nombre_corto": "Semilla sana y aporque alto",
+      "descripcion": "Usar tubérculo-semilla certificado y realizar aporque alto para proteger los tubérculos de las esporas que descienden con la lluvia.",
+      "sostenibilidad": "alta",
+      "fuente": "INIAP"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "EC",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes y monitoreo climático",
+      "descripcion": "Sembrar variedades con resistencia horizontal e intensificar el monitoreo cuando coincidan alta humedad relativa y temperaturas de 12-18 °C.",
+      "sostenibilidad": "alta",
+      "fuente": "INIAP"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Semilla sana y aporque alto",
+      "descripcion": "Usar tubérculo-semilla certificado y realizar aporque alto para proteger los tubérculos de las esporas que descienden con la lluvia.",
+      "sostenibilidad": "alta",
+      "fuente": "ICA / AGROSAVIA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes y monitoreo climático",
+      "descripcion": "Sembrar variedades con resistencia horizontal e intensificar el monitoreo cuando coincidan alta humedad relativa y temperaturas de 12-18 °C.",
+      "sostenibilidad": "alta",
+      "fuente": "ICA / AGROSAVIA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "AR",
+      "tipo": "cultural",
+      "nombre_corto": "Semilla sana y aporque alto",
+      "descripcion": "Usar tubérculo-semilla certificado y realizar aporque alto para proteger los tubérculos de las esporas que descienden con la lluvia.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "AR",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes y monitoreo climático",
+      "descripcion": "Sembrar variedades con resistencia horizontal e intensificar el monitoreo cuando coincidan alta humedad relativa y temperaturas de 12-18 °C.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "CL",
+      "tipo": "cultural",
+      "nombre_corto": "Semilla sana y aporque alto",
+      "descripcion": "Usar tubérculo-semilla certificado y realizar aporque alto para proteger los tubérculos de las esporas que descienden con la lluvia.",
+      "sostenibilidad": "alta",
+      "fuente": "SAG / INIA Chile"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "CL",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes y monitoreo climático",
+      "descripcion": "Sembrar variedades con resistencia horizontal e intensificar el monitoreo cuando coincidan alta humedad relativa y temperaturas de 12-18 °C.",
+      "sostenibilidad": "alta",
+      "fuente": "SAG / INIA Chile"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "MX",
+      "tipo": "cultural",
+      "nombre_corto": "Semilla sana y aporque alto",
+      "descripcion": "Usar tubérculo-semilla certificado y realizar aporque alto para proteger los tubérculos de las esporas que descienden con la lluvia.",
+      "sostenibilidad": "alta",
+      "fuente": "INIFAP"
+    },
+    {
+      "patologia_nombre": "Tizón tardío",
+      "patologia_cientifico": "Phytophthora infestans",
+      "pais_iso2": "MX",
+      "tipo": "cultural",
+      "nombre_corto": "Variedades resistentes y monitoreo climático",
+      "descripcion": "Sembrar variedades con resistencia horizontal e intensificar el monitoreo cuando coincidan alta humedad relativa y temperaturas de 12-18 °C.",
+      "sostenibilidad": "alta",
+      "fuente": "INIFAP"
+    },
+    {
+      "patologia_nombre": "Roya",
+      "patologia_cientifico": "Puccinia spp.",
+      "pais_iso2": "BR",
+      "tipo": "cultural",
+      "nombre_corto": "Vacío sanitario y siembra temprana",
+      "descripcion": "Respetar el período de vacío sanitario establecido en el país y priorizar siembras tempranas para escapar de los picos de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Roya",
+      "patologia_cientifico": "Puccinia spp.",
+      "pais_iso2": "AR",
+      "tipo": "cultural",
+      "nombre_corto": "Vacío sanitario y siembra temprana",
+      "descripcion": "Respetar el período de vacío sanitario establecido en el país y priorizar siembras tempranas para escapar de los picos de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA"
+    },
+    {
+      "patologia_nombre": "Roya",
+      "patologia_cientifico": "Puccinia spp.",
+      "pais_iso2": "PY",
+      "tipo": "cultural",
+      "nombre_corto": "Vacío sanitario y siembra temprana",
+      "descripcion": "Respetar el período de vacío sanitario establecido en el país y priorizar siembras tempranas para escapar de los picos de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "IPTA"
+    },
+    {
+      "patologia_nombre": "Roya",
+      "patologia_cientifico": "Puccinia spp.",
+      "pais_iso2": "UY",
+      "tipo": "cultural",
+      "nombre_corto": "Vacío sanitario y siembra temprana",
+      "descripcion": "Respetar el período de vacío sanitario establecido en el país y priorizar siembras tempranas para escapar de los picos de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "INIA Uruguay"
+    },
+    {
+      "patologia_nombre": "Roya",
+      "patologia_cientifico": "Puccinia spp.",
+      "pais_iso2": "BO",
+      "tipo": "cultural",
+      "nombre_corto": "Vacío sanitario y siembra temprana",
+      "descripcion": "Respetar el período de vacío sanitario establecido en el país y priorizar siembras tempranas para escapar de los picos de inóculo.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASAG"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "MX",
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa / Eretmocerus",
+      "descripcion": "Liberar parasitoides comerciales de mosca blanca en invernadero y casa-malla, junto con trampas amarillas de monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "MX",
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico y aceites vegetales",
+      "descripcion": "Aspersión de jabón potásico o aceite de neem dirigida al envés de las hojas, donde se concentran ninfas y adultos.",
+      "dosis": "10-20 mL/L de agua",
+      "frecuencia": "Cada 5-7 días mientras haya población",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "DO",
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa / Eretmocerus",
+      "descripcion": "Liberar parasitoides comerciales de mosca blanca en invernadero y casa-malla, junto con trampas amarillas de monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "IDIAF"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "DO",
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico y aceites vegetales",
+      "descripcion": "Aspersión de jabón potásico o aceite de neem dirigida al envés de las hojas, donde se concentran ninfas y adultos.",
+      "dosis": "10-20 mL/L de agua",
+      "frecuencia": "Cada 5-7 días mientras haya población",
+      "sostenibilidad": "alta",
+      "fuente": "IDIAF"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "CU",
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa / Eretmocerus",
+      "descripcion": "Liberar parasitoides comerciales de mosca blanca en invernadero y casa-malla, junto con trampas amarillas de monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "INISAV"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "CU",
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico y aceites vegetales",
+      "descripcion": "Aspersión de jabón potásico o aceite de neem dirigida al envés de las hojas, donde se concentran ninfas y adultos.",
+      "dosis": "10-20 mL/L de agua",
+      "frecuencia": "Cada 5-7 días mientras haya población",
+      "sostenibilidad": "alta",
+      "fuente": "INISAV"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "VE",
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa / Eretmocerus",
+      "descripcion": "Liberar parasitoides comerciales de mosca blanca en invernadero y casa-malla, junto con trampas amarillas de monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "INSAI"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "VE",
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico y aceites vegetales",
+      "descripcion": "Aspersión de jabón potásico o aceite de neem dirigida al envés de las hojas, donde se concentran ninfas y adultos.",
+      "dosis": "10-20 mL/L de agua",
+      "frecuencia": "Cada 5-7 días mientras haya población",
+      "sostenibilidad": "alta",
+      "fuente": "INSAI"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "CO",
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa / Eretmocerus",
+      "descripcion": "Liberar parasitoides comerciales de mosca blanca en invernadero y casa-malla, junto con trampas amarillas de monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "CO",
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico y aceites vegetales",
+      "descripcion": "Aspersión de jabón potásico o aceite de neem dirigida al envés de las hojas, donde se concentran ninfas y adultos.",
+      "dosis": "10-20 mL/L de agua",
+      "frecuencia": "Cada 5-7 días mientras haya población",
+      "sostenibilidad": "alta",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "PE",
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa / Eretmocerus",
+      "descripcion": "Liberar parasitoides comerciales de mosca blanca en invernadero y casa-malla, junto con trampas amarillas de monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "PE",
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico y aceites vegetales",
+      "descripcion": "Aspersión de jabón potásico o aceite de neem dirigida al envés de las hojas, donde se concentran ninfas y adultos.",
+      "dosis": "10-20 mL/L de agua",
+      "frecuencia": "Cada 5-7 días mientras haya población",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "BR",
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa / Eretmocerus",
+      "descripcion": "Liberar parasitoides comerciales de mosca blanca en invernadero y casa-malla, junto con trampas amarillas de monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "BR",
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico y aceites vegetales",
+      "descripcion": "Aspersión de jabón potásico o aceite de neem dirigida al envés de las hojas, donde se concentran ninfas y adultos.",
+      "dosis": "10-20 mL/L de agua",
+      "frecuencia": "Cada 5-7 días mientras haya población",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "GT",
+      "tipo": "biologico",
+      "nombre_corto": "Encarsia formosa / Eretmocerus",
+      "descripcion": "Liberar parasitoides comerciales de mosca blanca en invernadero y casa-malla, junto con trampas amarillas de monitoreo.",
+      "sostenibilidad": "alta",
+      "fuente": "MAGA"
+    },
+    {
+      "patologia_nombre": "Mosca blanca",
+      "patologia_cientifico": "Bemisia tabaci",
+      "pais_iso2": "GT",
+      "tipo": "organico",
+      "nombre_corto": "Jabón potásico y aceites vegetales",
+      "descripcion": "Aspersión de jabón potásico o aceite de neem dirigida al envés de las hojas, donde se concentran ninfas y adultos.",
+      "dosis": "10-20 mL/L de agua",
+      "frecuencia": "Cada 5-7 días mientras haya población",
+      "sostenibilidad": "alta",
+      "fuente": "MAGA"
+    },
+    {
+      "patologia_nombre": "Botritis (moho gris)",
+      "patologia_cientifico": "Botrytis cinerea",
+      "pais_iso2": "CL",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje de zona de racimos",
+      "descripcion": "Deshoje en la zona de racimos tras cuaje para mejorar aireación e insolación; práctica base del manejo de botritis en vid y berries.",
+      "sostenibilidad": "alta",
+      "fuente": "SAG / INIA Chile"
+    },
+    {
+      "patologia_nombre": "Oidio",
+      "patologia_cientifico": "Erysiphe spp.",
+      "pais_iso2": "CL",
+      "tipo": "organico",
+      "nombre_corto": "Azufre humectable",
+      "descripcion": "Azufre mojable como preventivo en las primeras etapas. No aplicar por encima de 30 °C para evitar fitotoxicidad.",
+      "frecuencia": "Cada 10-14 días en período susceptible",
+      "sostenibilidad": "media",
+      "fuente": "SAG / INIA Chile"
+    },
+    {
+      "patologia_nombre": "Botritis (moho gris)",
+      "patologia_cientifico": "Botrytis cinerea",
+      "pais_iso2": "AR",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje de zona de racimos",
+      "descripcion": "Deshoje en la zona de racimos tras cuaje para mejorar aireación e insolación; práctica base del manejo de botritis en vid y berries.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA"
+    },
+    {
+      "patologia_nombre": "Oidio",
+      "patologia_cientifico": "Erysiphe spp.",
+      "pais_iso2": "AR",
+      "tipo": "organico",
+      "nombre_corto": "Azufre humectable",
+      "descripcion": "Azufre mojable como preventivo en las primeras etapas. No aplicar por encima de 30 °C para evitar fitotoxicidad.",
+      "frecuencia": "Cada 10-14 días en período susceptible",
+      "sostenibilidad": "media",
+      "fuente": "INTA"
+    },
+    {
+      "patologia_nombre": "Botritis (moho gris)",
+      "patologia_cientifico": "Botrytis cinerea",
+      "pais_iso2": "UY",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje de zona de racimos",
+      "descripcion": "Deshoje en la zona de racimos tras cuaje para mejorar aireación e insolación; práctica base del manejo de botritis en vid y berries.",
+      "sostenibilidad": "alta",
+      "fuente": "INIA Uruguay"
+    },
+    {
+      "patologia_nombre": "Oidio",
+      "patologia_cientifico": "Erysiphe spp.",
+      "pais_iso2": "UY",
+      "tipo": "organico",
+      "nombre_corto": "Azufre humectable",
+      "descripcion": "Azufre mojable como preventivo en las primeras etapas. No aplicar por encima de 30 °C para evitar fitotoxicidad.",
+      "frecuencia": "Cada 10-14 días en período susceptible",
+      "sostenibilidad": "media",
+      "fuente": "INIA Uruguay"
+    },
+    {
+      "patologia_nombre": "Botritis (moho gris)",
+      "patologia_cientifico": "Botrytis cinerea",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Deshoje de zona de racimos",
+      "descripcion": "Deshoje en la zona de racimos tras cuaje para mejorar aireación e insolación; práctica base del manejo de botritis en vid y berries.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Oidio",
+      "patologia_cientifico": "Erysiphe spp.",
+      "pais_iso2": "PE",
+      "tipo": "organico",
+      "nombre_corto": "Azufre humectable",
+      "descripcion": "Azufre mojable como preventivo en las primeras etapas. No aplicar por encima de 30 °C para evitar fitotoxicidad.",
+      "frecuencia": "Cada 10-14 días en período susceptible",
+      "sostenibilidad": "media",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": "MX",
+      "tipo": "cultural",
+      "nombre_corto": "Sanidad de cosecha y poscosecha",
+      "descripcion": "Retirar frutos momificados y residuos de poda del lote, y manipular la fruta sin heridas: la infección suele quedar latente hasta la maduración.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA / INIFAP"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": "BR",
+      "tipo": "cultural",
+      "nombre_corto": "Sanidad de cosecha y poscosecha",
+      "descripcion": "Retirar frutos momificados y residuos de poda del lote, y manipular la fruta sin heridas: la infección suele quedar latente hasta la maduración.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Sanidad de cosecha y poscosecha",
+      "descripcion": "Retirar frutos momificados y residuos de poda del lote, y manipular la fruta sin heridas: la infección suele quedar latente hasta la maduración.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": "EC",
+      "tipo": "cultural",
+      "nombre_corto": "Sanidad de cosecha y poscosecha",
+      "descripcion": "Retirar frutos momificados y residuos de poda del lote, y manipular la fruta sin heridas: la infección suele quedar latente hasta la maduración.",
+      "sostenibilidad": "alta",
+      "fuente": "INIAP"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Sanidad de cosecha y poscosecha",
+      "descripcion": "Retirar frutos momificados y residuos de poda del lote, y manipular la fruta sin heridas: la infección suele quedar latente hasta la maduración.",
+      "sostenibilidad": "alta",
+      "fuente": "AGROSAVIA"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": "DO",
+      "tipo": "cultural",
+      "nombre_corto": "Sanidad de cosecha y poscosecha",
+      "descripcion": "Retirar frutos momificados y residuos de poda del lote, y manipular la fruta sin heridas: la infección suele quedar latente hasta la maduración.",
+      "sostenibilidad": "alta",
+      "fuente": "IDIAF"
+    },
+    {
+      "patologia_nombre": "Antracnosis",
+      "patologia_cientifico": "Colletotrichum spp.",
+      "pais_iso2": "CR",
+      "tipo": "cultural",
+      "nombre_corto": "Sanidad de cosecha y poscosecha",
+      "descripcion": "Retirar frutos momificados y residuos de poda del lote, y manipular la fruta sin heridas: la infección suele quedar latente hasta la maduración.",
+      "sostenibilidad": "alta",
+      "fuente": "INTA Costa Rica"
+    },
+    {
+      "patologia_nombre": "Nematodo agallador",
+      "patologia_cientifico": "Meloidogyne spp.",
+      "pais_iso2": "MX",
+      "tipo": "biologico",
+      "nombre_corto": "Trichoderma y hongos nematófagos",
+      "descripcion": "Aplicar Trichoderma spp. o Purpureocillium lilacinum al trasplante, junto con materia orgánica que favorezca su establecimiento.",
+      "sostenibilidad": "alta",
+      "fuente": "INIFAP"
+    },
+    {
+      "patologia_nombre": "Nematodo agallador",
+      "patologia_cientifico": "Meloidogyne spp.",
+      "pais_iso2": "BR",
+      "tipo": "biologico",
+      "nombre_corto": "Trichoderma y hongos nematófagos",
+      "descripcion": "Aplicar Trichoderma spp. o Purpureocillium lilacinum al trasplante, junto con materia orgánica que favorezca su establecimiento.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Nematodo agallador",
+      "patologia_cientifico": "Meloidogyne spp.",
+      "pais_iso2": "CO",
+      "tipo": "biologico",
+      "nombre_corto": "Trichoderma y hongos nematófagos",
+      "descripcion": "Aplicar Trichoderma spp. o Purpureocillium lilacinum al trasplante, junto con materia orgánica que favorezca su establecimiento.",
+      "sostenibilidad": "alta",
+      "fuente": "AGROSAVIA"
+    },
+    {
+      "patologia_nombre": "Nematodo agallador",
+      "patologia_cientifico": "Meloidogyne spp.",
+      "pais_iso2": "PE",
+      "tipo": "biologico",
+      "nombre_corto": "Trichoderma y hongos nematófagos",
+      "descripcion": "Aplicar Trichoderma spp. o Purpureocillium lilacinum al trasplante, junto con materia orgánica que favorezca su establecimiento.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Nematodo agallador",
+      "patologia_cientifico": "Meloidogyne spp.",
+      "pais_iso2": "CL",
+      "tipo": "biologico",
+      "nombre_corto": "Trichoderma y hongos nematófagos",
+      "descripcion": "Aplicar Trichoderma spp. o Purpureocillium lilacinum al trasplante, junto con materia orgánica que favorezca su establecimiento.",
+      "sostenibilidad": "alta",
+      "fuente": "INIA Chile"
+    },
+    {
+      "patologia_nombre": "Trips",
+      "patologia_cientifico": "Frankliniella spp.",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Trampas azules y manejo de bordes",
+      "descripcion": "Trampas cromáticas azules para monitoreo y eliminación de malezas hospederas en bordes; base del manejo preventivo en hortalizas de exportación.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Trips",
+      "patologia_cientifico": "Frankliniella spp.",
+      "pais_iso2": "CL",
+      "tipo": "cultural",
+      "nombre_corto": "Trampas azules y manejo de bordes",
+      "descripcion": "Trampas cromáticas azules para monitoreo y eliminación de malezas hospederas en bordes; base del manejo preventivo en hortalizas de exportación.",
+      "sostenibilidad": "alta",
+      "fuente": "SAG"
+    },
+    {
+      "patologia_nombre": "Trips",
+      "patologia_cientifico": "Frankliniella spp.",
+      "pais_iso2": "MX",
+      "tipo": "cultural",
+      "nombre_corto": "Trampas azules y manejo de bordes",
+      "descripcion": "Trampas cromáticas azules para monitoreo y eliminación de malezas hospederas en bordes; base del manejo preventivo en hortalizas de exportación.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASICA"
+    },
+    {
+      "patologia_nombre": "Trips",
+      "patologia_cientifico": "Frankliniella spp.",
+      "pais_iso2": "CO",
+      "tipo": "cultural",
+      "nombre_corto": "Trampas azules y manejo de bordes",
+      "descripcion": "Trampas cromáticas azules para monitoreo y eliminación de malezas hospederas en bordes; base del manejo preventivo en hortalizas de exportación.",
+      "sostenibilidad": "alta",
+      "fuente": "ICA"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera común",
+      "patologia_cientifico": "Atta cephalotes",
+      "pais_iso2": "EC",
+      "tipo": "cultural",
+      "nombre_corto": "Localización y control focalizado del hormiguero",
+      "descripcion": "Ubicar la bocatoma activa del hormiguero y tratar solo ese punto; el control disperso en el lote es ineficaz y contamina innecesariamente.",
+      "sostenibilidad": "alta",
+      "fuente": "Agrocalidad"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera común",
+      "patologia_cientifico": "Atta cephalotes",
+      "pais_iso2": "EC",
+      "tipo": "biologico",
+      "nombre_corto": "Hongos entomopatógenos en cebos",
+      "descripcion": "Cebos con Beauveria bassiana o Metarhizium anisopliae colocados en los caminos activos, que las obreras transportan al jardín de hongos.",
+      "sostenibilidad": "alta",
+      "fuente": "Agrocalidad"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera común",
+      "patologia_cientifico": "Atta cephalotes",
+      "pais_iso2": "PE",
+      "tipo": "cultural",
+      "nombre_corto": "Localización y control focalizado del hormiguero",
+      "descripcion": "Ubicar la bocatoma activa del hormiguero y tratar solo ese punto; el control disperso en el lote es ineficaz y contamina innecesariamente.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera común",
+      "patologia_cientifico": "Atta cephalotes",
+      "pais_iso2": "PE",
+      "tipo": "biologico",
+      "nombre_corto": "Hongos entomopatógenos en cebos",
+      "descripcion": "Cebos con Beauveria bassiana o Metarhizium anisopliae colocados en los caminos activos, que las obreras transportan al jardín de hongos.",
+      "sostenibilidad": "alta",
+      "fuente": "SENASA Perú"
+    },
+    {
+      "patologia_nombre": "Bibijagua",
+      "patologia_cientifico": "Atta insularis",
+      "pais_iso2": "CU",
+      "tipo": "cultural",
+      "nombre_corto": "Localización y control focalizado del hormiguero",
+      "descripcion": "Ubicar la bocatoma activa del hormiguero y tratar solo ese punto; el control disperso en el lote es ineficaz y contamina innecesariamente.",
+      "sostenibilidad": "alta",
+      "fuente": "INISAV"
+    },
+    {
+      "patologia_nombre": "Bibijagua",
+      "patologia_cientifico": "Atta insularis",
+      "pais_iso2": "CU",
+      "tipo": "biologico",
+      "nombre_corto": "Hongos entomopatógenos en cebos",
+      "descripcion": "Cebos con Beauveria bassiana o Metarhizium anisopliae colocados en los caminos activos, que las obreras transportan al jardín de hongos.",
+      "sostenibilidad": "alta",
+      "fuente": "INISAV"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera de pastizales",
+      "patologia_cientifico": "Atta capiguara",
+      "pais_iso2": "BR",
+      "tipo": "cultural",
+      "nombre_corto": "Localización y control focalizado del hormiguero",
+      "descripcion": "Ubicar la bocatoma activa del hormiguero y tratar solo ese punto; el control disperso en el lote es ineficaz y contamina innecesariamente.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera de pastizales",
+      "patologia_cientifico": "Atta capiguara",
+      "pais_iso2": "BR",
+      "tipo": "biologico",
+      "nombre_corto": "Hongos entomopatógenos en cebos",
+      "descripcion": "Cebos con Beauveria bassiana o Metarhizium anisopliae colocados en los caminos activos, que las obreras transportan al jardín de hongos.",
+      "sostenibilidad": "alta",
+      "fuente": "EMBRAPA"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera de pastizales",
+      "patologia_cientifico": "Atta capiguara",
+      "pais_iso2": "PY",
+      "tipo": "cultural",
+      "nombre_corto": "Localización y control focalizado del hormiguero",
+      "descripcion": "Ubicar la bocatoma activa del hormiguero y tratar solo ese punto; el control disperso en el lote es ineficaz y contamina innecesariamente.",
+      "sostenibilidad": "alta",
+      "fuente": "SENAVE"
+    },
+    {
+      "patologia_nombre": "Hormiga arriera de pastizales",
+      "patologia_cientifico": "Atta capiguara",
+      "pais_iso2": "PY",
+      "tipo": "biologico",
+      "nombre_corto": "Hongos entomopatógenos en cebos",
+      "descripcion": "Cebos con Beauveria bassiana o Metarhizium anisopliae colocados en los caminos activos, que las obreras transportan al jardín de hongos.",
+      "sostenibilidad": "alta",
+      "fuente": "SENAVE"
+    }
+  ],
+  "aviso": "Referencia agronómica orientativa. Verifique siempre el registro vigente del producto, la dosis y el período de carencia ante la autoridad sanitaria de su país antes de aplicar. Las prácticas culturales y biológicas son de primera elección."
+}
