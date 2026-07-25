@@ -812,6 +812,11 @@ class SyncService {
           'alt_m': r.altM,
           'finalizado_fecha': _fmtDateOrNull(r.finalizadoFecha),
           'notas': r.notas,
+          'tipo_cultivo': r.tipoCultivo,
+          'cosecha1_dias': r.cosecha1Dias,
+          'cosecha2_dias': r.cosecha2Dias,
+          'periodicidad_cosecha_dias': r.periodicidadCosechaDias,
+          'esperanza_vida_dias': r.esperanzaVidaDias,
           'updated_at': r.updatedAt.toUtc().toIso8601String(),
           'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
         },
@@ -1867,6 +1872,13 @@ class SyncService {
       altM: Value((row['alt_m'] as num?)?.toDouble()),
       finalizadoFecha: Value(_parseDateOrNull(row['finalizado_fecha'])),
       notas: Value(row['notas'] as String?),
+      tipoCultivo: Value(
+          (row['tipo_cultivo'] as String?) ?? 'ciclo_unico'),
+      cosecha1Dias: Value(row['cosecha1_dias'] as int?),
+      cosecha2Dias: Value(row['cosecha2_dias'] as int?),
+      periodicidadCosechaDias:
+          Value(row['periodicidad_cosecha_dias'] as int?),
+      esperanzaVidaDias: Value(row['esperanza_vida_dias'] as int?),
       updatedAt: Value(updatedRemote),
       deletedAt: Value(_parseDateOrNull(row['deleted_at'])),
     );

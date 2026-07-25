@@ -12,6 +12,7 @@ import '../../state/data_state.dart';
 import '../pathologies/patologia_activa_card.dart';
 import '../pathologies/reportar_patologia_modal.dart';
 import 'crops_list_screen.dart' show showRegistrarTareaModal;
+import 'cultivo_info_widgets.dart';
 
 class CropDetailScreen extends ConsumerWidget {
   const CropDetailScreen({super.key, required this.cultivoId});
@@ -47,6 +48,7 @@ class CropDetailScreen extends ConsumerWidget {
         .toList()
       ..sort((a, b) => b.fecha.compareTo(a.fecha));
     final estadoAsync = ref.watch(estadoCultivoProvider(cultivoId));
+    final eventos = ref.watch(eventosCultivoProvider(cultivoId));
 
     // Cálculos consolidados
     final totalHH = tareas.fold<double>(0, (s, t) => s + t.hh);
@@ -112,6 +114,68 @@ class CropDetailScreen extends ConsumerWidget {
               ),
             ),
           ),
+          // ============ Tipo y periodos ============
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    const Text('Tipo y periodos',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 8),
+                    TipoCultivoChip(cultivo: cul),
+                  ]),
+                  const SizedBox(height: 10),
+                  PeriodosConfiguradosList(cultivo: cul),
+                  if (cul.lineasPeriodosConfigurados.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Contados desde la fecha base fenológica '
+                        '(siembra o trasplante).',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context).hintColor),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          // ============ Cronograma ============
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    const Expanded(
+                      child: Text('Cronograma',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                    Text('${eventos.length} evento(s)',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).hintColor)),
+                  ]),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Las fechas se ajustan al registrar tareas con fecha '
+                    'distinta a la programada.',
+                    style: TextStyle(
+                        fontSize: 11, color: Theme.of(context).hintColor),
+                  ),
+                  const Divider(),
+                  CronogramaCultivoList(eventos: eventos),
+                ],
+              ),
+            ),
+          ),
           // ============ Consolidado ============
           Card(
             child: Padding(
@@ -138,9 +202,9 @@ class CropDetailScreen extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                      'Recalcula qué eventos del cronograma están ejecutados '
-                      'según las tareas registradas. Úsalo si un evento aparece '
-                      'como vencido a pesar de haber registrado la tarea.',
+                      'Reconstruye el cronograma desde la configuración del '
+                      'cultivo y reaplica las tareas, ajustando fechas según '
+                      'las fechas reales de ejecución.',
                       style: TextStyle(
                           fontSize: 11, color: Theme.of(context).hintColor)),
                 ],

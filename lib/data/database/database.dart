@@ -103,6 +103,16 @@ class Plantas extends Table {
   IntColumn get tiempoCosechaMinDias => integer().nullable()();
   IntColumn get tiempoCosechaMaxDias => integer().nullable()();
 
+  /// Tipo de cultivo por defecto al crear un cultivo: `ciclo_unico` | `perenne`.
+  TextColumn get tipoCultivoDefault =>
+      text().withDefault(const Constant('ciclo_unico'))();
+  /// Periodicidad entre cosechas (días) para variedad perenne.
+  IntColumn get periodicidadCosechaDias => integer().nullable()();
+  /// Esperanza de vida hasta renovación (días) para variedad perenne.
+  IntColumn get esperanzaVidaDias => integer().nullable()();
+  /// Ciclos de abono JSON: [{tipo, dias}, …] desde fecha base fenológica.
+  TextColumn get ciclosAbonoJson => text().nullable()();
+
   IntColumn get diasAbono1 => integer().nullable()();
   TextColumn get tipoAbono1 => text().nullable()();
   RealColumn get dosisAbono1KgHa => real().nullable()();
@@ -357,6 +367,19 @@ class Cultivos extends Table {
   TextColumn get estadoManual => text().nullable()(); // override manual
   DateTimeColumn get finalizadoFecha => dateTime().nullable()();
   TextColumn get notas => text().nullable()();
+
+  /// Tipo de ciclo productivo: `ciclo_unico` (anual/temporal) o `perenne`.
+  TextColumn get tipoCultivo =>
+      text().withDefault(const Constant('ciclo_unico'))();
+  /// Días desde la fecha base fenológica hasta Cosecha 1 (ciclo único)
+  /// o hasta la primera cosecha (cultivo perenne).
+  IntColumn get cosecha1Dias => integer().nullable()();
+  /// Días desde la fecha base fenológica hasta Cosecha 2 (ciclo único).
+  IntColumn get cosecha2Dias => integer().nullable()();
+  /// Periodicidad entre cosechas en días (cultivo perenne).
+  IntColumn get periodicidadCosechaDias => integer().nullable()();
+  /// Esperanza de vida / ciclo hasta renovación en días (cultivo perenne).
+  IntColumn get esperanzaVidaDias => integer().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -682,7 +705,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -768,6 +791,23 @@ class AppDatabase extends _$AppDatabase {
           if (from < 14) {
             // v14: cola persistente de operaciones remotas (Fase B5).
             await m.createTable(syncOps);
+          }
+          if (from < 15) {
+            // v15: tipo de cultivo (ciclo único vs perenne) y parámetros
+            // de cosecha / renovación.
+            await m.addColumn(cultivos, cultivos.tipoCultivo);
+            await m.addColumn(cultivos, cultivos.cosecha1Dias);
+            await m.addColumn(cultivos, cultivos.cosecha2Dias);
+            await m.addColumn(cultivos, cultivos.periodicidadCosechaDias);
+            await m.addColumn(cultivos, cultivos.esperanzaVidaDias);
+          }
+          if (from < 16) {
+            // v16: tipo de cultivo y periodos en catálogo de plantas +
+            // ciclos de abono dinámicos.
+            await m.addColumn(plantas, plantas.tipoCultivoDefault);
+            await m.addColumn(plantas, plantas.periodicidadCosechaDias);
+            await m.addColumn(plantas, plantas.esperanzaVidaDias);
+            await m.addColumn(plantas, plantas.ciclosAbonoJson);
           }
         },
       );

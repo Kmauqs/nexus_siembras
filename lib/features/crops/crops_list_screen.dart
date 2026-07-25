@@ -153,6 +153,12 @@ class _CultivoTile extends ConsumerWidget {
                         style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).hintColor)),
+                    const SizedBox(height: 2),
+                    Text(c.resumenPeriodosCorto,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(context).hintColor,
+                            fontStyle: FontStyle.italic)),
                     if (finalizado && c.finalizadoFecha != null)
                       Text('🏁 ${c.finalizadoFecha}',
                           style: const TextStyle(
@@ -306,9 +312,11 @@ void showRegistrarTareaModal({
 }
 
 
-const _actividadesBase = [
-  'Riego', 'Abono1', 'Abono2', 'Desmalezada', 'Fumigación', 'Cosecha1', 'Cosecha2'
+const _actividadesBaseComun = [
+  'Riego', 'Abono1', 'Abono2', 'Desmalezada', 'Fumigación',
 ];
+const _actividadesCicloUnico = ['Cosecha1', 'Cosecha2'];
+const _actividadesPerenne = ['Cosecha periódica', 'Renovación'];
 const _actividadesGerminador = ['Semillero', 'Trasplante'];
 
 class _RegistrarTareaModal extends ConsumerStatefulWidget {
@@ -332,9 +340,25 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
   DateTime _fecha = DateTime.now();
   final _hh = TextEditingController(text: '1');
   final _notas = TextEditingController();
+  final _periodicidadCosecha = TextEditingController();
   String? _act1;
   String? _act2;
   final List<_InsumoRow> _insumos = [];
+
+  bool _periodicidadInicializada = false;
+
+  @override
+  void dispose() {
+    _hh.dispose();
+    _notas.dispose();
+    _periodicidadCosecha.dispose();
+    super.dispose();
+  }
+
+  bool _requierePeriodicidad(String? act) => act == 'Cosecha periódica';
+
+  bool get _muestraPeriodicidad =>
+      _requierePeriodicidad(_act1) || _requierePeriodicidad(_act2);
 
   @override
   Widget build(BuildContext context) {
@@ -347,8 +371,14 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
     final pl = plantas.firstWhere((p) => p.id == cul.plantaId,
         orElse: () => plantas.first);
     final esGerm = pl.metodoSiembra == 'germinador';
+    final esPerenne = cul.esPerenne;
+    if (!_periodicidadInicializada && cul.periodicidadCosechaDias != null) {
+      _periodicidadInicializada = true;
+      _periodicidadCosecha.text = '${cul.periodicidadCosechaDias}';
+    }
     final opts = [
-      ..._actividadesBase,
+      ..._actividadesBaseComun,
+      if (esPerenne) ..._actividadesPerenne else ..._actividadesCicloUnico,
       if (esGerm) ..._actividadesGerminador,
     ];
 
@@ -423,6 +453,19 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
               ),
             ),
           ]),
+          if (_muestraPeriodicidad) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _periodicidadCosecha,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Periodicidad de cosecha (días)',
+                helperText:
+                    'Se programan cosechas periódicas hasta el fin del ciclo de vida',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           // ============ INSUMOS ============
           const Text('Insumos usados',
@@ -549,6 +592,15 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
           const SnackBar(content: Text('Selecciona al menos una actividad')));
       return;
     }
+    if (_muestraPeriodicidad) {
+      final p = int.tryParse(_periodicidadCosecha.text.trim());
+      if (p == null || p <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Indica la periodicidad de cosecha (días) para «Cosecha periódica»')));
+        return;
+      }
+    }
     final hh = double.tryParse(_hh.text) ?? 0;
     final mut = ref.read(dataMutationsProvider);
     // Convierte cada insumo a unidad base (persistimos en base para poder restaurar
@@ -568,6 +620,9 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
       actividades: acts,
       insumos: insumosBase,
       notas: _notas.text.trim().isEmpty ? null : _notas.text.trim(),
+      periodicidadCosechaDias: _muestraPeriodicidad
+          ? int.tryParse(_periodicidadCosecha.text.trim())
+          : null,
     );
     // Descuenta cada insumo del inventario (en unidad base ya convertida)
     for (final ins in insumosBase) {

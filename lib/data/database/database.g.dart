@@ -2315,6 +2315,32 @@ class $PlantasTable extends Plantas with TableInfo<$PlantasTable, Planta> {
   late final GeneratedColumn<int> tiempoCosechaMaxDias = GeneratedColumn<int>(
       'tiempo_cosecha_max_dias', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _tipoCultivoDefaultMeta =
+      const VerificationMeta('tipoCultivoDefault');
+  @override
+  late final GeneratedColumn<String> tipoCultivoDefault =
+      GeneratedColumn<String>('tipo_cultivo_default', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant('ciclo_unico'));
+  static const VerificationMeta _periodicidadCosechaDiasMeta =
+      const VerificationMeta('periodicidadCosechaDias');
+  @override
+  late final GeneratedColumn<int> periodicidadCosechaDias =
+      GeneratedColumn<int>('periodicidad_cosecha_dias', aliasedName, true,
+          type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _esperanzaVidaDiasMeta =
+      const VerificationMeta('esperanzaVidaDias');
+  @override
+  late final GeneratedColumn<int> esperanzaVidaDias = GeneratedColumn<int>(
+      'esperanza_vida_dias', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _ciclosAbonoJsonMeta =
+      const VerificationMeta('ciclosAbonoJson');
+  @override
+  late final GeneratedColumn<String> ciclosAbonoJson = GeneratedColumn<String>(
+      'ciclos_abono_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _diasAbono1Meta =
       const VerificationMeta('diasAbono1');
   @override
@@ -2499,6 +2525,10 @@ class $PlantasTable extends Plantas with TableInfo<$PlantasTable, Planta> {
         ciclo,
         tiempoCosechaMinDias,
         tiempoCosechaMaxDias,
+        tipoCultivoDefault,
+        periodicidadCosechaDias,
+        esperanzaVidaDias,
+        ciclosAbonoJson,
         diasAbono1,
         tipoAbono1,
         dosisAbono1KgHa,
@@ -2577,6 +2607,31 @@ class $PlantasTable extends Plantas with TableInfo<$PlantasTable, Planta> {
           _tiempoCosechaMaxDiasMeta,
           tiempoCosechaMaxDias.isAcceptableOrUnknown(
               data['tiempo_cosecha_max_dias']!, _tiempoCosechaMaxDiasMeta));
+    }
+    if (data.containsKey('tipo_cultivo_default')) {
+      context.handle(
+          _tipoCultivoDefaultMeta,
+          tipoCultivoDefault.isAcceptableOrUnknown(
+              data['tipo_cultivo_default']!, _tipoCultivoDefaultMeta));
+    }
+    if (data.containsKey('periodicidad_cosecha_dias')) {
+      context.handle(
+          _periodicidadCosechaDiasMeta,
+          periodicidadCosechaDias.isAcceptableOrUnknown(
+              data['periodicidad_cosecha_dias']!,
+              _periodicidadCosechaDiasMeta));
+    }
+    if (data.containsKey('esperanza_vida_dias')) {
+      context.handle(
+          _esperanzaVidaDiasMeta,
+          esperanzaVidaDias.isAcceptableOrUnknown(
+              data['esperanza_vida_dias']!, _esperanzaVidaDiasMeta));
+    }
+    if (data.containsKey('ciclos_abono_json')) {
+      context.handle(
+          _ciclosAbonoJsonMeta,
+          ciclosAbonoJson.isAcceptableOrUnknown(
+              data['ciclos_abono_json']!, _ciclosAbonoJsonMeta));
     }
     if (data.containsKey('dias_abono1')) {
       context.handle(
@@ -2762,6 +2817,15 @@ class $PlantasTable extends Plantas with TableInfo<$PlantasTable, Planta> {
           DriftSqlType.int, data['${effectivePrefix}tiempo_cosecha_min_dias']),
       tiempoCosechaMaxDias: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}tiempo_cosecha_max_dias']),
+      tipoCultivoDefault: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}tipo_cultivo_default'])!,
+      periodicidadCosechaDias: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}periodicidad_cosecha_dias']),
+      esperanzaVidaDias: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}esperanza_vida_dias']),
+      ciclosAbonoJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}ciclos_abono_json']),
       diasAbono1: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}dias_abono1']),
       tipoAbono1: attachedDatabase.typeMapping
@@ -2840,6 +2904,18 @@ class Planta extends DataClass implements Insertable<Planta> {
   final String? ciclo;
   final int? tiempoCosechaMinDias;
   final int? tiempoCosechaMaxDias;
+
+  /// Tipo de cultivo por defecto al crear un cultivo: `ciclo_unico` | `perenne`.
+  final String tipoCultivoDefault;
+
+  /// Periodicidad entre cosechas (días) para variedad perenne.
+  final int? periodicidadCosechaDias;
+
+  /// Esperanza de vida hasta renovación (días) para variedad perenne.
+  final int? esperanzaVidaDias;
+
+  /// Ciclos de abono JSON: [{tipo, dias}, …] desde fecha base fenológica.
+  final String? ciclosAbonoJson;
   final int? diasAbono1;
   final String? tipoAbono1;
   final double? dosisAbono1KgHa;
@@ -2878,6 +2954,10 @@ class Planta extends DataClass implements Insertable<Planta> {
       this.ciclo,
       this.tiempoCosechaMinDias,
       this.tiempoCosechaMaxDias,
+      required this.tipoCultivoDefault,
+      this.periodicidadCosechaDias,
+      this.esperanzaVidaDias,
+      this.ciclosAbonoJson,
       this.diasAbono1,
       this.tipoAbono1,
       this.dosisAbono1KgHa,
@@ -2929,6 +3009,16 @@ class Planta extends DataClass implements Insertable<Planta> {
     }
     if (!nullToAbsent || tiempoCosechaMaxDias != null) {
       map['tiempo_cosecha_max_dias'] = Variable<int>(tiempoCosechaMaxDias);
+    }
+    map['tipo_cultivo_default'] = Variable<String>(tipoCultivoDefault);
+    if (!nullToAbsent || periodicidadCosechaDias != null) {
+      map['periodicidad_cosecha_dias'] = Variable<int>(periodicidadCosechaDias);
+    }
+    if (!nullToAbsent || esperanzaVidaDias != null) {
+      map['esperanza_vida_dias'] = Variable<int>(esperanzaVidaDias);
+    }
+    if (!nullToAbsent || ciclosAbonoJson != null) {
+      map['ciclos_abono_json'] = Variable<String>(ciclosAbonoJson);
     }
     if (!nullToAbsent || diasAbono1 != null) {
       map['dias_abono1'] = Variable<int>(diasAbono1);
@@ -3038,6 +3128,16 @@ class Planta extends DataClass implements Insertable<Planta> {
       tiempoCosechaMaxDias: tiempoCosechaMaxDias == null && nullToAbsent
           ? const Value.absent()
           : Value(tiempoCosechaMaxDias),
+      tipoCultivoDefault: Value(tipoCultivoDefault),
+      periodicidadCosechaDias: periodicidadCosechaDias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(periodicidadCosechaDias),
+      esperanzaVidaDias: esperanzaVidaDias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(esperanzaVidaDias),
+      ciclosAbonoJson: ciclosAbonoJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ciclosAbonoJson),
       diasAbono1: diasAbono1 == null && nullToAbsent
           ? const Value.absent()
           : Value(diasAbono1),
@@ -3134,6 +3234,12 @@ class Planta extends DataClass implements Insertable<Planta> {
           serializer.fromJson<int?>(json['tiempoCosechaMinDias']),
       tiempoCosechaMaxDias:
           serializer.fromJson<int?>(json['tiempoCosechaMaxDias']),
+      tipoCultivoDefault:
+          serializer.fromJson<String>(json['tipoCultivoDefault']),
+      periodicidadCosechaDias:
+          serializer.fromJson<int?>(json['periodicidadCosechaDias']),
+      esperanzaVidaDias: serializer.fromJson<int?>(json['esperanzaVidaDias']),
+      ciclosAbonoJson: serializer.fromJson<String?>(json['ciclosAbonoJson']),
       diasAbono1: serializer.fromJson<int?>(json['diasAbono1']),
       tipoAbono1: serializer.fromJson<String?>(json['tipoAbono1']),
       dosisAbono1KgHa: serializer.fromJson<double?>(json['dosisAbono1KgHa']),
@@ -3182,6 +3288,11 @@ class Planta extends DataClass implements Insertable<Planta> {
       'ciclo': serializer.toJson<String?>(ciclo),
       'tiempoCosechaMinDias': serializer.toJson<int?>(tiempoCosechaMinDias),
       'tiempoCosechaMaxDias': serializer.toJson<int?>(tiempoCosechaMaxDias),
+      'tipoCultivoDefault': serializer.toJson<String>(tipoCultivoDefault),
+      'periodicidadCosechaDias':
+          serializer.toJson<int?>(periodicidadCosechaDias),
+      'esperanzaVidaDias': serializer.toJson<int?>(esperanzaVidaDias),
+      'ciclosAbonoJson': serializer.toJson<String?>(ciclosAbonoJson),
       'diasAbono1': serializer.toJson<int?>(diasAbono1),
       'tipoAbono1': serializer.toJson<String?>(tipoAbono1),
       'dosisAbono1KgHa': serializer.toJson<double?>(dosisAbono1KgHa),
@@ -3225,6 +3336,10 @@ class Planta extends DataClass implements Insertable<Planta> {
           Value<String?> ciclo = const Value.absent(),
           Value<int?> tiempoCosechaMinDias = const Value.absent(),
           Value<int?> tiempoCosechaMaxDias = const Value.absent(),
+          String? tipoCultivoDefault,
+          Value<int?> periodicidadCosechaDias = const Value.absent(),
+          Value<int?> esperanzaVidaDias = const Value.absent(),
+          Value<String?> ciclosAbonoJson = const Value.absent(),
           Value<int?> diasAbono1 = const Value.absent(),
           Value<String?> tipoAbono1 = const Value.absent(),
           Value<double?> dosisAbono1KgHa = const Value.absent(),
@@ -3267,6 +3382,16 @@ class Planta extends DataClass implements Insertable<Planta> {
         tiempoCosechaMaxDias: tiempoCosechaMaxDias.present
             ? tiempoCosechaMaxDias.value
             : this.tiempoCosechaMaxDias,
+        tipoCultivoDefault: tipoCultivoDefault ?? this.tipoCultivoDefault,
+        periodicidadCosechaDias: periodicidadCosechaDias.present
+            ? periodicidadCosechaDias.value
+            : this.periodicidadCosechaDias,
+        esperanzaVidaDias: esperanzaVidaDias.present
+            ? esperanzaVidaDias.value
+            : this.esperanzaVidaDias,
+        ciclosAbonoJson: ciclosAbonoJson.present
+            ? ciclosAbonoJson.value
+            : this.ciclosAbonoJson,
         diasAbono1: diasAbono1.present ? diasAbono1.value : this.diasAbono1,
         tipoAbono1: tipoAbono1.present ? tipoAbono1.value : this.tipoAbono1,
         dosisAbono1KgHa: dosisAbono1KgHa.present
@@ -3331,6 +3456,18 @@ class Planta extends DataClass implements Insertable<Planta> {
       tiempoCosechaMaxDias: data.tiempoCosechaMaxDias.present
           ? data.tiempoCosechaMaxDias.value
           : this.tiempoCosechaMaxDias,
+      tipoCultivoDefault: data.tipoCultivoDefault.present
+          ? data.tipoCultivoDefault.value
+          : this.tipoCultivoDefault,
+      periodicidadCosechaDias: data.periodicidadCosechaDias.present
+          ? data.periodicidadCosechaDias.value
+          : this.periodicidadCosechaDias,
+      esperanzaVidaDias: data.esperanzaVidaDias.present
+          ? data.esperanzaVidaDias.value
+          : this.esperanzaVidaDias,
+      ciclosAbonoJson: data.ciclosAbonoJson.present
+          ? data.ciclosAbonoJson.value
+          : this.ciclosAbonoJson,
       diasAbono1:
           data.diasAbono1.present ? data.diasAbono1.value : this.diasAbono1,
       tipoAbono1:
@@ -3404,6 +3541,10 @@ class Planta extends DataClass implements Insertable<Planta> {
           ..write('ciclo: $ciclo, ')
           ..write('tiempoCosechaMinDias: $tiempoCosechaMinDias, ')
           ..write('tiempoCosechaMaxDias: $tiempoCosechaMaxDias, ')
+          ..write('tipoCultivoDefault: $tipoCultivoDefault, ')
+          ..write('periodicidadCosechaDias: $periodicidadCosechaDias, ')
+          ..write('esperanzaVidaDias: $esperanzaVidaDias, ')
+          ..write('ciclosAbonoJson: $ciclosAbonoJson, ')
           ..write('diasAbono1: $diasAbono1, ')
           ..write('tipoAbono1: $tipoAbono1, ')
           ..write('dosisAbono1KgHa: $dosisAbono1KgHa, ')
@@ -3447,6 +3588,10 @@ class Planta extends DataClass implements Insertable<Planta> {
         ciclo,
         tiempoCosechaMinDias,
         tiempoCosechaMaxDias,
+        tipoCultivoDefault,
+        periodicidadCosechaDias,
+        esperanzaVidaDias,
+        ciclosAbonoJson,
         diasAbono1,
         tipoAbono1,
         dosisAbono1KgHa,
@@ -3489,6 +3634,10 @@ class Planta extends DataClass implements Insertable<Planta> {
           other.ciclo == this.ciclo &&
           other.tiempoCosechaMinDias == this.tiempoCosechaMinDias &&
           other.tiempoCosechaMaxDias == this.tiempoCosechaMaxDias &&
+          other.tipoCultivoDefault == this.tipoCultivoDefault &&
+          other.periodicidadCosechaDias == this.periodicidadCosechaDias &&
+          other.esperanzaVidaDias == this.esperanzaVidaDias &&
+          other.ciclosAbonoJson == this.ciclosAbonoJson &&
           other.diasAbono1 == this.diasAbono1 &&
           other.tipoAbono1 == this.tipoAbono1 &&
           other.dosisAbono1KgHa == this.dosisAbono1KgHa &&
@@ -3529,6 +3678,10 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
   final Value<String?> ciclo;
   final Value<int?> tiempoCosechaMinDias;
   final Value<int?> tiempoCosechaMaxDias;
+  final Value<String> tipoCultivoDefault;
+  final Value<int?> periodicidadCosechaDias;
+  final Value<int?> esperanzaVidaDias;
+  final Value<String?> ciclosAbonoJson;
   final Value<int?> diasAbono1;
   final Value<String?> tipoAbono1;
   final Value<double?> dosisAbono1KgHa;
@@ -3567,6 +3720,10 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
     this.ciclo = const Value.absent(),
     this.tiempoCosechaMinDias = const Value.absent(),
     this.tiempoCosechaMaxDias = const Value.absent(),
+    this.tipoCultivoDefault = const Value.absent(),
+    this.periodicidadCosechaDias = const Value.absent(),
+    this.esperanzaVidaDias = const Value.absent(),
+    this.ciclosAbonoJson = const Value.absent(),
     this.diasAbono1 = const Value.absent(),
     this.tipoAbono1 = const Value.absent(),
     this.dosisAbono1KgHa = const Value.absent(),
@@ -3606,6 +3763,10 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
     this.ciclo = const Value.absent(),
     this.tiempoCosechaMinDias = const Value.absent(),
     this.tiempoCosechaMaxDias = const Value.absent(),
+    this.tipoCultivoDefault = const Value.absent(),
+    this.periodicidadCosechaDias = const Value.absent(),
+    this.esperanzaVidaDias = const Value.absent(),
+    this.ciclosAbonoJson = const Value.absent(),
     this.diasAbono1 = const Value.absent(),
     this.tipoAbono1 = const Value.absent(),
     this.dosisAbono1KgHa = const Value.absent(),
@@ -3645,6 +3806,10 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
     Expression<String>? ciclo,
     Expression<int>? tiempoCosechaMinDias,
     Expression<int>? tiempoCosechaMaxDias,
+    Expression<String>? tipoCultivoDefault,
+    Expression<int>? periodicidadCosechaDias,
+    Expression<int>? esperanzaVidaDias,
+    Expression<String>? ciclosAbonoJson,
     Expression<int>? diasAbono1,
     Expression<String>? tipoAbono1,
     Expression<double>? dosisAbono1KgHa,
@@ -3686,6 +3851,12 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
         'tiempo_cosecha_min_dias': tiempoCosechaMinDias,
       if (tiempoCosechaMaxDias != null)
         'tiempo_cosecha_max_dias': tiempoCosechaMaxDias,
+      if (tipoCultivoDefault != null)
+        'tipo_cultivo_default': tipoCultivoDefault,
+      if (periodicidadCosechaDias != null)
+        'periodicidad_cosecha_dias': periodicidadCosechaDias,
+      if (esperanzaVidaDias != null) 'esperanza_vida_dias': esperanzaVidaDias,
+      if (ciclosAbonoJson != null) 'ciclos_abono_json': ciclosAbonoJson,
       if (diasAbono1 != null) 'dias_abono1': diasAbono1,
       if (tipoAbono1 != null) 'tipo_abono1': tipoAbono1,
       if (dosisAbono1KgHa != null) 'dosis_abono1_kg_ha': dosisAbono1KgHa,
@@ -3732,6 +3903,10 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
       Value<String?>? ciclo,
       Value<int?>? tiempoCosechaMinDias,
       Value<int?>? tiempoCosechaMaxDias,
+      Value<String>? tipoCultivoDefault,
+      Value<int?>? periodicidadCosechaDias,
+      Value<int?>? esperanzaVidaDias,
+      Value<String?>? ciclosAbonoJson,
       Value<int?>? diasAbono1,
       Value<String?>? tipoAbono1,
       Value<double?>? dosisAbono1KgHa,
@@ -3770,6 +3945,11 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
       ciclo: ciclo ?? this.ciclo,
       tiempoCosechaMinDias: tiempoCosechaMinDias ?? this.tiempoCosechaMinDias,
       tiempoCosechaMaxDias: tiempoCosechaMaxDias ?? this.tiempoCosechaMaxDias,
+      tipoCultivoDefault: tipoCultivoDefault ?? this.tipoCultivoDefault,
+      periodicidadCosechaDias:
+          periodicidadCosechaDias ?? this.periodicidadCosechaDias,
+      esperanzaVidaDias: esperanzaVidaDias ?? this.esperanzaVidaDias,
+      ciclosAbonoJson: ciclosAbonoJson ?? this.ciclosAbonoJson,
       diasAbono1: diasAbono1 ?? this.diasAbono1,
       tipoAbono1: tipoAbono1 ?? this.tipoAbono1,
       dosisAbono1KgHa: dosisAbono1KgHa ?? this.dosisAbono1KgHa,
@@ -3832,6 +4012,19 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
     if (tiempoCosechaMaxDias.present) {
       map['tiempo_cosecha_max_dias'] =
           Variable<int>(tiempoCosechaMaxDias.value);
+    }
+    if (tipoCultivoDefault.present) {
+      map['tipo_cultivo_default'] = Variable<String>(tipoCultivoDefault.value);
+    }
+    if (periodicidadCosechaDias.present) {
+      map['periodicidad_cosecha_dias'] =
+          Variable<int>(periodicidadCosechaDias.value);
+    }
+    if (esperanzaVidaDias.present) {
+      map['esperanza_vida_dias'] = Variable<int>(esperanzaVidaDias.value);
+    }
+    if (ciclosAbonoJson.present) {
+      map['ciclos_abono_json'] = Variable<String>(ciclosAbonoJson.value);
     }
     if (diasAbono1.present) {
       map['dias_abono1'] = Variable<int>(diasAbono1.value);
@@ -3936,6 +4129,10 @@ class PlantasCompanion extends UpdateCompanion<Planta> {
           ..write('ciclo: $ciclo, ')
           ..write('tiempoCosechaMinDias: $tiempoCosechaMinDias, ')
           ..write('tiempoCosechaMaxDias: $tiempoCosechaMaxDias, ')
+          ..write('tipoCultivoDefault: $tipoCultivoDefault, ')
+          ..write('periodicidadCosechaDias: $periodicidadCosechaDias, ')
+          ..write('esperanzaVidaDias: $esperanzaVidaDias, ')
+          ..write('ciclosAbonoJson: $ciclosAbonoJson, ')
           ..write('diasAbono1: $diasAbono1, ')
           ..write('tipoAbono1: $tipoAbono1, ')
           ..write('dosisAbono1KgHa: $dosisAbono1KgHa, ')
@@ -8852,6 +9049,38 @@ class $CultivosTable extends Cultivos with TableInfo<$CultivosTable, Cultivo> {
   late final GeneratedColumn<String> notas = GeneratedColumn<String>(
       'notas', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _tipoCultivoMeta =
+      const VerificationMeta('tipoCultivo');
+  @override
+  late final GeneratedColumn<String> tipoCultivo = GeneratedColumn<String>(
+      'tipo_cultivo', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('ciclo_unico'));
+  static const VerificationMeta _cosecha1DiasMeta =
+      const VerificationMeta('cosecha1Dias');
+  @override
+  late final GeneratedColumn<int> cosecha1Dias = GeneratedColumn<int>(
+      'cosecha1_dias', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _cosecha2DiasMeta =
+      const VerificationMeta('cosecha2Dias');
+  @override
+  late final GeneratedColumn<int> cosecha2Dias = GeneratedColumn<int>(
+      'cosecha2_dias', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _periodicidadCosechaDiasMeta =
+      const VerificationMeta('periodicidadCosechaDias');
+  @override
+  late final GeneratedColumn<int> periodicidadCosechaDias =
+      GeneratedColumn<int>('periodicidad_cosecha_dias', aliasedName, true,
+          type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _esperanzaVidaDiasMeta =
+      const VerificationMeta('esperanzaVidaDias');
+  @override
+  late final GeneratedColumn<int> esperanzaVidaDias = GeneratedColumn<int>(
+      'esperanza_vida_dias', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -8900,6 +9129,11 @@ class $CultivosTable extends Cultivos with TableInfo<$CultivosTable, Cultivo> {
         estadoManual,
         finalizadoFecha,
         notas,
+        tipoCultivo,
+        cosecha1Dias,
+        cosecha2Dias,
+        periodicidadCosechaDias,
+        esperanzaVidaDias,
         createdAt,
         updatedAt,
         deletedAt
@@ -9043,6 +9277,37 @@ class $CultivosTable extends Cultivos with TableInfo<$CultivosTable, Cultivo> {
       context.handle(
           _notasMeta, notas.isAcceptableOrUnknown(data['notas']!, _notasMeta));
     }
+    if (data.containsKey('tipo_cultivo')) {
+      context.handle(
+          _tipoCultivoMeta,
+          tipoCultivo.isAcceptableOrUnknown(
+              data['tipo_cultivo']!, _tipoCultivoMeta));
+    }
+    if (data.containsKey('cosecha1_dias')) {
+      context.handle(
+          _cosecha1DiasMeta,
+          cosecha1Dias.isAcceptableOrUnknown(
+              data['cosecha1_dias']!, _cosecha1DiasMeta));
+    }
+    if (data.containsKey('cosecha2_dias')) {
+      context.handle(
+          _cosecha2DiasMeta,
+          cosecha2Dias.isAcceptableOrUnknown(
+              data['cosecha2_dias']!, _cosecha2DiasMeta));
+    }
+    if (data.containsKey('periodicidad_cosecha_dias')) {
+      context.handle(
+          _periodicidadCosechaDiasMeta,
+          periodicidadCosechaDias.isAcceptableOrUnknown(
+              data['periodicidad_cosecha_dias']!,
+              _periodicidadCosechaDiasMeta));
+    }
+    if (data.containsKey('esperanza_vida_dias')) {
+      context.handle(
+          _esperanzaVidaDiasMeta,
+          esperanzaVidaDias.isAcceptableOrUnknown(
+              data['esperanza_vida_dias']!, _esperanzaVidaDiasMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -9116,6 +9381,17 @@ class $CultivosTable extends Cultivos with TableInfo<$CultivosTable, Cultivo> {
           DriftSqlType.dateTime, data['${effectivePrefix}finalizado_fecha']),
       notas: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notas']),
+      tipoCultivo: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tipo_cultivo'])!,
+      cosecha1Dias: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cosecha1_dias']),
+      cosecha2Dias: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cosecha2_dias']),
+      periodicidadCosechaDias: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}periodicidad_cosecha_dias']),
+      esperanzaVidaDias: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}esperanza_vida_dias']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -9158,6 +9434,22 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
   final String? estadoManual;
   final DateTime? finalizadoFecha;
   final String? notas;
+
+  /// Tipo de ciclo productivo: `ciclo_unico` (anual/temporal) o `perenne`.
+  final String tipoCultivo;
+
+  /// Días desde la fecha base fenológica hasta Cosecha 1 (ciclo único)
+  /// o hasta la primera cosecha (cultivo perenne).
+  final int? cosecha1Dias;
+
+  /// Días desde la fecha base fenológica hasta Cosecha 2 (ciclo único).
+  final int? cosecha2Dias;
+
+  /// Periodicidad entre cosechas en días (cultivo perenne).
+  final int? periodicidadCosechaDias;
+
+  /// Esperanza de vida / ciclo hasta renovación en días (cultivo perenne).
+  final int? esperanzaVidaDias;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -9186,6 +9478,11 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
       this.estadoManual,
       this.finalizadoFecha,
       this.notas,
+      required this.tipoCultivo,
+      this.cosecha1Dias,
+      this.cosecha2Dias,
+      this.periodicidadCosechaDias,
+      this.esperanzaVidaDias,
       required this.createdAt,
       required this.updatedAt,
       this.deletedAt});
@@ -9257,6 +9554,19 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
     if (!nullToAbsent || notas != null) {
       map['notas'] = Variable<String>(notas);
     }
+    map['tipo_cultivo'] = Variable<String>(tipoCultivo);
+    if (!nullToAbsent || cosecha1Dias != null) {
+      map['cosecha1_dias'] = Variable<int>(cosecha1Dias);
+    }
+    if (!nullToAbsent || cosecha2Dias != null) {
+      map['cosecha2_dias'] = Variable<int>(cosecha2Dias);
+    }
+    if (!nullToAbsent || periodicidadCosechaDias != null) {
+      map['periodicidad_cosecha_dias'] = Variable<int>(periodicidadCosechaDias);
+    }
+    if (!nullToAbsent || esperanzaVidaDias != null) {
+      map['esperanza_vida_dias'] = Variable<int>(esperanzaVidaDias);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -9322,6 +9632,19 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
           : Value(finalizadoFecha),
       notas:
           notas == null && nullToAbsent ? const Value.absent() : Value(notas),
+      tipoCultivo: Value(tipoCultivo),
+      cosecha1Dias: cosecha1Dias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cosecha1Dias),
+      cosecha2Dias: cosecha2Dias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cosecha2Dias),
+      periodicidadCosechaDias: periodicidadCosechaDias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(periodicidadCosechaDias),
+      esperanzaVidaDias: esperanzaVidaDias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(esperanzaVidaDias),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -9363,6 +9686,12 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
       estadoManual: serializer.fromJson<String?>(json['estadoManual']),
       finalizadoFecha: serializer.fromJson<DateTime?>(json['finalizadoFecha']),
       notas: serializer.fromJson<String?>(json['notas']),
+      tipoCultivo: serializer.fromJson<String>(json['tipoCultivo']),
+      cosecha1Dias: serializer.fromJson<int?>(json['cosecha1Dias']),
+      cosecha2Dias: serializer.fromJson<int?>(json['cosecha2Dias']),
+      periodicidadCosechaDias:
+          serializer.fromJson<int?>(json['periodicidadCosechaDias']),
+      esperanzaVidaDias: serializer.fromJson<int?>(json['esperanzaVidaDias']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -9400,6 +9729,12 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
       'estadoManual': serializer.toJson<String?>(estadoManual),
       'finalizadoFecha': serializer.toJson<DateTime?>(finalizadoFecha),
       'notas': serializer.toJson<String?>(notas),
+      'tipoCultivo': serializer.toJson<String>(tipoCultivo),
+      'cosecha1Dias': serializer.toJson<int?>(cosecha1Dias),
+      'cosecha2Dias': serializer.toJson<int?>(cosecha2Dias),
+      'periodicidadCosechaDias':
+          serializer.toJson<int?>(periodicidadCosechaDias),
+      'esperanzaVidaDias': serializer.toJson<int?>(esperanzaVidaDias),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -9431,6 +9766,11 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
           Value<String?> estadoManual = const Value.absent(),
           Value<DateTime?> finalizadoFecha = const Value.absent(),
           Value<String?> notas = const Value.absent(),
+          String? tipoCultivo,
+          Value<int?> cosecha1Dias = const Value.absent(),
+          Value<int?> cosecha2Dias = const Value.absent(),
+          Value<int?> periodicidadCosechaDias = const Value.absent(),
+          Value<int?> esperanzaVidaDias = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           Value<DateTime?> deletedAt = const Value.absent()}) =>
@@ -9475,6 +9815,17 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
             ? finalizadoFecha.value
             : this.finalizadoFecha,
         notas: notas.present ? notas.value : this.notas,
+        tipoCultivo: tipoCultivo ?? this.tipoCultivo,
+        cosecha1Dias:
+            cosecha1Dias.present ? cosecha1Dias.value : this.cosecha1Dias,
+        cosecha2Dias:
+            cosecha2Dias.present ? cosecha2Dias.value : this.cosecha2Dias,
+        periodicidadCosechaDias: periodicidadCosechaDias.present
+            ? periodicidadCosechaDias.value
+            : this.periodicidadCosechaDias,
+        esperanzaVidaDias: esperanzaVidaDias.present
+            ? esperanzaVidaDias.value
+            : this.esperanzaVidaDias,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -9528,6 +9879,20 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
           ? data.finalizadoFecha.value
           : this.finalizadoFecha,
       notas: data.notas.present ? data.notas.value : this.notas,
+      tipoCultivo:
+          data.tipoCultivo.present ? data.tipoCultivo.value : this.tipoCultivo,
+      cosecha1Dias: data.cosecha1Dias.present
+          ? data.cosecha1Dias.value
+          : this.cosecha1Dias,
+      cosecha2Dias: data.cosecha2Dias.present
+          ? data.cosecha2Dias.value
+          : this.cosecha2Dias,
+      periodicidadCosechaDias: data.periodicidadCosechaDias.present
+          ? data.periodicidadCosechaDias.value
+          : this.periodicidadCosechaDias,
+      esperanzaVidaDias: data.esperanzaVidaDias.present
+          ? data.esperanzaVidaDias.value
+          : this.esperanzaVidaDias,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -9561,6 +9926,11 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
           ..write('estadoManual: $estadoManual, ')
           ..write('finalizadoFecha: $finalizadoFecha, ')
           ..write('notas: $notas, ')
+          ..write('tipoCultivo: $tipoCultivo, ')
+          ..write('cosecha1Dias: $cosecha1Dias, ')
+          ..write('cosecha2Dias: $cosecha2Dias, ')
+          ..write('periodicidadCosechaDias: $periodicidadCosechaDias, ')
+          ..write('esperanzaVidaDias: $esperanzaVidaDias, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -9594,6 +9964,11 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
         estadoManual,
         finalizadoFecha,
         notas,
+        tipoCultivo,
+        cosecha1Dias,
+        cosecha2Dias,
+        periodicidadCosechaDias,
+        esperanzaVidaDias,
         createdAt,
         updatedAt,
         deletedAt
@@ -9626,6 +10001,11 @@ class Cultivo extends DataClass implements Insertable<Cultivo> {
           other.estadoManual == this.estadoManual &&
           other.finalizadoFecha == this.finalizadoFecha &&
           other.notas == this.notas &&
+          other.tipoCultivo == this.tipoCultivo &&
+          other.cosecha1Dias == this.cosecha1Dias &&
+          other.cosecha2Dias == this.cosecha2Dias &&
+          other.periodicidadCosechaDias == this.periodicidadCosechaDias &&
+          other.esperanzaVidaDias == this.esperanzaVidaDias &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -9656,6 +10036,11 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
   final Value<String?> estadoManual;
   final Value<DateTime?> finalizadoFecha;
   final Value<String?> notas;
+  final Value<String> tipoCultivo;
+  final Value<int?> cosecha1Dias;
+  final Value<int?> cosecha2Dias;
+  final Value<int?> periodicidadCosechaDias;
+  final Value<int?> esperanzaVidaDias;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -9684,6 +10069,11 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
     this.estadoManual = const Value.absent(),
     this.finalizadoFecha = const Value.absent(),
     this.notas = const Value.absent(),
+    this.tipoCultivo = const Value.absent(),
+    this.cosecha1Dias = const Value.absent(),
+    this.cosecha2Dias = const Value.absent(),
+    this.periodicidadCosechaDias = const Value.absent(),
+    this.esperanzaVidaDias = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -9713,6 +10103,11 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
     this.estadoManual = const Value.absent(),
     this.finalizadoFecha = const Value.absent(),
     this.notas = const Value.absent(),
+    this.tipoCultivo = const Value.absent(),
+    this.cosecha1Dias = const Value.absent(),
+    this.cosecha2Dias = const Value.absent(),
+    this.periodicidadCosechaDias = const Value.absent(),
+    this.esperanzaVidaDias = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -9744,6 +10139,11 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
     Expression<String>? estadoManual,
     Expression<DateTime>? finalizadoFecha,
     Expression<String>? notas,
+    Expression<String>? tipoCultivo,
+    Expression<int>? cosecha1Dias,
+    Expression<int>? cosecha2Dias,
+    Expression<int>? periodicidadCosechaDias,
+    Expression<int>? esperanzaVidaDias,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -9778,6 +10178,12 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
       if (estadoManual != null) 'estado_manual': estadoManual,
       if (finalizadoFecha != null) 'finalizado_fecha': finalizadoFecha,
       if (notas != null) 'notas': notas,
+      if (tipoCultivo != null) 'tipo_cultivo': tipoCultivo,
+      if (cosecha1Dias != null) 'cosecha1_dias': cosecha1Dias,
+      if (cosecha2Dias != null) 'cosecha2_dias': cosecha2Dias,
+      if (periodicidadCosechaDias != null)
+        'periodicidad_cosecha_dias': periodicidadCosechaDias,
+      if (esperanzaVidaDias != null) 'esperanza_vida_dias': esperanzaVidaDias,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -9809,6 +10215,11 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
       Value<String?>? estadoManual,
       Value<DateTime?>? finalizadoFecha,
       Value<String?>? notas,
+      Value<String>? tipoCultivo,
+      Value<int?>? cosecha1Dias,
+      Value<int?>? cosecha2Dias,
+      Value<int?>? periodicidadCosechaDias,
+      Value<int?>? esperanzaVidaDias,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<DateTime?>? deletedAt}) {
@@ -9840,6 +10251,12 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
       estadoManual: estadoManual ?? this.estadoManual,
       finalizadoFecha: finalizadoFecha ?? this.finalizadoFecha,
       notas: notas ?? this.notas,
+      tipoCultivo: tipoCultivo ?? this.tipoCultivo,
+      cosecha1Dias: cosecha1Dias ?? this.cosecha1Dias,
+      cosecha2Dias: cosecha2Dias ?? this.cosecha2Dias,
+      periodicidadCosechaDias:
+          periodicidadCosechaDias ?? this.periodicidadCosechaDias,
+      esperanzaVidaDias: esperanzaVidaDias ?? this.esperanzaVidaDias,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -9926,6 +10343,22 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
     if (notas.present) {
       map['notas'] = Variable<String>(notas.value);
     }
+    if (tipoCultivo.present) {
+      map['tipo_cultivo'] = Variable<String>(tipoCultivo.value);
+    }
+    if (cosecha1Dias.present) {
+      map['cosecha1_dias'] = Variable<int>(cosecha1Dias.value);
+    }
+    if (cosecha2Dias.present) {
+      map['cosecha2_dias'] = Variable<int>(cosecha2Dias.value);
+    }
+    if (periodicidadCosechaDias.present) {
+      map['periodicidad_cosecha_dias'] =
+          Variable<int>(periodicidadCosechaDias.value);
+    }
+    if (esperanzaVidaDias.present) {
+      map['esperanza_vida_dias'] = Variable<int>(esperanzaVidaDias.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -9965,6 +10398,11 @@ class CultivosCompanion extends UpdateCompanion<Cultivo> {
           ..write('estadoManual: $estadoManual, ')
           ..write('finalizadoFecha: $finalizadoFecha, ')
           ..write('notas: $notas, ')
+          ..write('tipoCultivo: $tipoCultivo, ')
+          ..write('cosecha1Dias: $cosecha1Dias, ')
+          ..write('cosecha2Dias: $cosecha2Dias, ')
+          ..write('periodicidadCosechaDias: $periodicidadCosechaDias, ')
+          ..write('esperanzaVidaDias: $esperanzaVidaDias, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -19058,6 +19496,10 @@ typedef $$PlantasTableCreateCompanionBuilder = PlantasCompanion Function({
   Value<String?> ciclo,
   Value<int?> tiempoCosechaMinDias,
   Value<int?> tiempoCosechaMaxDias,
+  Value<String> tipoCultivoDefault,
+  Value<int?> periodicidadCosechaDias,
+  Value<int?> esperanzaVidaDias,
+  Value<String?> ciclosAbonoJson,
   Value<int?> diasAbono1,
   Value<String?> tipoAbono1,
   Value<double?> dosisAbono1KgHa,
@@ -19097,6 +19539,10 @@ typedef $$PlantasTableUpdateCompanionBuilder = PlantasCompanion Function({
   Value<String?> ciclo,
   Value<int?> tiempoCosechaMinDias,
   Value<int?> tiempoCosechaMaxDias,
+  Value<String> tipoCultivoDefault,
+  Value<int?> periodicidadCosechaDias,
+  Value<int?> esperanzaVidaDias,
+  Value<String?> ciclosAbonoJson,
   Value<int?> diasAbono1,
   Value<String?> tipoAbono1,
   Value<double?> dosisAbono1KgHa,
@@ -19161,6 +19607,22 @@ class $$PlantasTableFilterComposer
 
   ColumnFilters<int> get tiempoCosechaMaxDias => $composableBuilder(
       column: $table.tiempoCosechaMaxDias,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tipoCultivoDefault => $composableBuilder(
+      column: $table.tipoCultivoDefault,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get periodicidadCosechaDias => $composableBuilder(
+      column: $table.periodicidadCosechaDias,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get esperanzaVidaDias => $composableBuilder(
+      column: $table.esperanzaVidaDias,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ciclosAbonoJson => $composableBuilder(
+      column: $table.ciclosAbonoJson,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get diasAbono1 => $composableBuilder(
@@ -19295,6 +19757,22 @@ class $$PlantasTableOrderingComposer
       column: $table.tiempoCosechaMaxDias,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get tipoCultivoDefault => $composableBuilder(
+      column: $table.tipoCultivoDefault,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get periodicidadCosechaDias => $composableBuilder(
+      column: $table.periodicidadCosechaDias,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get esperanzaVidaDias => $composableBuilder(
+      column: $table.esperanzaVidaDias,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ciclosAbonoJson => $composableBuilder(
+      column: $table.ciclosAbonoJson,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get diasAbono1 => $composableBuilder(
       column: $table.diasAbono1, builder: (column) => ColumnOrderings(column));
 
@@ -19427,6 +19905,18 @@ class $$PlantasTableAnnotationComposer
   GeneratedColumn<int> get tiempoCosechaMaxDias => $composableBuilder(
       column: $table.tiempoCosechaMaxDias, builder: (column) => column);
 
+  GeneratedColumn<String> get tipoCultivoDefault => $composableBuilder(
+      column: $table.tipoCultivoDefault, builder: (column) => column);
+
+  GeneratedColumn<int> get periodicidadCosechaDias => $composableBuilder(
+      column: $table.periodicidadCosechaDias, builder: (column) => column);
+
+  GeneratedColumn<int> get esperanzaVidaDias => $composableBuilder(
+      column: $table.esperanzaVidaDias, builder: (column) => column);
+
+  GeneratedColumn<String> get ciclosAbonoJson => $composableBuilder(
+      column: $table.ciclosAbonoJson, builder: (column) => column);
+
   GeneratedColumn<int> get diasAbono1 => $composableBuilder(
       column: $table.diasAbono1, builder: (column) => column);
 
@@ -19546,6 +20036,10 @@ class $$PlantasTableTableManager extends RootTableManager<
             Value<String?> ciclo = const Value.absent(),
             Value<int?> tiempoCosechaMinDias = const Value.absent(),
             Value<int?> tiempoCosechaMaxDias = const Value.absent(),
+            Value<String> tipoCultivoDefault = const Value.absent(),
+            Value<int?> periodicidadCosechaDias = const Value.absent(),
+            Value<int?> esperanzaVidaDias = const Value.absent(),
+            Value<String?> ciclosAbonoJson = const Value.absent(),
             Value<int?> diasAbono1 = const Value.absent(),
             Value<String?> tipoAbono1 = const Value.absent(),
             Value<double?> dosisAbono1KgHa = const Value.absent(),
@@ -19585,6 +20079,10 @@ class $$PlantasTableTableManager extends RootTableManager<
             ciclo: ciclo,
             tiempoCosechaMinDias: tiempoCosechaMinDias,
             tiempoCosechaMaxDias: tiempoCosechaMaxDias,
+            tipoCultivoDefault: tipoCultivoDefault,
+            periodicidadCosechaDias: periodicidadCosechaDias,
+            esperanzaVidaDias: esperanzaVidaDias,
+            ciclosAbonoJson: ciclosAbonoJson,
             diasAbono1: diasAbono1,
             tipoAbono1: tipoAbono1,
             dosisAbono1KgHa: dosisAbono1KgHa,
@@ -19624,6 +20122,10 @@ class $$PlantasTableTableManager extends RootTableManager<
             Value<String?> ciclo = const Value.absent(),
             Value<int?> tiempoCosechaMinDias = const Value.absent(),
             Value<int?> tiempoCosechaMaxDias = const Value.absent(),
+            Value<String> tipoCultivoDefault = const Value.absent(),
+            Value<int?> periodicidadCosechaDias = const Value.absent(),
+            Value<int?> esperanzaVidaDias = const Value.absent(),
+            Value<String?> ciclosAbonoJson = const Value.absent(),
             Value<int?> diasAbono1 = const Value.absent(),
             Value<String?> tipoAbono1 = const Value.absent(),
             Value<double?> dosisAbono1KgHa = const Value.absent(),
@@ -19663,6 +20165,10 @@ class $$PlantasTableTableManager extends RootTableManager<
             ciclo: ciclo,
             tiempoCosechaMinDias: tiempoCosechaMinDias,
             tiempoCosechaMaxDias: tiempoCosechaMaxDias,
+            tipoCultivoDefault: tipoCultivoDefault,
+            periodicidadCosechaDias: periodicidadCosechaDias,
+            esperanzaVidaDias: esperanzaVidaDias,
+            ciclosAbonoJson: ciclosAbonoJson,
             diasAbono1: diasAbono1,
             tipoAbono1: tipoAbono1,
             dosisAbono1KgHa: dosisAbono1KgHa,
@@ -21950,6 +22456,11 @@ typedef $$CultivosTableCreateCompanionBuilder = CultivosCompanion Function({
   Value<String?> estadoManual,
   Value<DateTime?> finalizadoFecha,
   Value<String?> notas,
+  Value<String> tipoCultivo,
+  Value<int?> cosecha1Dias,
+  Value<int?> cosecha2Dias,
+  Value<int?> periodicidadCosechaDias,
+  Value<int?> esperanzaVidaDias,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -21979,6 +22490,11 @@ typedef $$CultivosTableUpdateCompanionBuilder = CultivosCompanion Function({
   Value<String?> estadoManual,
   Value<DateTime?> finalizadoFecha,
   Value<String?> notas,
+  Value<String> tipoCultivo,
+  Value<int?> cosecha1Dias,
+  Value<int?> cosecha2Dias,
+  Value<int?> periodicidadCosechaDias,
+  Value<int?> esperanzaVidaDias,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -22071,6 +22587,23 @@ class $$CultivosTableFilterComposer
 
   ColumnFilters<String> get notas => $composableBuilder(
       column: $table.notas, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tipoCultivo => $composableBuilder(
+      column: $table.tipoCultivo, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get cosecha1Dias => $composableBuilder(
+      column: $table.cosecha1Dias, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get cosecha2Dias => $composableBuilder(
+      column: $table.cosecha2Dias, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get periodicidadCosechaDias => $composableBuilder(
+      column: $table.periodicidadCosechaDias,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get esperanzaVidaDias => $composableBuilder(
+      column: $table.esperanzaVidaDias,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -22173,6 +22706,25 @@ class $$CultivosTableOrderingComposer
   ColumnOrderings<String> get notas => $composableBuilder(
       column: $table.notas, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get tipoCultivo => $composableBuilder(
+      column: $table.tipoCultivo, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get cosecha1Dias => $composableBuilder(
+      column: $table.cosecha1Dias,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get cosecha2Dias => $composableBuilder(
+      column: $table.cosecha2Dias,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get periodicidadCosechaDias => $composableBuilder(
+      column: $table.periodicidadCosechaDias,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get esperanzaVidaDias => $composableBuilder(
+      column: $table.esperanzaVidaDias,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -22264,6 +22816,21 @@ class $$CultivosTableAnnotationComposer
   GeneratedColumn<String> get notas =>
       $composableBuilder(column: $table.notas, builder: (column) => column);
 
+  GeneratedColumn<String> get tipoCultivo => $composableBuilder(
+      column: $table.tipoCultivo, builder: (column) => column);
+
+  GeneratedColumn<int> get cosecha1Dias => $composableBuilder(
+      column: $table.cosecha1Dias, builder: (column) => column);
+
+  GeneratedColumn<int> get cosecha2Dias => $composableBuilder(
+      column: $table.cosecha2Dias, builder: (column) => column);
+
+  GeneratedColumn<int> get periodicidadCosechaDias => $composableBuilder(
+      column: $table.periodicidadCosechaDias, builder: (column) => column);
+
+  GeneratedColumn<int> get esperanzaVidaDias => $composableBuilder(
+      column: $table.esperanzaVidaDias, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -22321,6 +22888,11 @@ class $$CultivosTableTableManager extends RootTableManager<
             Value<String?> estadoManual = const Value.absent(),
             Value<DateTime?> finalizadoFecha = const Value.absent(),
             Value<String?> notas = const Value.absent(),
+            Value<String> tipoCultivo = const Value.absent(),
+            Value<int?> cosecha1Dias = const Value.absent(),
+            Value<int?> cosecha2Dias = const Value.absent(),
+            Value<int?> periodicidadCosechaDias = const Value.absent(),
+            Value<int?> esperanzaVidaDias = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -22350,6 +22922,11 @@ class $$CultivosTableTableManager extends RootTableManager<
             estadoManual: estadoManual,
             finalizadoFecha: finalizadoFecha,
             notas: notas,
+            tipoCultivo: tipoCultivo,
+            cosecha1Dias: cosecha1Dias,
+            cosecha2Dias: cosecha2Dias,
+            periodicidadCosechaDias: periodicidadCosechaDias,
+            esperanzaVidaDias: esperanzaVidaDias,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -22379,6 +22956,11 @@ class $$CultivosTableTableManager extends RootTableManager<
             Value<String?> estadoManual = const Value.absent(),
             Value<DateTime?> finalizadoFecha = const Value.absent(),
             Value<String?> notas = const Value.absent(),
+            Value<String> tipoCultivo = const Value.absent(),
+            Value<int?> cosecha1Dias = const Value.absent(),
+            Value<int?> cosecha2Dias = const Value.absent(),
+            Value<int?> periodicidadCosechaDias = const Value.absent(),
+            Value<int?> esperanzaVidaDias = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -22408,6 +22990,11 @@ class $$CultivosTableTableManager extends RootTableManager<
             estadoManual: estadoManual,
             finalizadoFecha: finalizadoFecha,
             notas: notas,
+            tipoCultivo: tipoCultivo,
+            cosecha1Dias: cosecha1Dias,
+            cosecha2Dias: cosecha2Dias,
+            periodicidadCosechaDias: periodicidadCosechaDias,
+            esperanzaVidaDias: esperanzaVidaDias,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,

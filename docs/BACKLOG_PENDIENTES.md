@@ -6,8 +6,8 @@
 | # | Tarea | Origen |
 |---|-------|--------|
 | A1 | Supabase → Authentication → Settings: longitud mínima de contraseña **8** y activar *Leaked password protection* | Auditoría S7 (paso manual 5, sin confirmar) |
-| A2 | Borrar el respaldo sin cifrar `nexus_siembras.sqlite.pre-cifrado.bak` (Documentos de la app) tras verificar que los datos están intactos | Auditoría S4 (paso manual 7, sin confirmar) |
-| A3 | Probar en Windows **y** Android lo entregado en 3j/3k: comprobante de compra (PDF/foto y carpeta `soportes/{año}/`), exports CSV/PDF de las 5 pantallas, reporte integral del Dashboard (verificar gráfico circular en el PDF), PDF de laboratorio en análisis de suelo, y el Asistente paso a paso completo (incluida la oferta tras un onboarding nuevo) | Fases 3j/3k recién implementadas |
+| ~~A2~~ | ~~Borrar el respaldo sin cifrar `nexus_siembras.sqlite.pre-cifrado.bak` (Documentos de la app) tras verificar que los datos están intactos~~ | Auditoría S4 (paso manual 7, sin confirmar) |
+| ~~A3~~ | ~~Probar en Windows **y** Android lo entregado en 3j/3k: comprobante de compra (PDF/foto y carpeta `soportes/{año}/`), exports CSV/PDF de las 5 pantallas, reporte integral del Dashboard (verificar gráfico circular en el PDF), PDF de laboratorio en análisis de suelo, y el Asistente paso a paso completo (incluida la oferta tras un onboarding nuevo)~~ | Fases 3j/3k recién implementadas |
 | A4 | Re-ejecutar el plan E2E multi-usuario (`docs/PRUEBAS_MULTI_USUario_E2E.md`) — el sync cambió a lotes/paginado y conviene revalidar colaboradores con `schema_meta` v7 aplicado | Auditoría P1-P5 |
 
 ## B. Desarrollo — funcionalidad pendiente
@@ -28,16 +28,16 @@
 | # | Tarea | Notas |
 |---|-------|-------|
 | C1 | Limpieza de `flutter analyze`: ~90 infos + 12 warnings preexistentes (`withOpacity`→`withValues`, `value`→`initialValue`, `prefer_const`, unused) | Cosmético, ~30 archivos |
-| C2 | Revisión de código formal (code-review) de lo implementado en 3j/3k | Ofrecida |
+| C2 | Segunda revisión de código formal (code-review) de lo implementado en Fase 3 finalizada | Proyectada |
 | C3 | Ampliar tests: hoy solo 3 unitarios; faltan tests de widgets y del SyncService (mergers, LWW, batch) | — |
-| C4 | Renovación del pin TLS de EPPO cuando rote el certificado (síntoma: Android falla, Windows no; correr `dart run tool/eppo_fingerprint.dart`) | Recurrente, documentado |
+| ~~C4~~ | ~~Renovación del pin TLS de EPPO cuando rote el certificado (síntoma: Android falla, Windows no; correr `dart run tool/eppo_fingerprint.dart`)~~ **COMPLETADO 2026-07-20** | Recurrente, documentado |
 | C5 | Nueva migración remota ⇒ nuevo archivo en `supabase/migrations/` + subir `schema_meta.version` y `schemaRemotoRequerido` | Regla permanente S6 |
 
 ## D. Publicación y distribución
 
 | # | Tarea | Notas |
 |---|-------|-------|
-| D1 | Instalador Windows con Inno Setup + subir `version:` en pubspec por release | Guía en conversación 2026-07-20 |
+| ~~D1~~ | ~~Instalador Windows con Inno Setup + subir `version:` en pubspec por release~~ **COMPLETADO 2026-07-25** | Guía según instrucciones del 2026-07-20 |
 | D2 | Android release: keystore de firma propio, `flutter build appbundle`, y eventualmente Play Store (política de datos, privacidad) | Hoy se usa firma debug |
 | D3 | Branding definitivo: fuentes NexusSans (comentadas en pubspec), íconos por plataforma, borrar `flutter_01.png` (0 bytes) y `schema_3e_v*.sql` obsoletos al consolidar | — |
 

@@ -4,6 +4,7 @@
 
 import 'dart:convert';
 import 'package:drift/drift.dart';
+import '../../core/models/ciclo_abono.dart';
 import '../../core/units/units_catalog.dart';
 import '../database/database.dart';
 
@@ -119,6 +120,11 @@ class CultivoRepository {
     double? lng,
     double? altM,
     int? loteId,
+    String tipoCultivo = 'ciclo_unico',
+    int? cosecha1Dias,
+    int? cosecha2Dias,
+    int? periodicidadCosechaDias,
+    int? esperanzaVidaDias,
   }) async {
     final (areaBase, _) = toBase(areaValor, areaUnidad);
     final (semBase, semCode) = toBase(semillaValor, semillaUnidad);
@@ -144,12 +150,22 @@ class CultivoRepository {
     //     - Abono, cosecha, etc. : cuentan desde fechaSiembra
     final esGerminador =
         planta.metodoSiembra == 'germinador' && planta.germinadorDias != null;
-    final fechaBase = esGerminador
-        ? fechaSiembra.add(Duration(days: planta.germinadorDias!))
-        : fechaSiembra;
+    final fechaBase = _fechaBaseFenologia(
+        planta: planta, fechaSiembra: fechaSiembra, esGerminador: esGerminador);
 
-    final maxCos = planta.tiempoCosechaMaxDias ?? 120;
-    final cosechaEst = fechaBase.add(Duration(days: maxCos));
+    final esPerenne = tipoCultivo == 'perenne';
+    final cos1 = cosecha1Dias ?? planta.tiempoCosechaMinDias;
+    final cos2 = cosecha2Dias ?? planta.tiempoCosechaMaxDias;
+    final DateTime? cosechaEst;
+    if (esPerenne && esperanzaVidaDias != null) {
+      cosechaEst = fechaBase.add(Duration(days: esperanzaVidaDias));
+    } else if (cos2 != null) {
+      cosechaEst = fechaBase.add(Duration(days: cos2));
+    } else if (cos1 != null) {
+      cosechaEst = fechaBase.add(Duration(days: cos1));
+    } else {
+      cosechaEst = fechaBase.add(const Duration(days: 120));
+    }
 
     final cultivoId = await db.into(db.cultivos).insert(CultivosCompanion.insert(
           predioId: predioId,
@@ -166,11 +182,40 @@ class CultivoRepository {
           lat: Value(lat),
           lng: Value(lng),
           altM: Value(altM),
+          tipoCultivo: Value(tipoCultivo),
+          cosecha1Dias: Value(cosecha1Dias),
+          cosecha2Dias: Value(cosecha2Dias),
+          periodicidadCosechaDias: Value(periodicidadCosechaDias),
+          esperanzaVidaDias: Value(esperanzaVidaDias),
         ));
 
-    // Genera eventos proyectados. `executed=true` marca el evento como ya
-    // ejecutado (para siembra o semillero, cuando se registra el cultivo
-    // al momento de sembrar).
+    final culRow = await (db.select(db.cultivos)
+          ..where((c) => c.id.equals(cultivoId)))
+        .getSingle();
+    await _generarEventosProyectados(
+      cultivoId: cultivoId,
+      planta: planta,
+      cul: culRow,
+    );
+
+    return cultivoId;
+  }
+
+  /// Crea el cronograma inicial de eventos según la planta y la config
+  /// del cultivo (tipo, periodos de cosecha, etc.).
+  Future<void> _generarEventosProyectados({
+    required int cultivoId,
+    required Planta planta,
+    required Cultivo cul,
+  }) async {
+    final esGerminador =
+        planta.metodoSiembra == 'germinador' && planta.germinadorDias != null;
+    final fechaBase = _fechaBaseFenologia(
+        planta: planta, fechaSiembra: cul.fechaSiembra, esGerminador: esGerminador);
+    final esPerenne = cul.tipoCultivo == 'perenne';
+    final cos1 = cul.cosecha1Dias ?? planta.tiempoCosechaMinDias;
+    final cos2 = cul.cosecha2Dias ?? planta.tiempoCosechaMaxDias;
+
     Future<void> ev(String tipo, DateTime fecha, String desc,
         {bool executed = false}) async {
       await db.into(db.eventosCultivo).insert(EventosCultivoCompanion.insert(
@@ -183,39 +228,169 @@ class CultivoRepository {
     }
 
     if (esGerminador) {
-      // Semillero: hoy (fechaSiembra) — ya ejecutado
-      await ev('semillero', fechaSiembra,
+      await ev('semillero', cul.fechaSiembra,
           'Semillero (germinador · ${planta.germinadorDias} d)',
           executed: true);
-      // Trasplante: en fechaBase — PENDIENTE, se registra cuando toque
       await ev('trasplante', fechaBase, 'Trasplante');
     } else {
-      await ev('siembra', fechaSiembra, 'Siembra', executed: true);
+      await ev('siembra', cul.fechaSiembra, 'Siembra', executed: true);
     }
 
-    await ev('abono', fechaBase.add(const Duration(days: 1)),
-        'Abono 1${planta.tipoAbono1 != null ? " · ${planta.tipoAbono1}" : ""}');
+    final ciclosAbono = decodeCiclosAbonoJson(
+      planta.ciclosAbonoJson,
+      tipoAbono1: planta.tipoAbono1,
+      tipoAbono2: planta.tipoAbono2,
+      diasAbono2: planta.diasAbono2,
+    );
+    final sorted = [...ciclosAbono]..sort((a, b) => a.dias.compareTo(b.dias));
+    for (var i = 0; i < sorted.length; i++) {
+      final c = sorted[i];
+      final n = i + 1;
+      await ev(
+        'abono',
+        fechaBase.add(Duration(days: c.dias)),
+        'Abono $n${c.tipo.isNotEmpty ? " · ${c.tipo}" : ""}',
+      );
+    }
+    if (sorted.length >= 2 && sorted[1].dias > 1) {
+      await ev(
+        'control_fito',
+        fechaBase.add(Duration(days: sorted[1].dias - 1)),
+        'Desmalezada',
+      );
+    }
 
-    if (planta.diasAbono2 != null) {
-      final desmalezadaDia = (planta.diasAbono2! - 1).clamp(1, 999);
-      await ev('control_fito',
-          fechaBase.add(Duration(days: desmalezadaDia)), 'Desmalezada');
-      await ev('abono', fechaBase.add(Duration(days: planta.diasAbono2!)),
-          'Abono 2${planta.tipoAbono2 != null ? " · ${planta.tipoAbono2}" : ""}');
+    if (esPerenne) {
+      final period = cul.periodicidadCosechaDias ?? 90;
+      final vida = cul.esperanzaVidaDias ?? 365 * 3;
+      final primera = cos1 ?? period;
+      await _generarCosechasPeriodicas(
+        cultivoId: cultivoId,
+        ev: ev,
+        fechaInicio: fechaBase.add(Duration(days: primera)),
+        finCiclo: fechaBase.add(Duration(days: vida)),
+        periodicidadDias: period,
+        desdeNumero: 1,
+      );
+      await ev('renovacion', fechaBase.add(Duration(days: vida)), 'Renovación');
+    } else {
+      if (cos1 != null) {
+        await ev('cosecha', fechaBase.add(Duration(days: cos1)), 'Cosecha 1');
+      }
+      if (cos2 != null && cos2 != cos1) {
+        await ev('cosecha', fechaBase.add(Duration(days: cos2)), 'Cosecha 2');
+      }
     }
-    if (planta.tiempoCosechaMinDias != null) {
-      await ev('cosecha',
-          fechaBase.add(Duration(days: planta.tiempoCosechaMinDias!)),
-          'Cosecha 1');
+  }
+
+  static DateTime _fechaBaseFenologia({
+    required Planta planta,
+    required DateTime fechaSiembra,
+    required bool esGerminador,
+  }) {
+    if (esGerminador && planta.germinadorDias != null) {
+      return fechaSiembra.add(Duration(days: planta.germinadorDias!));
     }
-    if (planta.tiempoCosechaMaxDias != null &&
-        planta.tiempoCosechaMaxDias != planta.tiempoCosechaMinDias) {
-      await ev('cosecha',
-          fechaBase.add(Duration(days: planta.tiempoCosechaMaxDias!)),
-          'Cosecha 2');
+    return fechaSiembra;
+  }
+
+  /// Genera eventos «Cosecha periódica N» cada [periodicidadDias] hasta
+  /// [finCiclo] (exclusive de fechas posteriores al fin).
+  Future<void> _generarCosechasPeriodicas({
+    required int cultivoId,
+    required Future<void> Function(String tipo, DateTime fecha, String desc,
+            {bool executed})
+        ev,
+    required DateTime fechaInicio,
+    required DateTime finCiclo,
+    required int periodicidadDias,
+    required int desdeNumero,
+  }) async {
+    var n = desdeNumero;
+    var fecha = fechaInicio;
+    final fin = DateTime(finCiclo.year, finCiclo.month, finCiclo.day);
+    while (!fecha.isAfter(fin)) {
+      await ev('cosecha', fecha, 'Cosecha periódica $n');
+      n++;
+      fecha = fecha.add(Duration(days: periodicidadDias));
+    }
+  }
+
+  /// Tras registrar una cosecha periódica, asegura eventos futuros hasta el
+  /// fin del ciclo de vida del cultivo perenne.
+  Future<void> extenderCosechasPeriodicas({
+    required int cultivoId,
+    required DateTime fechaReferencia,
+    required int periodicidadDias,
+  }) async {
+    final cul = await (db.select(db.cultivos)
+          ..where((c) => c.id.equals(cultivoId)))
+        .getSingleOrNull();
+    if (cul == null || cul.tipoCultivo != 'perenne') return;
+
+    final planta = await (db.select(db.plantas)
+          ..where((p) => p.id.equals(cul.plantaId)))
+        .getSingleOrNull();
+    if (planta == null) return;
+
+    final esGerm = planta.metodoSiembra == 'germinador' &&
+        planta.germinadorDias != null;
+    final fechaBase = _fechaBaseFenologia(
+        planta: planta, fechaSiembra: cul.fechaSiembra, esGerminador: esGerm);
+    final vida = cul.esperanzaVidaDias ?? 365 * 3;
+    final finCiclo = fechaBase.add(Duration(days: vida));
+
+    if (periodicidadDias != cul.periodicidadCosechaDias) {
+      await (db.update(db.cultivos)..where((c) => c.id.equals(cultivoId)))
+          .write(CultivosCompanion(
+        periodicidadCosechaDias: Value(periodicidadDias),
+        updatedAt: Value(DateTime.now()),
+      ));
     }
 
-    return cultivoId;
+    final pendientes = await (db.select(db.eventosCultivo)
+          ..where((e) => e.cultivoId.equals(cultivoId))
+          ..where((e) => e.descripcion.like('Cosecha periódica%'))
+          ..where((e) => e.fechaEjecutada.isNull())
+          ..where((e) => e.deletedAt.isNull())
+          ..orderBy([(e) => OrderingTerm.desc(e.fechaProgramada)]))
+        .get();
+    if (pendientes.isNotEmpty) return;
+
+    final todos = await (db.select(db.eventosCultivo)
+          ..where((e) => e.cultivoId.equals(cultivoId))
+          ..where((e) => e.descripcion.like('Cosecha periódica%'))
+          ..where((e) => e.deletedAt.isNull()))
+        .get();
+    var maxN = 0;
+    for (final e in todos) {
+      final d = e.descripcion ?? '';
+      final m = RegExp(r'Cosecha periódica (\d+)').firstMatch(d);
+      if (m != null) {
+        final num = int.tryParse(m.group(1) ?? '') ?? 0;
+        if (num > maxN) maxN = num;
+      }
+    }
+
+    Future<void> ev(String tipo, DateTime fecha, String desc,
+        {bool executed = false}) async {
+      await db.into(db.eventosCultivo).insert(EventosCultivoCompanion.insert(
+            cultivoId: cultivoId,
+            tipo: tipo,
+            fechaProgramada: Value(fecha),
+            fechaEjecutada: executed ? Value(fecha) : const Value.absent(),
+            descripcion: Value(desc),
+          ));
+    }
+
+    await _generarCosechasPeriodicas(
+      cultivoId: cultivoId,
+      ev: ev,
+      fechaInicio: fechaReferencia.add(Duration(days: periodicidadDias)),
+      finCiclo: finCiclo,
+      periodicidadDias: periodicidadDias,
+      desdeNumero: maxN + 1,
+    );
   }
 
   Future<void> softDelete(int id) {
@@ -310,6 +485,8 @@ class CultivoRepository {
     'Abono1': 'abono', 'Abono2': 'abono',
     'Desmalezada': 'control_fito', 'Fumigación': 'control_fito',
     'Cosecha1': 'cosecha', 'Cosecha2': 'cosecha',
+    'Cosecha periódica': 'cosecha',
+    'Renovación': 'renovacion',
     'Semillero': 'semillero', 'Trasplante': 'trasplante',
     'Siembra': 'siembra',
   };
@@ -326,6 +503,8 @@ class CultivoRepository {
     'Desmalezada': 'Desmalezada',
     'Cosecha1': 'Cosecha 1',
     'Cosecha2': 'Cosecha 2',
+    'Cosecha periódica': 'Cosecha periódica',
+    'Renovación': 'Renovación',
     // 'Fumigación' no tiene evento proyectado; se registra como tarea sin cerrar evento.
   };
 
@@ -337,6 +516,7 @@ class CultivoRepository {
     List<Map<String, dynamic>> insumos = const [],
     String? notas,
     String? createdByUserId,
+    int? periodicidadCosechaDias,
   }) async {
     return await db.transaction<int>(() async {
       final id = await db.into(db.tareasCompletadas).insert(
@@ -359,33 +539,118 @@ class CultivoRepository {
         updatedAt: Value(DateTime.now()),
       ));
       for (final a in actividades) {
-        final descPrefix = _actividadDescMap[a];
-        if (descPrefix == null) continue;
-        // Cierra el evento MÁS ANTIGUO pendiente cuya descripción coincida.
-        // Con descripción específica distinguimos Abono 1 de Abono 2, etc.
-        final match = await (db.select(db.eventosCultivo)
-              ..where((e) => e.cultivoId.equals(cultivoId))
-              ..where((e) => e.descripcion.like('$descPrefix%'))
-              ..where((e) => e.fechaEjecutada.isNull())
-              ..where((e) => e.deletedAt.isNull())
-              ..orderBy([(e) => OrderingTerm.asc(e.fechaProgramada)])
-              ..limit(1))
-            .getSingleOrNull();
-        if (match != null) {
-          // Bumpear updatedAt es CRÍTICO: sin esto el sync no ve el cambio
-          // y el remoto (y por tanto los otros dispositivos) nunca se
-          // enteran de que el evento se completó, dejando el Gantt en
-          // "Vencido" para los colaboradores (bug detectado 2026-07-19).
-          await (db.update(db.eventosCultivo)
-                ..where((e) => e.id.equals(match.id)))
-              .write(EventosCultivoCompanion(
-            fechaEjecutada: Value(fecha),
-            updatedAt: Value(DateTime.now()),
-          ));
-        }
+        await _cerrarEventoPorActividad(
+          cultivoId: cultivoId,
+          actividad: a,
+          fecha: fecha,
+        );
       }
+
+      if (actividades.contains('Cosecha periódica') &&
+          periodicidadCosechaDias != null &&
+          periodicidadCosechaDias > 0) {
+        await extenderCosechasPeriodicas(
+          cultivoId: cultivoId,
+          fechaReferencia: fecha,
+          periodicidadDias: periodicidadCosechaDias,
+        );
+      }
+
+      if (actividades.contains('Renovación')) {
+        await markFinalizado(cultivoId);
+      }
+
       return id;
     });
+  }
+
+  /// Cierra el evento pendiente más antiguo que coincida con [actividad] y
+  /// desplaza los eventos posteriores según la fecha real de ejecución.
+  Future<bool> _cerrarEventoPorActividad({
+    required int cultivoId,
+    required String actividad,
+    required DateTime fecha,
+  }) async {
+    final descPrefix = _actividadDescMap[actividad];
+    if (descPrefix == null) return false;
+    final match = await (db.select(db.eventosCultivo)
+          ..where((e) => e.cultivoId.equals(cultivoId))
+          ..where((e) => e.descripcion.like('$descPrefix%'))
+          ..where((e) => e.fechaEjecutada.isNull())
+          ..where((e) => e.deletedAt.isNull())
+          ..orderBy([(e) => OrderingTerm.asc(e.fechaProgramada)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (match == null) return false;
+    final prog = match.fechaProgramada ?? fecha;
+    await (db.update(db.eventosCultivo)..where((e) => e.id.equals(match.id)))
+        .write(EventosCultivoCompanion(
+      fechaEjecutada: Value(fecha),
+      updatedAt: Value(DateTime.now()),
+    ));
+    await _desplazarEventosPendientes(
+      cultivoId: cultivoId,
+      anclaProgramada: prog,
+      fechaEjecutada: fecha,
+    );
+    return true;
+  }
+
+  /// Desplaza las fechas programadas de eventos pendientes posteriores al
+  /// ancla cuando una actividad se ejecuta antes o después de lo previsto.
+  Future<void> _desplazarEventosPendientes({
+    required int cultivoId,
+    required DateTime anclaProgramada,
+    required DateTime fechaEjecutada,
+  }) async {
+    final orig = DateTime(
+        anclaProgramada.year, anclaProgramada.month, anclaProgramada.day);
+    final exec =
+        DateTime(fechaEjecutada.year, fechaEjecutada.month, fechaEjecutada.day);
+    final delta = exec.difference(orig).inDays;
+    if (delta == 0) return;
+
+    final pendientes = await (db.select(db.eventosCultivo)
+          ..where((e) => e.cultivoId.equals(cultivoId))
+          ..where((e) => e.fechaEjecutada.isNull())
+          ..where((e) => e.deletedAt.isNull())
+          ..where((e) => e.fechaProgramada.isBiggerThanValue(orig)))
+        .get();
+
+    final now = DateTime.now();
+    for (final e in pendientes) {
+      final prog = e.fechaProgramada;
+      if (prog == null) continue;
+      await (db.update(db.eventosCultivo)..where((x) => x.id.equals(e.id)))
+          .write(EventosCultivoCompanion(
+        fechaProgramada: Value(prog.add(Duration(days: delta))),
+        updatedAt: Value(now),
+      ));
+    }
+    await _actualizarFechaCosechaEstimada(cultivoId);
+  }
+
+  /// Recalcula la fecha de cosecha estimada del cultivo según el último
+  /// evento de cosecha o renovación (efectivo o programado).
+  Future<void> _actualizarFechaCosechaEstimada(int cultivoId) async {
+    final evs = await (db.select(db.eventosCultivo)
+          ..where((e) => e.cultivoId.equals(cultivoId))
+          ..where((e) => e.deletedAt.isNull())
+          ..where((e) => e.tipo.isIn(['cosecha', 'renovacion'])))
+        .get();
+    if (evs.isEmpty) return;
+    DateTime? maxFecha;
+    for (final e in evs) {
+      final f = e.fechaEjecutada ?? e.fechaProgramada;
+      if (f == null) continue;
+      if (maxFecha == null || f.isAfter(maxFecha)) maxFecha = f;
+    }
+    if (maxFecha == null) return;
+    await (db.update(db.cultivos)..where((c) => c.id.equals(cultivoId))).write(
+        CultivosCompanion(
+      fechaCosechaEstimada: Value(maxFecha),
+      updatedAt: Value(DateTime.now()),
+    ));
   }
 
   /// Actualiza fecha, HH, y notas de una tarea existente. No permite cambiar
@@ -492,37 +757,25 @@ class CultivoRepository {
   /// equivocado.
   Future<int> resincronizarEventos(int cultivoId) async {
     return await db.transaction<int>(() async {
-      // 1) Reabre todos los eventos del cultivo.
-      await (db.update(db.eventosCultivo)
-            ..where((e) => e.cultivoId.equals(cultivoId))
-            ..where((e) => e.deletedAt.isNull()))
-          .write(EventosCultivoCompanion(
-        fechaEjecutada: const Value(null),
-        updatedAt: Value(DateTime.now()),
-      ));
-
-      // 2) Reabre eventos de siembra/semillero — se marcan como ejecutados
-      //    al momento de insert() del cultivo (representan el "acto" que el
-      //    usuario acaba de realizar). Trasplante NO va aquí: siempre inicia
-      //    pendiente y se cierra cuando el usuario registre la actividad.
       final cul = await (db.select(db.cultivos)
             ..where((c) => c.id.equals(cultivoId)))
           .getSingleOrNull();
       if (cul == null) return 0;
-      final auto = ['Siembra', 'Semillero'];
-      for (final descPrefix in auto) {
-        await (db.update(db.eventosCultivo)
-              ..where((e) => e.cultivoId.equals(cultivoId))
-              ..where((e) => e.descripcion.like('$descPrefix%'))
-              ..where((e) => e.fechaEjecutada.isNull())
-              ..where((e) => e.deletedAt.isNull()))
-            .write(EventosCultivoCompanion(
-          fechaEjecutada: Value(cul.fechaSiembra),
-          updatedAt: Value(DateTime.now()),
-        ));
-      }
+      final planta = await (db.select(db.plantas)
+            ..where((p) => p.id.equals(cul.plantaId)))
+          .getSingleOrNull();
+      if (planta == null) return 0;
 
-      // 3) Reprocesa cada tarea completada en orden cronológico.
+      // Regenera fechas programadas originales y reaplica tareas con ajuste.
+      await (db.delete(db.eventosCultivo)
+            ..where((e) => e.cultivoId.equals(cultivoId)))
+          .go();
+      await _generarEventosProyectados(
+        cultivoId: cultivoId,
+        planta: planta,
+        cul: cul,
+      );
+
       final tareas = await (db.select(db.tareasCompletadas)
             ..where((t) => t.cultivoId.equals(cultivoId))
             ..orderBy([(t) => OrderingTerm.asc(t.fecha)]))
@@ -535,25 +788,25 @@ class CultivoRepository {
               (jsonDecode(t.actividadesJson) as List<dynamic>).cast<String>());
         } catch (_) {}
         for (final a in acts) {
-          final descPrefix = _actividadDescMap[a];
-          if (descPrefix == null) continue;
-          final match = await (db.select(db.eventosCultivo)
-                ..where((e) => e.cultivoId.equals(cultivoId))
-                ..where((e) => e.descripcion.like('$descPrefix%'))
-                ..where((e) => e.fechaEjecutada.isNull())
-                ..where((e) => e.deletedAt.isNull())
-                ..orderBy([(e) => OrderingTerm.asc(e.fechaProgramada)])
-                ..limit(1))
-              .getSingleOrNull();
-          if (match != null) {
-            await (db.update(db.eventosCultivo)
-                  ..where((e) => e.id.equals(match.id)))
-                .write(EventosCultivoCompanion(
-              fechaEjecutada: Value(t.fecha),
-              updatedAt: Value(DateTime.now()),
-            ));
+          if (await _cerrarEventoPorActividad(
+            cultivoId: cultivoId,
+            actividad: a,
+            fecha: t.fecha,
+          )) {
             cerrados++;
           }
+        }
+        if (acts.contains('Cosecha periódica') &&
+            cul.periodicidadCosechaDias != null &&
+            cul.periodicidadCosechaDias! > 0) {
+          await extenderCosechasPeriodicas(
+            cultivoId: cultivoId,
+            fechaReferencia: t.fecha,
+            periodicidadDias: cul.periodicidadCosechaDias!,
+          );
+        }
+        if (acts.contains('Renovación')) {
+          await markFinalizado(cultivoId);
         }
       }
       return cerrados;

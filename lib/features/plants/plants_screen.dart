@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/models/ciclo_abono.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../data/database/database.dart' as drift;
 import '../../services/eppo_client.dart';
 import '../../services/variedades_comunitarias_service.dart';
 import '../../state/auth_state.dart';
 import '../../state/data_state.dart';
+import 'ciclos_abono_editor.dart';
 
 class PlantsScreen extends ConsumerWidget {
   const PlantsScreen({super.key});
@@ -80,13 +82,34 @@ class _PlantaCard extends ConsumerWidget {
               ),
             ]),
             const Divider(),
-            _row('Cosecha', '${pl.cosechaMin}–${pl.cosechaMax} días'),
+            _row('Tipo cultivo', pl.tipoCultivoEtiqueta),
+            if (pl.esPerenneDefault) ...[
+              if (pl.cosechaMin != null)
+                _row('1ª cosecha', '${pl.cosechaMin} d'),
+              if (pl.periodicidadCosechaDias != null)
+                _row('Periodicidad', '${pl.periodicidadCosechaDias} d'),
+              if (pl.esperanzaVidaDias != null)
+                _row('Vida útil', '${pl.esperanzaVidaDias} d'),
+            ] else ...[
+              if (pl.cosechaMin != null || pl.cosechaMax != null)
+                _row(
+                    'Cosechas',
+                    '${pl.cosechaMin ?? "?"} / ${pl.cosechaMax ?? "?"} d '
+                    '(verde · maduro)'),
+            ],
             _row(
                 'Método siembra',
                 esGerm
                     ? '🌱🪴 Germinador (${pl.germinadorDias ?? "?"} d)'
                     : '🌾 Directa'),
-            if (pl.tipoAbono1 != null || pl.tipoAbono2 != null)
+            if (pl.ciclosAbono.any((c) => c.tipo.isNotEmpty))
+              _row(
+                  'Abonos',
+                  pl.ciclosAbono
+                      .where((c) => c.tipo.isNotEmpty)
+                      .map((c) => '${c.tipo} (${c.dias} d)')
+                      .join(' · '))
+            else if (pl.tipoAbono1 != null || pl.tipoAbono2 != null)
               _row(
                   'Abonos',
                   [pl.tipoAbono1, pl.tipoAbono2]
@@ -185,13 +208,14 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
   late final TextEditingController _especie;
   late final TextEditingController _cosechaMin;
   late final TextEditingController _cosechaMax;
+  late final TextEditingController _periodicidad;
+  late final TextEditingController _esperanzaVida;
   late final TextEditingController _germinadorDias;
-  late final TextEditingController _tipoAbono1;
-  late final TextEditingController _tipoAbono2;
-  late final TextEditingController _diasAbono2;
   late final TextEditingController _fuente;
   late final TextEditingController _notas;
+  final List<CicloAbonoEditorRow> _ciclosAbono = [];
   String _metodo = 'directa';
+  String _tipoCultivo = 'ciclo_unico';
   bool _saving = false;
   // Fase 3h: preview de patologías conocidas para la especie ingresada.
   List<drift.Patologia> _patologiasConocidas = const [];
@@ -211,16 +235,27 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
     final e = widget.existing;
     _nombre = TextEditingController(text: e?.nombre ?? '');
     _especie = TextEditingController(text: e?.especie ?? '');
-    _cosechaMin = TextEditingController(text: e?.cosechaMin.toString() ?? '');
-    _cosechaMax = TextEditingController(text: e?.cosechaMax.toString() ?? '');
+    _cosechaMin = TextEditingController(
+        text: e?.cosechaMin?.toString() ?? '');
+    _cosechaMax = TextEditingController(
+        text: e?.cosechaMax?.toString() ?? '');
+    _periodicidad = TextEditingController(
+        text: e?.periodicidadCosechaDias?.toString() ?? '');
+    _esperanzaVida = TextEditingController(
+        text: e?.esperanzaVidaDias?.toString() ?? '');
     _germinadorDias =
         TextEditingController(text: e?.germinadorDias?.toString() ?? '');
-    _tipoAbono1 = TextEditingController(text: e?.tipoAbono1 ?? '');
-    _tipoAbono2 = TextEditingController(text: e?.tipoAbono2 ?? '');
-    _diasAbono2 = TextEditingController(text: e?.abono2Dias.toString() ?? '');
     _fuente = TextEditingController(text: e?.fuenteMetodo ?? '');
     _notas = TextEditingController(text: '');
     _metodo = e?.metodoSiembra ?? 'directa';
+    _tipoCultivo = e?.tipoCultivoDefault ?? 'ciclo_unico';
+    _ciclosAbono.clear();
+    if (e != null && e.ciclosAbono.isNotEmpty) {
+      _ciclosAbono.addAll(
+          e.ciclosAbono.map(CicloAbonoEditorRow.fromCiclo));
+    } else {
+      _ciclosAbono.add(CicloAbonoEditorRow(dias: '1'));
+    }
     // Fase 3h: cuando cambie la especie, consultar patologías conocidas.
     _especie.addListener(_refrescarPatologiasConocidas);
     // Verificación EPPO con debounce cuando cambian nombre o especie.
@@ -250,10 +285,12 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
     _especie.dispose();
     _cosechaMin.dispose();
     _cosechaMax.dispose();
+    _periodicidad.dispose();
+    _esperanzaVida.dispose();
     _germinadorDias.dispose();
-    _tipoAbono1.dispose();
-    _tipoAbono2.dispose();
-    _diasAbono2.dispose();
+    for (final c in _ciclosAbono) {
+      c.dispose();
+    }
     _fuente.dispose();
     _notas.dispose();
     super.dispose();
@@ -315,14 +352,27 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
       if (_germinadorDias.text.trim().isEmpty && v.germinadorDias != null) {
         _germinadorDias.text = '${v.germinadorDias}';
       }
-      if (_tipoAbono1.text.trim().isEmpty && v.tipoAbono1 != null) {
-        _tipoAbono1.text = v.tipoAbono1!;
+      if (_periodicidad.text.trim().isEmpty && v.cosechaMinDias != null) {
+        _periodicidad.text = '${v.cosechaMinDias}';
       }
-      if (_tipoAbono2.text.trim().isEmpty && v.tipoAbono2 != null) {
-        _tipoAbono2.text = v.tipoAbono2!;
+      if (v.tipoAbono1 != null && _ciclosAbono.isNotEmpty) {
+        final row = _ciclosAbono.first;
+        if (row.tipoResuelto.isEmpty) {
+          if (tiposAbonoSugeridos.contains(v.tipoAbono1)) {
+            row.tipoSeleccionado = v.tipoAbono1!;
+          } else {
+            row.tipoSeleccionado = 'Otro';
+            row.tipoCustomCtrl.text = v.tipoAbono1!;
+          }
+        }
       }
-      if (_diasAbono2.text.trim().isEmpty && v.abono2Dias != null) {
-        _diasAbono2.text = '${v.abono2Dias}';
+      if (v.tipoAbono2 != null && v.abono2Dias != null) {
+        if (_ciclosAbono.length < 2) {
+          _ciclosAbono.add(CicloAbonoEditorRow(
+            tipo: v.tipoAbono2,
+            dias: '${v.abono2Dias}',
+          ));
+        }
       }
       if (_fuente.text.trim().isEmpty) {
         _fuente.text = v.fuente ?? 'Comunidad NEXUS';
@@ -402,7 +452,6 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
       orElse: () => plantas.isNotEmpty
           ? Planta(
               id: -1, nombre: '', especie: '',
-              cosechaMin: 0, cosechaMax: 0, abono2Dias: 0,
               metodoSiembra: 'directa', fuenteMetodo: '')
           : throw StateError('sin plantas'),
     );
@@ -566,59 +615,94 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
               ),
             ],
             const SizedBox(height: 16),
-            Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _cosechaMin,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                      labelText: 'Cosecha mín (días)',
-                      border: OutlineInputBorder()),
+            const Text('Tipo de cultivo',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'ciclo_unico',
+                  label: Text('Ciclo único'),
+                  icon: Icon(Icons.timelapse, size: 18),
+                ),
+                ButtonSegment(
+                  value: 'perenne',
+                  label: Text('Cultivo perenne'),
+                  icon: Icon(Icons.park, size: 18),
+                ),
+              ],
+              selected: {_tipoCultivo},
+              onSelectionChanged: (s) =>
+                  setState(() => _tipoCultivo = s.first),
+            ),
+            const SizedBox(height: 12),
+            if (_tipoCultivo == 'perenne') ...[
+              TextField(
+                controller: _cosechaMin,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Días hasta primera cosecha',
+                  border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _cosechaMax,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                      labelText: 'Cosecha máx (días)',
-                      border: OutlineInputBorder()),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _periodicidad,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Periodicidad entre cosechas (días)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
                 ),
-              ),
-            ]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _esperanzaVida,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Esperanza de vida (días)',
+                      helperText: 'Hasta renovación',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ]),
+            ] else ...[
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _cosechaMin,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Cosecha 1 — verde/tierno (días)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _cosechaMax,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Cosecha 2 — maduro/seco (días)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ]),
+            ],
             const SizedBox(height: 16),
             const Text('Fertilización',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-            TextField(
-              controller: _tipoAbono1,
-              decoration: const InputDecoration(
-                  labelText: 'Tipo Abono 1',
-                  hintText: 'Ej: Triple 15, Gallinaza…',
-                  border: OutlineInputBorder()),
+            CiclosAbonoEditor(
+              ciclos: _ciclosAbono,
+              onChanged: () => setState(() {}),
             ),
-            const SizedBox(height: 8),
-            Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _tipoAbono2,
-                  decoration: const InputDecoration(
-                      labelText: 'Tipo Abono 2',
-                      border: OutlineInputBorder()),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _diasAbono2,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                      labelText: 'Días abono 2',
-                      border: OutlineInputBorder()),
-                ),
-              ),
-            ]),
             const SizedBox(height: 8),
             TextField(
               controller: _fuente,
@@ -962,6 +1046,36 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
               'Ingresa días en germinador (> 0) o cambia a siembra directa')));
       return;
     }
+    if (_tipoCultivo == 'perenne') {
+      if ((_i(_cosechaMin) ?? 0) <= 0 ||
+          (_i(_periodicidad) ?? 0) <= 0 ||
+          (_i(_esperanzaVida) ?? 0) <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Indica días hasta 1ª cosecha, periodicidad y esperanza de vida')));
+        return;
+      }
+    } else if ((_i(_cosechaMin) ?? 0) <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Indica los días hasta Cosecha 1 (verde/tierno)')));
+      return;
+    }
+
+    final ciclos = <CicloAbono>[];
+    for (final row in _ciclosAbono) {
+      final c = row.toCiclo();
+      if (c == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Completa tipo y días de cada ciclo de abono (> 0)')));
+        return;
+      }
+      ciclos.add(c);
+    }
+    ciclos.sort((a, b) => a.dias.compareTo(b.dias));
+    final ciclosJson = encodeCiclosAbonoJson(ciclos);
+    final esPerenne = _tipoCultivo == 'perenne';
+
     setState(() => _saving = true);
     try {
       final mut = ref.read(dataMutationsProvider);
@@ -971,12 +1085,16 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
           nombreComun: nombre,
           especie: _s(_especie),
           tiempoCosechaMinDias: _i(_cosechaMin),
-          tiempoCosechaMaxDias: _i(_cosechaMax),
+          tiempoCosechaMaxDias: esPerenne ? null : _i(_cosechaMax),
+          tipoCultivoDefault: _tipoCultivo,
+          periodicidadCosechaDias: esPerenne ? _i(_periodicidad) : null,
+          esperanzaVidaDias: esPerenne ? _i(_esperanzaVida) : null,
+          ciclosAbonoJson: ciclosJson,
           metodoSiembra: _metodo,
           germinadorDias: _metodo == 'germinador' ? _i(_germinadorDias) : null,
-          tipoAbono1: _s(_tipoAbono1),
-          tipoAbono2: _s(_tipoAbono2),
-          diasAbono2: _i(_diasAbono2),
+          tipoAbono1: ciclos.isNotEmpty ? ciclos.first.tipo : null,
+          tipoAbono2: ciclos.length > 1 ? ciclos[1].tipo : null,
+          diasAbono2: ciclos.length > 1 ? ciclos[1].dias : null,
           fuenteMetodo: _s(_fuente),
           notas: _s(_notas),
         );
@@ -987,18 +1105,20 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
           nombreComun: nombre,
           especie: _s(_especie),
           tiempoCosechaMinDias: _i(_cosechaMin),
-          tiempoCosechaMaxDias: _i(_cosechaMax),
+          tiempoCosechaMaxDias: esPerenne ? null : _i(_cosechaMax),
+          tipoCultivoDefault: _tipoCultivo,
+          periodicidadCosechaDias: esPerenne ? _i(_periodicidad) : null,
+          esperanzaVidaDias: esPerenne ? _i(_esperanzaVida) : null,
+          ciclosAbonoJson: ciclosJson,
           metodoSiembra: _metodo,
           germinadorDias: _metodo == 'germinador' ? _i(_germinadorDias) : null,
-          tipoAbono1: _s(_tipoAbono1),
-          tipoAbono2: _s(_tipoAbono2),
-          diasAbono2: _i(_diasAbono2),
+          tipoAbono1: ciclos.isNotEmpty ? ciclos.first.tipo : null,
+          tipoAbono2: ciclos.length > 1 ? ciclos[1].tipo : null,
+          diasAbono2: ciclos.length > 1 ? ciclos[1].dias : null,
           fuenteMetodo: _s(_fuente),
           notas: _s(_notas),
         );
       }
-      // Contribución al banco comunitario (B1) — fire-and-forget: nunca
-      // bloquea ni falla el guardado local.
       if (_compartirComunidad) {
         unawaited(VariedadesComunitariasService.contribuir(
           nombre: nombre,
@@ -1007,10 +1127,10 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
           germinadorDias:
               _metodo == 'germinador' ? _i(_germinadorDias) : null,
           cosechaMinDias: _i(_cosechaMin),
-          cosechaMaxDias: _i(_cosechaMax),
-          tipoAbono1: _s(_tipoAbono1),
-          tipoAbono2: _s(_tipoAbono2),
-          abono2Dias: _i(_diasAbono2),
+          cosechaMaxDias: esPerenne ? null : _i(_cosechaMax),
+          tipoAbono1: ciclos.isNotEmpty ? ciclos.first.tipo : null,
+          tipoAbono2: ciclos.length > 1 ? ciclos[1].tipo : null,
+          abono2Dias: ciclos.length > 1 ? ciclos[1].dias : null,
           fuente: _s(_fuente),
         ));
       }

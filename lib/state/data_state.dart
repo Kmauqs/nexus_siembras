@@ -4,8 +4,9 @@
 // para no romper la interfaz; hay adapters que las construyen desde los rows Drift.
 
 import 'dart:convert';
-import 'package:drift/drift.dart' show OrderingTerm, Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart' show OrderingTerm, Value;
+import '../core/models/ciclo_abono.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/reports/report_service.dart' show ReportPredio;
 import '../data/database/database.dart' as drift;
@@ -86,27 +87,50 @@ class Compra {
 class Planta {
   const Planta({
     required this.id, required this.nombre, required this.especie,
-    required this.cosechaMin, required this.cosechaMax,
-    required this.abono2Dias, required this.metodoSiembra,
+    this.cosechaMin, this.cosechaMax,
+    this.abono2Dias,
+    required this.metodoSiembra,
     this.germinadorDias, required this.fuenteMetodo,
     this.tipoAbono1, this.tipoAbono2,
+    this.tipoCultivoDefault = 'ciclo_unico',
+    this.periodicidadCosechaDias,
+    this.esperanzaVidaDias,
+    this.ciclosAbono = const [],
   });
-  final int id, cosechaMin, cosechaMax, abono2Dias;
+  final int id;
+  final int? cosechaMin, cosechaMax, abono2Dias;
   final int? germinadorDias;
+  final int? periodicidadCosechaDias, esperanzaVidaDias;
   final String nombre, especie, metodoSiembra, fuenteMetodo;
+  final String tipoCultivoDefault;
   final String? tipoAbono1, tipoAbono2;
+  final List<CicloAbono> ciclosAbono;
+
+  bool get esPerenneDefault => tipoCultivoDefault == 'perenne';
+  String get tipoCultivoEtiqueta =>
+      esPerenneDefault ? 'Cultivo perenne' : 'Ciclo único';
 
   factory Planta.fromDrift(drift.Planta p) => Planta(
         id: p.id,
         nombre: p.nombreComun,
         especie: p.especie ?? '',
-        cosechaMin: p.tiempoCosechaMinDias ?? 90,
-        cosechaMax: p.tiempoCosechaMaxDias ?? 120,
-        abono2Dias: p.diasAbono2 ?? 45,
+        cosechaMin: p.tiempoCosechaMinDias,
+        cosechaMax: p.tiempoCosechaMaxDias,
+        abono2Dias: p.diasAbono2,
         metodoSiembra: p.metodoSiembra ?? 'directa',
         germinadorDias: p.germinadorDias,
         fuenteMetodo: p.fuenteMetodo ?? '',
-        tipoAbono1: p.tipoAbono1, tipoAbono2: p.tipoAbono2,
+        tipoAbono1: p.tipoAbono1,
+        tipoAbono2: p.tipoAbono2,
+        tipoCultivoDefault: p.tipoCultivoDefault,
+        periodicidadCosechaDias: p.periodicidadCosechaDias,
+        esperanzaVidaDias: p.esperanzaVidaDias,
+        ciclosAbono: decodeCiclosAbonoJson(
+          p.ciclosAbonoJson,
+          tipoAbono1: p.tipoAbono1,
+          tipoAbono2: p.tipoAbono2,
+          diasAbono2: p.diasAbono2,
+        ),
       );
 }
 
@@ -116,6 +140,11 @@ class Cultivo {
     required this.lote, required this.sembrado, required this.hh,
     this.horaValor, this.finalizadoFecha, this.lat, this.lng, this.altM,
     this.areaBaseM2, this.loteId,
+    this.tipoCultivo = 'ciclo_unico',
+    this.cosecha1Dias,
+    this.cosecha2Dias,
+    this.periodicidadCosechaDias,
+    this.esperanzaVidaDias,
   });
   factory Cultivo.fromDrift(drift.Cultivo c) => Cultivo(
         id: c.id, predioId: c.predioId, plantaId: c.plantaId,
@@ -127,6 +156,11 @@ class Cultivo {
         lat: c.lat, lng: c.lng, altM: c.altM,
         areaBaseM2: c.areaBaseM2,
         loteId: c.loteId,
+        tipoCultivo: c.tipoCultivo,
+        cosecha1Dias: c.cosecha1Dias,
+        cosecha2Dias: c.cosecha2Dias,
+        periodicidadCosechaDias: c.periodicidadCosechaDias,
+        esperanzaVidaDias: c.esperanzaVidaDias,
       );
   final int id, predioId, plantaId;
   final String lote, sembrado;
@@ -134,7 +168,36 @@ class Cultivo {
   final double? horaValor, lat, lng, altM, areaBaseM2;
   final int? loteId;
   final String? finalizadoFecha;
+  final String tipoCultivo;
+  final int? cosecha1Dias, cosecha2Dias, periodicidadCosechaDias, esperanzaVidaDias;
   bool get isFinalizado => finalizadoFecha != null;
+  bool get esPerenne => tipoCultivo == 'perenne';
+
+  String get tipoCultivoEtiqueta =>
+      esPerenne ? 'Cultivo perenne' : 'Ciclo único';
+
+  /// Líneas legibles de los periodos configurados al crear el cultivo.
+  List<String> get lineasPeriodosConfigurados {
+    if (esPerenne) {
+      return [
+        if (cosecha1Dias != null) 'Primera cosecha: $cosecha1Dias d',
+        if (periodicidadCosechaDias != null)
+          'Periodicidad: $periodicidadCosechaDias d',
+        if (esperanzaVidaDias != null) 'Vida útil: $esperanzaVidaDias d',
+      ];
+    }
+    return [
+      if (cosecha1Dias != null) 'Cosecha 1: $cosecha1Dias d',
+      if (cosecha2Dias != null) 'Cosecha 2: $cosecha2Dias d',
+    ];
+  }
+
+  /// Resumen compacto para la lista de cultivos.
+  String get resumenPeriodosCorto {
+    final p = lineasPeriodosConfigurados;
+    if (p.isEmpty) return tipoCultivoEtiqueta;
+    return '$tipoCultivoEtiqueta · ${p.take(2).join(' · ')}';
+  }
 }
 
 String _iso(DateTime d) =>
@@ -954,6 +1017,7 @@ class Evento {
   final DateTime fechaProgramada;
   final DateTime? fechaEjecutada;
   bool get ejecutada => fechaEjecutada != null;
+  DateTime get fechaEfectiva => fechaEjecutada ?? fechaProgramada;
 }
 
 class InsumoUsado {
@@ -1009,6 +1073,15 @@ final eventosPredioProvider = Provider<List<Evento>>((ref) {
     data: (list) => list.map(Evento.fromDrift).toList(),
     orElse: () => const <Evento>[],
   );
+});
+
+/// Eventos del cronograma de un cultivo, ordenados por fecha efectiva.
+final eventosCultivoProvider = Provider.family<List<Evento>, int>((ref, cultivoId) {
+  final eventos = ref.watch(eventosPredioProvider)
+      .where((e) => e.cultivoId == cultivoId)
+      .toList();
+  eventos.sort((a, b) => a.fechaEfectiva.compareTo(b.fechaEfectiva));
+  return eventos;
 });
 
 final _eventosStreamByPredio =
@@ -1307,6 +1380,11 @@ class DataMutations {
     double? lng,
     double? altM,
     int? loteId,
+    String tipoCultivo = 'ciclo_unico',
+    int? cosecha1Dias,
+    int? cosecha2Dias,
+    int? periodicidadCosechaDias,
+    int? esperanzaVidaDias,
   }) async {
     final predioId = await _getPredioIdAsync();
     final id = await ref.read(_cultivoRepoProvider).insert(
@@ -1324,6 +1402,11 @@ class DataMutations {
           lng: lng,
           altM: altM,
           loteId: loteId,
+          tipoCultivo: tipoCultivo,
+          cosecha1Dias: cosecha1Dias,
+          cosecha2Dias: cosecha2Dias,
+          periodicidadCosechaDias: periodicidadCosechaDias,
+          esperanzaVidaDias: esperanzaVidaDias,
         );
     if (semillaValor > 0) {
       final plantas = ref.read(plantasProvider);
@@ -1370,6 +1453,10 @@ class DataMutations {
     String? familia,
     int? tiempoCosechaMinDias,
     int? tiempoCosechaMaxDias,
+    String tipoCultivoDefault = 'ciclo_unico',
+    int? periodicidadCosechaDias,
+    int? esperanzaVidaDias,
+    String? ciclosAbonoJson,
     String? metodoSiembra,
     int? germinadorDias,
     String? tipoAbono1,
@@ -1387,6 +1474,10 @@ class DataMutations {
       familia: familia,
       tiempoCosechaMinDias: tiempoCosechaMinDias,
       tiempoCosechaMaxDias: tiempoCosechaMaxDias,
+      tipoCultivoDefault: tipoCultivoDefault,
+      periodicidadCosechaDias: periodicidadCosechaDias,
+      esperanzaVidaDias: esperanzaVidaDias,
+      ciclosAbonoJson: ciclosAbonoJson,
       metodoSiembra: metodoSiembra,
       germinadorDias: germinadorDias,
       tipoAbono1: tipoAbono1,
@@ -1411,6 +1502,10 @@ class DataMutations {
     String? familia,
     int? tiempoCosechaMinDias,
     int? tiempoCosechaMaxDias,
+    String tipoCultivoDefault = 'ciclo_unico',
+    int? periodicidadCosechaDias,
+    int? esperanzaVidaDias,
+    String? ciclosAbonoJson,
     String? metodoSiembra,
     int? germinadorDias,
     String? tipoAbono1,
@@ -1429,6 +1524,10 @@ class DataMutations {
       familia: familia,
       tiempoCosechaMinDias: tiempoCosechaMinDias,
       tiempoCosechaMaxDias: tiempoCosechaMaxDias,
+      tipoCultivoDefault: tipoCultivoDefault,
+      periodicidadCosechaDias: periodicidadCosechaDias,
+      esperanzaVidaDias: esperanzaVidaDias,
+      ciclosAbonoJson: ciclosAbonoJson,
       metodoSiembra: metodoSiembra,
       germinadorDias: germinadorDias,
       tipoAbono1: tipoAbono1,
@@ -1746,6 +1845,7 @@ class DataMutations {
     required List<String> actividades,
     List<InsumoUsado> insumos = const [],
     String? notas,
+    int? periodicidadCosechaDias,
   }) async {
     // Fase 3g: si hay sesión Supabase, estampar el UUID del usuario que
     // registra la tarea. En modo local queda null (legacy/anónimo).
@@ -1761,6 +1861,7 @@ class DataMutations {
           insumos: insumos.map((i) => i.toJson()).toList(),
           notas: notas,
           createdByUserId: autorUserId,
+          periodicidadCosechaDias: periodicidadCosechaDias,
         );
     // Reprograma notificaciones: al cerrar un evento su alerta ya no aplica.
     ref.read(eventNotificationSyncProvider).sincronizar();

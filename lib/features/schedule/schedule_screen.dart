@@ -222,17 +222,18 @@ class _GanttView extends ConsumerWidget {
                         final sembrado = DateTime.parse(c.sembrado);
                         final ultima = evs.isEmpty
                             ? sembrado.add(const Duration(days: 90))
-                            : evs.map((e) => e.fechaEjecutada ?? e.fechaProgramada)
+                            : evs
+                                .map((e) => e.fechaEfectiva)
                                 .reduce((a, b) => a.isAfter(b) ? a : b);
                         return _GanttRow(
                           plantaNombre: pl?.nombre ?? '?',
-                          lote: c.lote,
+                          lote: '${c.lote} · ${c.tipoCultivoEtiqueta}',
                           labelW: labelW,
                           barColor: color,
                           barLeft: pctOf(sembrado),
                           barRight: pctOf(ultima),
                           milestones: evs.map((e) {
-                            final fecha = e.fechaEjecutada ?? e.fechaProgramada;
+                            final fecha = e.fechaEfectiva;
                             return (
                               e.descripcion,
                               pctOf(fecha),
@@ -466,7 +467,7 @@ class _CalendarView extends StatelessWidget {
     // Agrupa eventos por fecha string
     final byDate = <String, List<Evento>>{};
     for (final e in eventos) {
-      final f = e.fechaEjecutada ?? e.fechaProgramada;
+      final f = e.fechaEfectiva;
       (byDate[_iso(f)] ??= []).add(e);
     }
 

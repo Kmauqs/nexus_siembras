@@ -204,6 +204,13 @@ class BackupService {
                   finalizadoFecha:
                       Value(_parseNullableDate(row['finalizadoFecha'])),
                   notas: Value(row['notas'] as String?),
+                  tipoCultivo: Value(
+                      (row['tipoCultivo'] as String?) ?? 'ciclo_unico'),
+                  cosecha1Dias: Value(row['cosecha1Dias'] as int?),
+                  cosecha2Dias: Value(row['cosecha2Dias'] as int?),
+                  periodicidadCosechaDias:
+                      Value(row['periodicidadCosechaDias'] as int?),
+                  esperanzaVidaDias: Value(row['esperanzaVidaDias'] as int?),
                 ));
         cultivoMap[row['id'] as int] = newId;
       }
@@ -381,6 +388,11 @@ class BackupService {
         'altM': c.altM,
         'finalizadoFecha': c.finalizadoFecha?.toIso8601String(),
         'notas': c.notas,
+        'tipoCultivo': c.tipoCultivo,
+        'cosecha1Dias': c.cosecha1Dias,
+        'cosecha2Dias': c.cosecha2Dias,
+        'periodicidadCosechaDias': c.periodicidadCosechaDias,
+        'esperanzaVidaDias': c.esperanzaVidaDias,
       };
 
   Map<String, dynamic> _eventoToJson(EventosCultivoData e) => {
