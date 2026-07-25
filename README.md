@@ -137,9 +137,9 @@ flutter build web --release
 # Windows — build\windows\x64\runner\Release\
 flutter build windows --release
 
-# Instalador Windows (Inno Setup 6) — dist\NexusSiembras-Setup-*-win-x64.exe
+# Instalador Windows (Inno Setup 7) — dist\NexusSiembras-Setup-*-win-x64.exe
 flutter build windows --release
-& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" script-install-winx64.ini
+& "C:\Program Files\Inno Setup 7\ISCC.exe" script-install-winx64.ini
 ```
 
 ## Estructura del proyecto
@@ -187,7 +187,7 @@ nexus_siembras/
 ├── supabase/               # Schemas SQL + scripts de diagnóstico
 │   └── migrations/         # Fuente canónica (README con orden + 0007 schema_meta)
 ├── tool/                   # eppo_fingerprint.dart, import_excel.dart
-├── script-install-winx64.ini  # Instalador Inno Setup 6 para Windows x64
+├── script-install-winx64.ini  # Instalador Inno Setup 7 para Windows x64
 ├── docs/                   # Auditoría, parches aplicados, pruebas E2E
 ├── assets/                 # imágenes, animaciones, .env
 ├── test/
