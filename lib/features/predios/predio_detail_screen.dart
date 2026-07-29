@@ -580,7 +580,7 @@ class _InvitarColaboradorSheetState
             items: const [
               DropdownMenuItem(
                   value: 'propietario',
-                  child: Text('Propietario · control total')),
+                  child: Text('Propietario · control total incl. compras')),
               DropdownMenuItem(
                   value: 'trabajador',
                   child: Text('Trabajador · crear y editar')),

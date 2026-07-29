@@ -6,6 +6,7 @@ import '../../core/reports/adjunto_viewer.dart';
 import '../../core/reports/export_helpers.dart';
 import '../../core/reports/report_data_builder.dart';
 import '../../core/units/units_catalog.dart';
+import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/unit_dropdown.dart';
 import '../../services/soporte_service.dart';
@@ -17,11 +18,18 @@ class PurchasesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final compras = ref.watch(comprasProvider);
-    // Solo el propietario puede editar compras (matriz de permisos:
-    // trabajador y consultor no tienen acceso; el listado se muestra
-    // igual porque forma parte de la información visible del predio).
     final permisos = ref.watch(permisosPredioActivoProvider);
+    if (!permisos.puedeVerCompras) {
+      return const AppShell(
+        title: 'Compras',
+        child: AccesoDenegado(
+          icono: Icons.lock_outline,
+          mensaje: 'Las compras del predio solo están disponibles para '
+              'usuarios con rol Propietario (dueño o co-propietario invitado).',
+        ),
+      );
+    }
+    final compras = ref.watch(comprasProvider);
     final puedeEditar = permisos.puedeEditarCompras;
     return AppShell(
       title: 'Compras',

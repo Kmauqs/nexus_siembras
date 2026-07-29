@@ -88,17 +88,35 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           final data = await buildDashboardData(ref);
           final cultivos = await buildCultivosReporte(ref);
           final inventario = buildInventarioReporte(ref);
-          final compras = buildComprasReporte(ref);
+          final puedeVerCompras =
+              ref.read(permisosPredioActivoProvider).puedeVerCompras;
           final proveedores = await buildProveedoresReporte(ref);
+          final comprasTabla =
+              puedeVerCompras ? buildComprasReporte(ref) : null;
+          final secciones = <SeccionReporte>[
+            SeccionReporte(
+                titulo: cultivos.titulo,
+                columns: cultivos.columns,
+                rows: cultivos.rows),
+            SeccionReporte(
+                titulo: inventario.titulo,
+                columns: inventario.columns,
+                rows: inventario.rows),
+            if (comprasTabla != null)
+              SeccionReporte(
+                  titulo: comprasTabla.titulo,
+                  columns: comprasTabla.columns,
+                  rows: comprasTabla.rows),
+            SeccionReporte(
+                titulo: proveedores.titulo,
+                columns: proveedores.columns,
+                rows: proveedores.rows),
+          ];
           file = await exportConsolidadoPdf(
             predio: predio,
             sistemaUnidades: sistema,
             dashboard: data,
-            secciones: [
-              for (final t in [cultivos, inventario, compras, proveedores])
-                SeccionReporte(
-                    titulo: t.titulo, columns: t.columns, rows: t.rows),
-            ],
+            secciones: secciones,
           );
         default:
           final TablaReporte t = switch (tipo) {
@@ -268,6 +286,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   }
 
   Widget _cardGenerar() {
+    final puedeVerCompras =
+        ref.watch(permisosPredioActivoProvider).puedeVerCompras;
     Widget fila(String tipo, IconData icono, String nombre,
         {bool soloPdf = false}) {
       return ListTile(
@@ -321,7 +341,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             fila('cultivos', Icons.eco_outlined,
                 'Cultivos y patologías activas'),
             fila('inventario', Icons.inventory_2_outlined, 'Inventario'),
-            fila('compras', Icons.receipt_long_outlined, 'Compras'),
+            if (puedeVerCompras)
+              fila('compras', Icons.receipt_long_outlined, 'Compras'),
             fila('proveedores', Icons.storefront_outlined, 'Proveedores'),
             const Divider(),
             fila('consolidado', Icons.auto_stories_outlined,

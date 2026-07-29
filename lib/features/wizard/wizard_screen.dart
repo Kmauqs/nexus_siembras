@@ -352,6 +352,25 @@ class WizardScreen extends ConsumerWidget {
   }
 
   _PasoDef _pasoCompra(BuildContext context, WidgetRef ref) {
+    final permisos = ref.watch(permisosPredioActivoProvider);
+    if (!permisos.puedeVerCompras) {
+      return _PasoDef(
+        titulo: '7. Primera compra',
+        descripcion:
+            'Las compras del predio solo están disponibles para usuarios '
+            'con rol Propietario. Como colaborador Trabajador o Consultor '
+            'puedes omitir este paso.',
+        obligatorio: false,
+        cumplido: true,
+        contenido: const [
+          _Estado(
+            ok: true,
+            okTxt: 'No aplica a tu rol en este predio',
+            noTxt: '',
+          ),
+        ],
+      );
+    }
     final compras = ref.watch(comprasProvider);
     return _PasoDef(
       titulo: '7. Primera compra',

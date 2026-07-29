@@ -31,7 +31,8 @@ class CicloAbonoEditorRow {
 
   CicloAbono? toCiclo() {
     final dias = int.tryParse(diasCtrl.text.trim());
-    if (dias == null || dias <= 0) return null;
+    // 0 = abono al momento de siembra/trasplante (válido).
+    if (dias == null || dias < 0) return null;
     final tipo = tipoResuelto;
     if (tipo.isEmpty) return null;
     return CicloAbono(tipo: tipo, dias: dias);
@@ -169,7 +170,7 @@ class _CicloAbonoCard extends StatelessWidget {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: 'Días desde siembra/trasplante',
-                helperText: 'Tiempo estimado hasta este abonado',
+                helperText: '0 = al siembra/trasplante · >0 = días después',
                 border: OutlineInputBorder(),
               ),
               onChanged: (_) => onChanged(),

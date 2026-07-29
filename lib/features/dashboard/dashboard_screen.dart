@@ -94,8 +94,10 @@ class DashboardScreen extends ConsumerWidget {
           _AlertsCard(),
           const SizedBox(height: 12),
           _NextEventsCard(),
-          const SizedBox(height: 12),
-          _ComprasCard(compras: compras),
+          if (permisos.puedeVerCompras) ...[
+            const SizedBox(height: 12),
+            _ComprasCard(compras: compras),
+          ],
           const SizedBox(height: 12),
           _HHCard(hhMap: hhMap),
           const SizedBox(height: 20),

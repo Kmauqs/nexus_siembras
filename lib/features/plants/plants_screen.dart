@@ -1062,12 +1062,13 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
     }
 
     final ciclos = <CicloAbono>[];
-    for (final row in _ciclosAbono) {
-      final c = row.toCiclo();
+    for (var i = 0; i < _ciclosAbono.length; i++) {
+      final c = _ciclosAbono[i].toCiclo();
       if (c == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            behavior: SnackBarBehavior.floating,
             content: Text(
-                'Completa tipo y días de cada ciclo de abono (> 0)')));
+                'Revisa Abono ${i + 1}: indica el tipo y días válidos (≥ 0)')));
         return;
       }
       ciclos.add(c);

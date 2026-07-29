@@ -318,12 +318,14 @@ final rolEnPredioActivoProvider = Provider<String?>((ref) {
 /// "Modelo de datos → Reglas de acceso resumidas". Un consultor es
 /// siempre solo-lectura; un trabajador puede editar cultivos/eventos/
 /// tareas/inventario pero no compras/colaboradores/predio/lotes/suelo/
-/// condiciones. El propietario puede todo.
+/// condiciones. El propietario (dueño o colaborador invitado como
+/// propietario) puede todo, incluidas compras.
 class PermisosPredio {
   const PermisosPredio({
     required this.rol,
     required this.esPropietario,
     required this.puedeVer,
+    required this.puedeVerCompras,
     required this.puedeEditarPredioYLotes,
     required this.puedeEditarCultivosYTareas,
     required this.puedeEditarInventario,
@@ -335,6 +337,8 @@ class PermisosPredio {
   final String? rol; // 'propietario' | 'trabajador' | 'consultor' | null
   final bool esPropietario;
   final bool puedeVer;
+  /// Compras: solo rol `propietario` (dueño o co-propietario invitado).
+  final bool puedeVerCompras;
   final bool puedeEditarPredioYLotes;
   final bool puedeEditarCultivosYTareas;
   final bool puedeEditarInventario;
@@ -353,6 +357,7 @@ class PermisosPredio {
       rol: rol,
       esPropietario: esPropietario,
       puedeVer: tieneAcceso,
+      puedeVerCompras: esPropietario,
       puedeEditarPredioYLotes: esPropietario,
       puedeEditarCultivosYTareas: esPropietario || esTrabajador,
       puedeEditarInventario: esPropietario || esTrabajador,
@@ -941,7 +946,11 @@ final _inventoryStreamProvider =
 });
 
 /// Compras del predio activo con nombre de proveedor resuelto.
+/// Solo visible para rol `propietario` (dueño o co-propietario invitado).
 final comprasProvider = Provider<List<Compra>>((ref) {
+  if (!ref.watch(permisosPredioActivoProvider).puedeVerCompras) {
+    return const [];
+  }
   final predioId = ref.watch(activePredioIdProvider);
   final rows = ref.watch(_comprasStreamProvider(predioId)).valueOrNull ?? const [];
   final provs = ref.watch(proveedoresDriftProvider).valueOrNull ?? const [];
@@ -1247,6 +1256,9 @@ class DataMutations {
     int? plantaRef,
     String? soporteName,
   }) async {
+    if (!ref.read(permisosPredioActivoProvider).puedeEditarCompras) {
+      throw StateError('Sin permiso para registrar compras en este predio');
+    }
     final predioId = await _getPredioIdAsync();
     final provRepo = ref.read(_proveedorRepoProvider);
     final proveedorId = proveedor.trim().isEmpty
@@ -1288,6 +1300,9 @@ class DataMutations {
     int? plantaRef,
     String? soporteName,
   }) async {
+    if (!ref.read(permisosPredioActivoProvider).puedeEditarCompras) {
+      throw StateError('Sin permiso para editar compras en este predio');
+    }
     final predioId = await _getPredioIdAsync();
     final provRepo = ref.read(_proveedorRepoProvider);
     final proveedorId = proveedor.trim().isEmpty

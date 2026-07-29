@@ -80,6 +80,7 @@ class SyncService {
 
   /// Cache de permisos de edición por predio durante un sync (auditoría P1).
   final Map<int, bool> _permisoCache = {};
+  final Map<int, bool> _propietarioCache = {};
 
   /// Borra permanentemente una fila remota dado su ID local + tabla.
   /// Se usa cuando el usuario vacía la papelera o borra definitivamente
@@ -327,6 +328,7 @@ class SyncService {
     _enCurso = true;
     _erroresFilas = 0;
     _permisoCache.clear();
+    _propietarioCache.clear();
     try {
       // Auditoría S6: verificar versión del esquema remoto antes de tocar
       // datos. Si el servidor está desactualizado respecto a lo que este
@@ -523,6 +525,15 @@ class SyncService {
     if (cached != null) return cached;
     final v = await _puedoEditarPredioLocal(predioLocalId);
     _permisoCache[predioLocalId] = v;
+    return v;
+  }
+
+  /// Versión cacheada de `_soyPropietarioPredioLocal` para compras.
+  Future<bool> _soyPropietarioPredioCached(int predioLocalId) async {
+    final cached = _propietarioCache[predioLocalId];
+    if (cached != null) return cached;
+    final v = await _soyPropietarioPredioLocal(predioLocalId);
+    _propietarioCache[predioLocalId] = v;
     return v;
   }
 
@@ -945,8 +956,8 @@ class SyncService {
       if (!_debeSubirEnMapa(mappings, r.id, r.updatedAt)) continue;
       final predioRemote = prediosMap[r.predioId]?.remoteId;
       if (predioRemote == null) continue;
-      // Skip proactivo: compras R/W solo propietario.
-      if (!await _puedoEditarPredioCached(r.predioId)) continue;
+      // Skip proactivo: compras R/W solo propietario (dueño o co-propietario).
+      if (!await _soyPropietarioPredioCached(r.predioId)) continue;
       final provRemote =
           r.proveedorId == null ? null : provMap[r.proveedorId!]?.remoteId;
       filas.add(_FilaPush(
@@ -1464,9 +1475,11 @@ class SyncService {
     await pullPorPredio('cultivos', _mergeCultivo);
     await pullPorPredio('inventarios', _mergeInventario);
     await pullPorPredio('analisis_suelo', _mergeAnalisis);
-    // Compras: R/W propietario únicamente. Un trabajador/consultor puede
-    // igual VER las compras vinculadas — RLS lo permite. Backfill igual.
-    await pullPorPredio('compras', _mergeCompra);
+    // Compras: R/W solo propietario (dueño o colaborador invitado como
+    // propietario). Trabajador/consultor no ven ni editan compras (RLS).
+    if (await _soyPropietarioPredioCached(predioLocalId)) {
+      await pullPorPredio('compras', _mergeCompra);
+    }
 
     // Eventos y tareas están ligadas a cultivo_id. Resolvemos los ids
     // remotos de los cultivos del predio y hacemos un `inFilter`.
@@ -2245,6 +2258,26 @@ class SyncService {
           ..limit(1))
         .getSingleOrNull();
     return share?.rol == 'trabajador';
+  }
+
+  /// True si el usuario puede ver/editar compras del predio: dueño real
+  /// (`ownerUserId`) o colaborador con rol `propietario` en el share.
+  Future<bool> _soyPropietarioPredioLocal(int predioLocalId) async {
+    final userId = _sb.auth.currentUser?.id;
+    if (userId == null) return true; // modo local
+    final predio = await (db.select(db.predios)
+          ..where((p) => p.id.equals(predioLocalId)))
+        .getSingleOrNull();
+    if (predio == null) return false;
+    if (predio.ownerUserId == userId) return true;
+    if (predio.ownerUserId == null) return true;
+    final share = await (db.select(db.predioColaboradores)
+          ..where((c) => c.predioId.equals(predioLocalId))
+          ..where((c) => c.colaboradorUserId.equals(userId))
+          ..where((c) => c.deletedAt.isNull())
+          ..limit(1))
+        .getSingleOrNull();
+    return share?.rol == 'propietario';
   }
 
   Future<void> _saveMapping(String tabla, int localId, int remoteId,

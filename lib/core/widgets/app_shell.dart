@@ -66,7 +66,7 @@ class AppShell extends StatelessWidget {
   }
 }
 
-class _MainDrawer extends StatelessWidget {
+class _MainDrawer extends ConsumerWidget {
   const _MainDrawer();
 
   // Fase B4 (i18n): el 3.º elemento es la CLAVE ARB, no el literal.
@@ -93,7 +93,9 @@ class _MainDrawer extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final puedeVerCompras =
+        ref.watch(permisosPredioActivoProvider).puedeVerCompras;
     return Drawer(
       child: Column(
         children: [
@@ -118,7 +120,10 @@ class _MainDrawer extends StatelessWidget {
           ),
           Expanded(
             child: ListView(
-              children: _items.map((it) {
+              children: _items.where((it) {
+                if (it.$1 == '/purchases') return puedeVerCompras;
+                return true;
+              }).map((it) {
                 final (path, icon, claveArb) = it;
                 return ListTile(
                   leading: Icon(icon),
