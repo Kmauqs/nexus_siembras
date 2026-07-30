@@ -20,6 +20,8 @@ Texto listo para Play Store / comunicación de release.
 
 **Compras entre co-propietarios:** cada compra muestra quién la registró. Exporta un **ZIP completo** con reporte PDF/CSV detallado (facturas identificadas) y todos los comprobantes adjuntos.
 
+**Co-propietarios y proveedores:** lo que crea un co-propietario (cultivos, tareas, etc.) se sincroniza con el dueño del predio. El listado de **proveedores** se comparte entre propietario y trabajadores del mismo predio.
+
 **Reportes de compras:** tablas PDF más legibles (Cant./Und., columnas Fecha y Valor ampliadas).
 
 Sigue funcionando **offline** con base de datos cifrada; sincroniza con la nube si tienes cuenta.

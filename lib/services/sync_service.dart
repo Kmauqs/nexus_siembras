@@ -1469,7 +1469,20 @@ class SyncService {
     // de `_pullAll()` — con marcador persistente y reintento si falla.
     if (recuperandoAcceso) {
       await _invalidarHidratacionPredio(predioRemoteId);
+      await _invalidarPullTabla('proveedores');
     }
+  }
+
+  /// Reinicia el cursor incremental de una tabla para forzar re-pull completo
+  /// en la próxima sincronización (p. ej. al recuperar acceso a un predio).
+  Future<void> _invalidarPullTabla(String tabla) async {
+    await db.into(db.syncTables).insertOnConflictUpdate(
+          SyncTablesCompanion.insert(
+            tabla: tabla,
+            lastPulledAt: Value(DateTime.fromMillisecondsSinceEpoch(0)),
+            lastAttemptAt: Value(DateTime.now()),
+          ),
+        );
   }
 
   /// Prefijo de los marcadores de hidratación en `syncTables`. Son filas
@@ -1648,7 +1661,74 @@ class SyncService {
       Log.w('[sync] _backfillRecursosDePredio cultivos-ids fallo: $e');
     }
 
+    // Proveedores del equipo (dueño + co-propietarios/trabajadores): no
+    // tienen predio_id; el pull incremental pudo avanzar el cursor antes
+    // de que RLS permitiera ver el directorio compartido.
+    if (await _puedoEditarPredioCached(predioLocalId)) {
+      try {
+        total += await _pullProveedoresEquipoPredio(predioLocalId);
+      } catch (e) {
+        completo = false;
+        _erroresFilas++;
+        Log.w('[sync] _backfillRecursosDePredio proveedores-equipo fallo: $e');
+      }
+    }
+
     return (filas: total, completo: completo);
+  }
+
+  /// Baja proveedores de dueño y colaboradores propietario/trabajador del
+  /// predio (directorio compartido del equipo).
+  Future<int> _pullProveedoresEquipoPredio(int predioLocalId) async {
+    final predio = await (db.select(db.predios)
+          ..where((p) => p.id.equals(predioLocalId)))
+        .getSingleOrNull();
+    if (predio == null) return 0;
+
+    final ownerIds = <String>{};
+    if (predio.ownerUserId != null) ownerIds.add(predio.ownerUserId!);
+
+    final cols = await (db.select(db.predioColaboradores)
+          ..where((c) => c.predioId.equals(predioLocalId))
+          ..where((c) => c.deletedAt.isNull())
+          ..where((c) => c.rol.isIn(['propietario', 'trabajador'])))
+        .get();
+    for (final c in cols) {
+      final uid = c.colaboradorUserId;
+      if (uid != null && uid.isNotEmpty) ownerIds.add(uid);
+    }
+
+    var count = 0;
+    for (final ownerId in ownerIds) {
+      var offset = 0;
+      while (true) {
+        List<dynamic> rows;
+        try {
+          rows = await _sb
+              .from('proveedores')
+              .select()
+              .eq('owner_id', ownerId)
+              .order('id', ascending: true)
+              .range(offset, offset + _pageSize - 1);
+        } catch (e) {
+          _erroresFilas++;
+          Log.w('[sync] _pullProveedoresEquipoPredio owner=$ownerId: $e');
+          break;
+        }
+        for (final raw in rows) {
+          try {
+            await _mergeProveedor(raw as Map<String, dynamic>);
+            count++;
+          } catch (e) {
+            _erroresFilas++;
+            Log.w('[sync] pull proveedores equipo: fila descartada: $e');
+          }
+        }
+        if (rows.length < _pageSize) break;
+        offset += _pageSize;
+      }
+    }
+    return count;
   }
 
   static String _short(String uuid) {
@@ -2356,8 +2436,10 @@ class SyncService {
   }
 
   /// Retorna true si el usuario actual puede editar recursos del predio
-  /// según el estado LOCAL de la BD (propietario o colaborador con rol
-  /// 'trabajador'). Se usa como filtro proactivo en los `_push*` para
+  /// según el estado LOCAL de la BD (dueño, co-propietario con rol
+  /// `propietario`, o colaborador con rol `trabajador`). Alineado con
+  /// `puede_editar_predio()` en Postgres. Se usa como filtro proactivo en
+  /// los `_push*` para
   /// evitar disparar UPDATE/INSERT en el remoto que la RLS de Postgres
   /// rechazaría con 42501 tras revocarse el share (bug 2026-07-19: al
   /// eliminar a un colaborador, el sync del ex-colaborador abortaba
@@ -2376,14 +2458,14 @@ class SyncService {
     // Sin ownerUserId aún → asumir propio (fue creado localmente antes
     // del primer sync).
     if (predio.ownerUserId == null) return true;
-    // Colaborador trabajador. Consultores no pueden editar.
+    // Co-propietario o trabajador. Consultores no pueden editar.
     final share = await (db.select(db.predioColaboradores)
           ..where((c) => c.predioId.equals(predioLocalId))
           ..where((c) => c.colaboradorUserId.equals(userId))
           ..where((c) => c.deletedAt.isNull())
           ..limit(1))
         .getSingleOrNull();
-    return share?.rol == 'trabajador';
+    return share?.rol == 'propietario' || share?.rol == 'trabajador';
   }
 
   /// True solo si soy el DUEÑO REAL del predio (`predios.ownerUserId`), sin

@@ -22,6 +22,7 @@ Ejecutar en el SQL Editor, en este orden exacto:
 | 10 | `migrations/0009_rls_reportes_privacidad.sql` | **Privacidad reportes**: tabla base solo del dueño; lectura comunitaria por la vista anonimizada |
 | 11 | `migrations/0010_cultivos_tipo_ciclo.sql` | Tipo de ciclo y periodos en `cultivos` (ciclo único / perenne) |
 | 12 | `migrations/0011_compras_created_by.sql` | Autor (`created_by_user_id`) en compras para co-propietarios |
+| 13 | `migrations/0012_proveedores_compartidos.sql` | **Proveedores compartidos**: lectura para colaboradores propietario/trabajador del predio |
 
 Los archivos `fix_*.sql` restantes y `cleanup_duplicados.sql` son remedios
 puntuales históricos: solo ejecutar si se reproduce el problema que
