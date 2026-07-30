@@ -1,7 +1,7 @@
 # NEXUS Siembras — Notas de versión (What's new)
 
 Texto listo para Play Store / comunicación de release.  
-**Última generación:** 2026-07-30 · **Versión:** 0.2.5  
+**Última generación:** 2026-07-30 · **Versión:** 0.2.6
 **Versión anterior documentada:** 0.2.2 (2026-07-25)
 
 ---
