@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Excluye la BD cifrada del backup en la nube de Android: la clave vive
+     en el Keystore y NO se restaura junto con el archivo .sqlite. Sin esto,
+     una reinstalación puede dejar una BD ilegible (SqliteException 26). -->
+<full-backup-content>
+    <exclude domain="root" path="app_flutter/nexus_siembras.sqlite"/>
+    <exclude domain="root" path="app_flutter/nexus_siembras.sqlite-wal"/>
+    <exclude domain="root" path="app_flutter/nexus_siembras.sqlite-shm"/>
+    <exclude domain="root" path="app_flutter/nexus_siembras.sqlite-journal"/>
+</full-backup-content>

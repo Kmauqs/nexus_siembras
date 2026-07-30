@@ -71,12 +71,13 @@ Future<File> exportPdf({
   required String sistemaUnidades,
   required List<String> columns,
   required List<List<String>> rows,
+  PdfPageFormat pageFormat = PdfPageFormat.a4,
 }) async {
   final doc = pw.Document();
   final logos = await _cargarLogos();
 
   doc.addPage(pw.MultiPage(
-    pageFormat: PdfPageFormat.a4,
+    pageFormat: pageFormat,
     margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 32),
     header: (ctx) => _pdfHeader(predio, sistemaUnidades, logos),
     footer: (ctx) => _pdfFooter(ctx, logos),
@@ -198,7 +199,38 @@ pw.Widget _tablaSec(List<String> cols, List<List<String>> rows) => rows.isEmpty
         cellStyle: const pw.TextStyle(fontSize: 8),
         cellAlignment: pw.Alignment.centerLeft,
         border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
+        columnWidths: _columnWidthsComprasPdf(cols),
       );
+
+/// Anchos relativos para tablas de compras en PDF (reporte propio,
+/// consolidado y sección 3 del dashboard). Descripción y Factura −25%;
+/// Fecha y Valor ampliadas; sin columna Comprobante.
+Map<int, pw.TableColumnWidth>? _columnWidthsComprasPdf(List<String> cols) {
+  if (!_esTablaComprasPdf(cols)) return null;
+  double flex(String h) => switch (h) {
+        'Fecha' => 1.35,
+        'Descripción' => 0.75,
+        'Tipo' => 0.85,
+        'Proveedor' => 1.0,
+        'Factura' => 0.85,
+        'Desc. 2' => 0.65,
+        'Código' => 0.55,
+        'Registrada por' => 0.95,
+        'Comprobante (ZIP)' => 0.85,
+        'Cant.' || 'Cantidad' => 0.65,
+        'Und.' || 'Unidad' || 'Unid.' => 0.55,
+        'Valor' => 1.35,
+        _ => 1.0,
+      };
+  return {for (var i = 0; i < cols.length; i++) i: pw.FlexColumnWidth(flex(cols[i]))};
+}
+
+bool _esTablaComprasPdf(List<String> cols) =>
+    cols.isNotEmpty &&
+    cols.first == 'Fecha' &&
+    cols.contains('Valor') &&
+    cols.contains('Descripción') &&
+    (cols.contains('Cant.') || cols.contains('Cantidad'));
 
 /// Secciones 1-6 del reporte integral del Dashboard. Compartidas entre
 /// `exportDashboardPdf` y `exportConsolidadoPdf`.
@@ -244,7 +276,7 @@ List<pw.Widget> _cuerpoDashboard(DashboardReportData data) {
     pw.SizedBox(height: 6),
     _tablaSec(
         const ['Fecha', 'Descripción', 'Tipo', 'Proveedor', 'Cant.',
-          'Unid.', 'Valor'],
+          'Und.', 'Valor'],
         data.comprasRows),
     _tituloSec('4. Horas-hombre por mes (año fiscal ${data.anio})'),
     _tablaSec(const ['Mes', 'HH'], hhMesRows),

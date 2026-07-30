@@ -64,11 +64,12 @@ class Compra {
     this.desc2, required this.valor, required this.cantidad,
     required this.unidad, required this.cod, required this.factura,
     required this.proveedor, required this.tipo,
-    this.plantaRef, this.soporteName,
+    this.plantaRef, this.soporteName, this.createdByUserId,
   });
   final int id;
   final String fecha, desc, cod, factura, proveedor, tipo, unidad;
   final String? desc2, soporteName;
+  final String? createdByUserId;
   final double valor, cantidad;
   final int? plantaRef;
 
@@ -81,6 +82,7 @@ class Compra {
         tipo: c.tipo ?? 'otro',
         plantaRef: c.plantaRef,
         soporteName: c.soportePath,
+        createdByUserId: c.createdByUserId,
       );
 }
 
@@ -96,6 +98,8 @@ class Planta {
     this.periodicidadCosechaDias,
     this.esperanzaVidaDias,
     this.ciclosAbono = const [],
+    this.esComunidad = false,
+    this.contribucionesComunidad,
   });
   final int id;
   final int? cosechaMin, cosechaMax, abono2Dias;
@@ -105,10 +109,17 @@ class Planta {
   final String tipoCultivoDefault;
   final String? tipoAbono1, tipoAbono2;
   final List<CicloAbono> ciclosAbono;
+  /// Variedad del banco comunitario (caché local, solo lectura en listado).
+  final bool esComunidad;
+  final int? contribucionesComunidad;
 
   bool get esPerenneDefault => tipoCultivoDefault == 'perenne';
   String get tipoCultivoEtiqueta =>
       esPerenneDefault ? 'Cultivo perenne' : 'Ciclo único';
+
+  /// Etiqueta para selectores (p. ej. agregar cultivo).
+  String get nombreEnSelector =>
+      esComunidad ? '$nombre (comunidad)' : nombre;
 
   factory Planta.fromDrift(drift.Planta p) => Planta(
         id: p.id,
@@ -132,6 +143,34 @@ class Planta {
           diasAbono2: p.diasAbono2,
         ),
       );
+
+  factory Planta.fromComunidadCache(drift.VariedadesComunitariasCacheData c) {
+    final abonos = <CicloAbono>[];
+    if (c.tipoAbono1 != null && c.tipoAbono1!.isNotEmpty) {
+      abonos.add(CicloAbono(tipo: c.tipoAbono1!, dias: 0));
+    }
+    if (c.tipoAbono2 != null &&
+        c.tipoAbono2!.isNotEmpty &&
+        c.abono2Dias != null) {
+      abonos.add(CicloAbono(tipo: c.tipoAbono2!, dias: c.abono2Dias!));
+    }
+    return Planta(
+      id: -c.id,
+      nombre: c.nombreComun,
+      especie: c.especie ?? '',
+      cosechaMin: c.cosechaMinDias,
+      cosechaMax: c.cosechaMaxDias,
+      abono2Dias: c.abono2Dias,
+      metodoSiembra: c.metodoSiembra ?? 'directa',
+      germinadorDias: c.germinadorDias,
+      fuenteMetodo: c.fuente ?? 'Comunidad NEXUS',
+      tipoAbono1: c.tipoAbono1,
+      tipoAbono2: c.tipoAbono2,
+      ciclosAbono: abonos,
+      esComunidad: true,
+      contribucionesComunidad: c.contribuciones,
+    );
+  }
 }
 
 class Cultivo {
@@ -453,6 +492,18 @@ final municipiosProvider =
   return (db.select(db.municipios)
         ..where((m) => m.regionId.equals(regionId))
         ..orderBy([(m) => OrderingTerm.asc(m.nombre)]))
+      .watch();
+});
+
+/// Espejo local del banco comunitario de variedades (Supabase).
+final variedadesComunitariasCacheProvider =
+    StreamProvider<List<drift.VariedadesComunitariasCacheData>>((ref) {
+  final db = ref.watch(databaseProvider);
+  return (db.select(db.variedadesComunitariasCache)
+        ..orderBy([
+          (v) => OrderingTerm.desc(v.contribuciones),
+          (v) => OrderingTerm.asc(v.nombreComun),
+        ]))
       .watch();
 });
 
@@ -922,6 +973,26 @@ final plantasProvider = Provider<List<Planta>>((ref) {
       );
 });
 
+/// Catálogo propio + variedades comunitarias en caché local (sin duplicar
+/// por nombre+especie). Las comunitarias van después de las propias.
+final plantasListadoProvider = Provider<List<Planta>>((ref) {
+  final propias = ref.watch(plantasProvider);
+  final cache =
+      ref.watch(variedadesComunitariasCacheProvider).valueOrNull ?? const [];
+  final clavesPropias = {
+    for (final p in propias)
+      '${p.nombre.toLowerCase()}|${p.especie.toLowerCase()}',
+  };
+  final comunidad = <Planta>[];
+  for (final c in cache) {
+    final key =
+        '${c.nombreComun.toLowerCase()}|${(c.especie ?? '').toLowerCase()}';
+    if (clavesPropias.contains(key)) continue;
+    comunidad.add(Planta.fromComunidadCache(c));
+  }
+  return [...propias, ...comunidad];
+});
+
 final _plantasStreamProvider =
     StreamProvider<List<drift.Planta>>((ref) => ref.watch(_plantaRepoProvider).watchAll());
 
@@ -1264,6 +1335,12 @@ class DataMutations {
     final proveedorId = proveedor.trim().isEmpty
         ? null
         : await provRepo.addIfMissing(proveedor.trim());
+    String? autorUserId;
+    try {
+      autorUserId = Supabase.instance.client.auth.currentUser?.id;
+    } catch (_) {
+      autorUserId = null;
+    }
     return await ref.read(_compraRepoProvider).add(
           predioId: predioId,
           fecha: DateTime.parse(fecha),
@@ -1282,6 +1359,7 @@ class DataMutations {
           soporteTipo: soporteName?.toLowerCase().endsWith('.pdf') == true
               ? 'application/pdf'
               : (soporteName != null ? 'image/*' : null),
+          createdByUserId: autorUserId,
         );
   }
 
@@ -1381,6 +1459,32 @@ class DataMutations {
         );
   }
 
+  /// Si [pl] es comunitaria (id negativo), la copia al catálogo propio y
+  /// devuelve el id local persistido. Idempotente para variedades propias.
+  Future<int> ensurePlantaLocal(Planta pl) async {
+    if (!pl.esComunidad) return pl.id;
+    final esPerenne = pl.esPerenneDefault;
+    final res = await addPlanta(
+      nombreComun: pl.nombre,
+      especie: pl.especie.isEmpty ? null : pl.especie,
+      tiempoCosechaMinDias: pl.cosechaMin,
+      tiempoCosechaMaxDias: esPerenne ? null : pl.cosechaMax,
+      tipoCultivoDefault: pl.tipoCultivoDefault,
+      periodicidadCosechaDias:
+          esPerenne ? pl.periodicidadCosechaDias : null,
+      esperanzaVidaDias: esPerenne ? pl.esperanzaVidaDias : null,
+      ciclosAbonoJson: encodeCiclosAbonoJson(pl.ciclosAbono),
+      metodoSiembra: pl.metodoSiembra,
+      germinadorDias:
+          pl.metodoSiembra == 'germinador' ? pl.germinadorDias : null,
+      tipoAbono1: pl.tipoAbono1,
+      tipoAbono2: pl.tipoAbono2,
+      diasAbono2: pl.abono2Dias,
+      fuenteMetodo: pl.fuenteMetodo.isEmpty ? null : pl.fuenteMetodo,
+    );
+    return res.plantaId;
+  }
+
   Future<int> addCultivo({
     required int plantaId,
     required String lote,
@@ -1401,10 +1505,13 @@ class DataMutations {
     int? periodicidadCosechaDias,
     int? esperanzaVidaDias,
   }) async {
+    final resolvedPlantaId = plantaId < 0
+        ? await _plantaIdDesdeVariedadComunitaria(-plantaId)
+        : plantaId;
     final predioId = await _getPredioIdAsync();
     final id = await ref.read(_cultivoRepoProvider).insert(
           predioId: predioId,
-          plantaId: plantaId,
+          plantaId: resolvedPlantaId,
           lote: lote,
           fechaSiembra: fechaSiembra,
           areaValor: areaValor,
@@ -1424,12 +1531,13 @@ class DataMutations {
           esperanzaVidaDias: esperanzaVidaDias,
         );
     if (semillaValor > 0) {
-      final plantas = ref.read(plantasProvider);
-      final pl = plantas.firstWhere((p) => p.id == plantaId,
-          orElse: () => throw StateError('Planta $plantaId no encontrada'));
+      final plRow = await ref.read(_plantaRepoProvider).findById(resolvedPlantaId);
+      if (plRow == null) {
+        throw StateError('Planta $resolvedPlantaId no encontrada');
+      }
       await ref.read(_inventoryRepoProvider).consume(
             predioId: predioId,
-            descripcion: 'Semilla ${pl.nombre}',
+            descripcion: 'Semilla ${plRow.nombreComun}',
             cantidad: semillaValor,
             unidad: semillaUnidad,
           );
@@ -1455,6 +1563,18 @@ class DataMutations {
 
   Future<void> unfinalizeCultivo(int id) =>
       ref.read(_cultivoRepoProvider).unmarkFinalizado(id);
+
+  Future<int> _plantaIdDesdeVariedadComunitaria(int cacheId) async {
+    final db = ref.read(databaseProvider);
+    final row = await (db.select(db.variedadesComunitariasCache)
+          ..where((t) => t.id.equals(cacheId)))
+        .getSingleOrNull();
+    if (row == null) {
+      throw StateError(
+          'Variedad comunitaria #$cacheId no encontrada — sincroniza el banco');
+    }
+    return ensurePlantaLocal(Planta.fromComunidadCache(row));
+  }
 
   // ============================================================
   // Plantas (catálogo)
@@ -1809,6 +1929,17 @@ class DataMutations {
 
   Future<void> marcarPatologiaCurada(int cpId) =>
       ref.read(_patologiaRepoProvider).marcarCurada(cpId);
+
+  /// Mueve una patología del catálogo al grupo indicado del listado.
+  /// `tipoManual = null` restaura la agrupación automática.
+  Future<void> reclasificarPatologia({
+    required int patologiaId,
+    required String? tipoManual,
+  }) =>
+      ref.read(_patologiaRepoProvider).reclasificar(
+            patologiaId: patologiaId,
+            tipoManual: tipoManual,
+          );
 
   /// Fase 3e-5: registra un reporte de patología en un cultivo. Si el
   /// usuario acepta compartir a comunidad, crea también la entrada

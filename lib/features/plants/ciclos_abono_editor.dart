@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../core/models/ciclo_abono.dart';
+import '../../core/widgets/duracion_field.dart';
 
 /// Fila editable de un ciclo de abono en el formulario de variedad.
 class CicloAbonoEditorRow {
-  CicloAbonoEditorRow({String? tipo, String? dias})
+  CicloAbonoEditorRow({String? tipo, int? dias})
       : tipoSeleccionado = _tipoInicial(tipo),
         tipoCustomCtrl = TextEditingController(
           text: _esOtro(tipo) ? (tipo ?? '') : '',
         ),
-        diasCtrl = TextEditingController(text: dias ?? '');
+        duracion = DuracionController(dias: dias);
 
   String tipoSeleccionado;
   final TextEditingController tipoCustomCtrl;
-  final TextEditingController diasCtrl;
+
+  /// Tiempo desde la fecha base fenológica. Se persiste siempre en días.
+  final DuracionController duracion;
 
   static String _tipoInicial(String? tipo) {
     if (tipo == null || tipo.trim().isEmpty) return tiposAbonoSugeridos.first;
@@ -30,7 +33,7 @@ class CicloAbonoEditorRow {
       : tipoSeleccionado;
 
   CicloAbono? toCiclo() {
-    final dias = int.tryParse(diasCtrl.text.trim());
+    final dias = duracion.dias;
     // 0 = abono al momento de siembra/trasplante (válido).
     if (dias == null || dias < 0) return null;
     final tipo = tipoResuelto;
@@ -40,12 +43,12 @@ class CicloAbonoEditorRow {
 
   void dispose() {
     tipoCustomCtrl.dispose();
-    diasCtrl.dispose();
+    duracion.dispose();
   }
 
   static CicloAbonoEditorRow fromCiclo(CicloAbono c) => CicloAbonoEditorRow(
         tipo: c.tipo,
-        dias: '${c.dias}',
+        dias: c.dias,
       );
 }
 
@@ -85,8 +88,8 @@ class CiclosAbonoEditor extends StatelessWidget {
             onPressed: () {
               ciclos.add(CicloAbonoEditorRow(
                 dias: ciclos.isEmpty
-                    ? '1'
-                    : '${(int.tryParse(ciclos.last.diasCtrl.text) ?? 30) + 30}',
+                    ? 1
+                    : (ciclos.last.duracion.dias ?? 30) + 30,
               ));
               onChanged();
             },
@@ -165,15 +168,11 @@ class _CicloAbonoCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 8),
-            TextField(
-              controller: row.diasCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Días desde siembra/trasplante',
-                helperText: '0 = al siembra/trasplante · >0 = días después',
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => onChanged(),
+            DuracionField(
+              controller: row.duracion,
+              label: 'Tiempo desde siembra/trasplante',
+              helperText: '0 = al sembrar/trasplantar',
+              onChanged: onChanged,
             ),
           ],
         ),

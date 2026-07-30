@@ -177,6 +177,11 @@ class Patologias extends Table {
   TextColumn get nombreComun => text()();
   TextColumn get nombreCientifico => text().nullable()();
   TextColumn get tipo => text().nullable()(); // hongo|bacteria|virus|plaga|nutricional|abiotica|otra
+  /// Reclasificación manual del usuario (mismos valores que `tipo`). Cuando
+  /// no es null manda sobre `tipo` para agrupar en el listado. Va en columna
+  /// aparte porque `PatologiaCatalogService` reescribe `tipo` en cada
+  /// "Actualizar" y la elección del usuario tiene que sobrevivir a eso.
+  TextColumn get tipoManual => text().nullable()();
   TextColumn get descripcion => text().nullable()();
   TextColumn get sintomas => text().nullable()();
   TextColumn get fuente => text().nullable()();
@@ -301,6 +306,8 @@ class Compras extends Table {
   TextColumn get tipo => text().nullable()(); // semilla|abono|pesticida|herramienta|servicio|otro
   IntColumn get plantaRef => integer().nullable().references(Plantas, #id)();
   TextColumn get notas => text().nullable()();
+  /// UUID Supabase del usuario que registró la compra (co-propietarios).
+  TextColumn get createdByUserId => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -682,6 +689,29 @@ class Configs extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Espejo local de `variedades_comunitarias` (Supabase). Se refresca al
+/// arrancar la app (con sesión) para autocompletar el modal "Nueva variedad"
+/// sin depender de una búsqueda remota en cada tecleo.
+class VariedadesComunitariasCache extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get remoteId => integer().unique()();
+  TextColumn get nombreComun => text()();
+  /// Clave de especie normalizada ('' si no hay) para deduplicar localmente.
+  TextColumn get especieKey => text().withDefault(const Constant(''))();
+  TextColumn get especie => text().nullable()();
+  TextColumn get metodoSiembra => text().nullable()();
+  IntColumn get germinadorDias => integer().nullable()();
+  IntColumn get cosechaMinDias => integer().nullable()();
+  IntColumn get cosechaMaxDias => integer().nullable()();
+  TextColumn get tipoAbono1 => text().nullable()();
+  TextColumn get tipoAbono2 => text().nullable()();
+  IntColumn get abono2Dias => integer().nullable()();
+  TextColumn get fuente => text().nullable()();
+  IntColumn get contribuciones => integer().withDefault(const Constant(1))();
+  DateTimeColumn get remoteUpdatedAt => dateTime().nullable()();
+  DateTimeColumn get syncedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 // ============================================================
 // DATABASE CLASS
 // ============================================================
@@ -699,13 +729,14 @@ class Configs extends Table {
   AnalisisSuelo, CondicionesPredio,
   PredioColaboradores, PatologiasReportadas,
   SyncMappings, SyncTables, SyncOps,
+  VariedadesComunitariasCache,
   Configs,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -808,6 +839,19 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(plantas, plantas.periodicidadCosechaDias);
             await m.addColumn(plantas, plantas.esperanzaVidaDias);
             await m.addColumn(plantas, plantas.ciclosAbonoJson);
+          }
+          if (from < 17) {
+            // v17: reclasificación manual de patologías del catálogo
+            // (override de la agrupación automática por tipo taxonómico).
+            await m.addColumn(patologias, patologias.tipoManual);
+          }
+          if (from < 18) {
+            // v18: caché local del banco comunitario de variedades.
+            await m.createTable(variedadesComunitariasCache);
+          }
+          if (from < 19) {
+            // v19: autor de cada compra (trazabilidad entre co-propietarios).
+            await m.addColumn(compras, compras.createdByUserId);
           }
         },
       );

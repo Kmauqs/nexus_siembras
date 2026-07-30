@@ -4,36 +4,106 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/ciclo_abono.dart';
 import '../../core/widgets/app_shell.dart';
+import '../../core/widgets/duracion_field.dart';
 import '../../data/database/database.dart' as drift;
 import '../../services/eppo_client.dart';
 import '../../services/variedades_comunitarias_service.dart';
+import '../../state/app_state.dart';
 import '../../state/auth_state.dart';
 import '../../state/data_state.dart';
 import 'ciclos_abono_editor.dart';
 
-class PlantsScreen extends ConsumerWidget {
+class PlantsScreen extends ConsumerStatefulWidget {
   const PlantsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final plantas = ref.watch(plantasProvider);
+  ConsumerState<PlantsScreen> createState() => _PlantsScreenState();
+}
+
+class _PlantsScreenState extends ConsumerState<PlantsScreen> {
+  bool _syncComunidad = false;
+
+  Future<void> _sincronizarComunidad() async {
+    if (_syncComunidad) return;
+    if (!ref.read(isLoggedInProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+            'Inicia sesión para descargar variedades de la comunidad.'),
+      ));
+      return;
+    }
+    setState(() => _syncComunidad = true);
+    try {
+      final n = await VariedadesComunitariasService.sincronizarEnLocal(
+          ref.read(databaseProvider));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(n > 0
+            ? 'Banco comunitario actualizado ($n variedades en local)'
+            : 'Sin nuevas variedades (revisa tu conexión o la migración 0008)'),
+        backgroundColor: n > 0 ? Colors.green.shade700 : null,
+      ));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error al sincronizar comunidad: $e'),
+          backgroundColor: Colors.red.shade700,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _syncComunidad = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final plantas = ref.watch(plantasListadoProvider);
+    final cacheCount =
+        ref.watch(variedadesComunitariasCacheProvider).valueOrNull?.length ??
+            0;
     return AppShell(
       title: 'Plantas',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: FilledButton.icon(
-              onPressed: () => _showPlantaEditor(context, ref, null),
-              icon: const Icon(Icons.add),
-              label: const Text('Agregar variedad'),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: () => _showPlantaEditor(context, ref, null),
+                icon: const Icon(Icons.add),
+                label: const Text('Agregar variedad'),
+              ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _syncComunidad ? null : _sincronizarComunidad,
+                icon: _syncComunidad
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.cloud_download_outlined, size: 20),
+                label: const Text('Sincronizar comunidad'),
+              ),
+            ),
+          ]),
+          if (cacheCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Text(
+                '$cacheCount variedad${cacheCount == 1 ? '' : 'es'} '
+                'comunitaria${cacheCount == 1 ? '' : 's'} en local',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ),
           if (plantas.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: Text('Sin plantas en el catálogo')),
+              child: Center(
+                  child: Text(
+                      'Sin variedades. Agrega una propia o sincroniza '
+                      'con la comunidad.')),
             )
           else
             ...plantas.map((p) => _PlantaCard(pl: p)),
@@ -50,6 +120,7 @@ class _PlantaCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final esGerm = pl.metodoSiembra == 'germinador';
     return Card(
+      color: pl.esComunidad ? Colors.teal.shade50 : null,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -60,9 +131,26 @@ class _PlantaCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(pl.nombre,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Row(children: [
+                      Flexible(
+                        child: Text(pl.nombre,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      if (pl.esComunidad) ...[
+                        const SizedBox(width: 6),
+                        Chip(
+                          label: Text(
+                              'Comunidad · ${pl.contribucionesComunidad ?? 1}',
+                              style: const TextStyle(fontSize: 10)),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: EdgeInsets.zero,
+                          backgroundColor: Colors.teal.shade100,
+                        ),
+                      ],
+                    ]),
                     Text(pl.especie,
                         style: TextStyle(
                             fontStyle: FontStyle.italic,
@@ -71,15 +159,20 @@ class _PlantaCard extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Editar variedad',
+                icon: Icon(pl.esComunidad
+                    ? Icons.file_copy_outlined
+                    : Icons.edit_outlined),
+                tooltip: pl.esComunidad
+                    ? 'Copiar a mi catálogo'
+                    : 'Editar variedad',
                 onPressed: () => _showPlantaEditor(context, ref, pl),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                tooltip: 'Eliminar variedad',
-                onPressed: () => _confirmDelete(context, ref, pl),
-              ),
+              if (!pl.esComunidad)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  tooltip: 'Eliminar variedad',
+                  onPressed: () => _confirmDelete(context, ref, pl),
+                ),
             ]),
             const Divider(),
             _row('Tipo cultivo', pl.tipoCultivoEtiqueta),
@@ -116,21 +209,24 @@ class _PlantaCard extends ConsumerWidget {
                       .whereType<String>()
                       .join(' + ')),
             if (pl.fuenteMetodo.isNotEmpty) _row('Fuente', pl.fuenteMetodo),
-            // Fase 3h: contador de patologías asociadas.
-            Consumer(builder: (_, ref2, __) {
-              final async = ref2.watch(patologiasAsociadasCountProvider(pl.id));
-              return async.when(
-                loading: () =>
-                    _row('Patologías', '…', color: Colors.grey),
-                error: (_, __) =>
-                    _row('Patologías', '?', color: Colors.grey),
-                data: (n) => _row(
-                  'Patologías',
-                  n == 0 ? 'ninguna asociada' : '🐛 $n conocida${n == 1 ? "" : "s"}',
-                  color: n > 0 ? Colors.orange.shade900 : Colors.grey,
-                ),
-              );
-            }),
+            if (!pl.esComunidad)
+              Consumer(builder: (_, ref2, __) {
+                final async =
+                    ref2.watch(patologiasAsociadasCountProvider(pl.id));
+                return async.when(
+                  loading: () =>
+                      _row('Patologías', '…', color: Colors.grey),
+                  error: (_, __) =>
+                      _row('Patologías', '?', color: Colors.grey),
+                  data: (n) => _row(
+                    'Patologías',
+                    n == 0
+                        ? 'ninguna asociada'
+                        : '🐛 $n conocida${n == 1 ? "" : "s"}',
+                    color: n > 0 ? Colors.orange.shade900 : Colors.grey,
+                  ),
+                );
+              }),
           ],
         ),
       ),
@@ -206,11 +302,11 @@ class _PlantaEditor extends ConsumerStatefulWidget {
 class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
   late final TextEditingController _nombre;
   late final TextEditingController _especie;
-  late final TextEditingController _cosechaMin;
-  late final TextEditingController _cosechaMax;
-  late final TextEditingController _periodicidad;
-  late final TextEditingController _esperanzaVida;
-  late final TextEditingController _germinadorDias;
+  late final DuracionController _cosechaMin;
+  late final DuracionController _cosechaMax;
+  late final DuracionController _periodicidad;
+  late final DuracionController _esperanzaVida;
+  late final DuracionController _germinadorDias;
   late final TextEditingController _fuente;
   late final TextEditingController _notas;
   final List<CicloAbonoEditorRow> _ciclosAbono = [];
@@ -224,10 +320,21 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
   bool? _eppoNombreOk;
   bool? _eppoEspecieOk;
   Timer? _debounceEppo;
+  // Último par nombre|especie que agendó una verificación EPPO. Los
+  // listeners de TextEditingController se disparan también al mover el
+  // cursor o cambiar la selección; sin este filtro cada tap en el campo
+  // reagendaba una consulta EPPO idéntica (bug del cursor, 2026-07-30).
+  String _ultimoTextoEppo = '';
   // Banco comunitario de variedades (Fase B1, 2026-07-20).
   List<VariedadComunitaria> _sugerenciasComunidad = const [];
   Timer? _debounceComunidad;
+  String _ultimoTextoComunidad = '';
   bool _compartirComunidad = true;
+  // Controllers internos de los Autocomplete (los crea RawAutocomplete).
+  // Se guardan para añadir el listener de sincronización UNA sola vez —
+  // `fieldViewBuilder` corre en cada rebuild y antes acumulaba listeners.
+  TextEditingController? _acNombreCtrl;
+  TextEditingController? _acEspecieCtrl;
 
   @override
   void initState() {
@@ -235,16 +342,11 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
     final e = widget.existing;
     _nombre = TextEditingController(text: e?.nombre ?? '');
     _especie = TextEditingController(text: e?.especie ?? '');
-    _cosechaMin = TextEditingController(
-        text: e?.cosechaMin?.toString() ?? '');
-    _cosechaMax = TextEditingController(
-        text: e?.cosechaMax?.toString() ?? '');
-    _periodicidad = TextEditingController(
-        text: e?.periodicidadCosechaDias?.toString() ?? '');
-    _esperanzaVida = TextEditingController(
-        text: e?.esperanzaVidaDias?.toString() ?? '');
-    _germinadorDias =
-        TextEditingController(text: e?.germinadorDias?.toString() ?? '');
+    _cosechaMin = DuracionController(dias: e?.cosechaMin);
+    _cosechaMax = DuracionController(dias: e?.cosechaMax);
+    _periodicidad = DuracionController(dias: e?.periodicidadCosechaDias);
+    _esperanzaVida = DuracionController(dias: e?.esperanzaVidaDias);
+    _germinadorDias = DuracionController(dias: e?.germinadorDias);
     _fuente = TextEditingController(text: e?.fuenteMetodo ?? '');
     _notas = TextEditingController(text: '');
     _metodo = e?.metodoSiembra ?? 'directa';
@@ -254,7 +356,7 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
       _ciclosAbono.addAll(
           e.ciclosAbono.map(CicloAbonoEditorRow.fromCiclo));
     } else {
-      _ciclosAbono.add(CicloAbonoEditorRow(dias: '1'));
+      _ciclosAbono.add(CicloAbonoEditorRow(dias: 1));
     }
     // Fase 3h: cuando cambie la especie, consultar patologías conocidas.
     _especie.addListener(_refrescarPatologiasConocidas);
@@ -312,11 +414,15 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
   }
 
   /// Banco comunitario: busca variedades por nombre con debounce de
-  /// 600 ms. Silencioso si no hay sesión o la migración 0008 no está.
+  /// 900 ms. Silencioso si no hay sesión o la migración 0008 no está.
+  /// Ignora disparos sin cambio real de texto (movimientos de cursor).
   void _agendarBusquedaComunidad() {
+    final actual = _nombre.text.trim();
+    if (actual == _ultimoTextoComunidad) return;
+    _ultimoTextoComunidad = actual;
     _debounceComunidad?.cancel();
     _debounceComunidad =
-        Timer(const Duration(milliseconds: 600), _buscarEnComunidad);
+        Timer(const Duration(milliseconds: 900), _buscarEnComunidad);
   }
 
   Future<void> _buscarEnComunidad() async {
@@ -327,7 +433,8 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
       }
       return;
     }
-    final res = await VariedadesComunitariasService.buscar(term);
+    final res = await VariedadesComunitariasService.buscar(
+        ref.read(databaseProvider), term);
     if (!mounted) return;
     setState(() => _sugerenciasComunidad = res);
   }
@@ -340,20 +447,20 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
       if (_especie.text.trim().isEmpty && v.especie != null) {
         _especie.text = v.especie!;
       }
-      if (_cosechaMin.text.trim().isEmpty && v.cosechaMinDias != null) {
-        _cosechaMin.text = '${v.cosechaMinDias}';
+      if (_cosechaMin.vacio && v.cosechaMinDias != null) {
+        _cosechaMin.setDias(v.cosechaMinDias);
       }
-      if (_cosechaMax.text.trim().isEmpty && v.cosechaMaxDias != null) {
-        _cosechaMax.text = '${v.cosechaMaxDias}';
+      if (_cosechaMax.vacio && v.cosechaMaxDias != null) {
+        _cosechaMax.setDias(v.cosechaMaxDias);
       }
       if (v.metodoSiembra == 'directa' || v.metodoSiembra == 'germinador') {
         _metodo = v.metodoSiembra!;
       }
-      if (_germinadorDias.text.trim().isEmpty && v.germinadorDias != null) {
-        _germinadorDias.text = '${v.germinadorDias}';
+      if (_germinadorDias.vacio && v.germinadorDias != null) {
+        _germinadorDias.setDias(v.germinadorDias);
       }
-      if (_periodicidad.text.trim().isEmpty && v.cosechaMinDias != null) {
-        _periodicidad.text = '${v.cosechaMinDias}';
+      if (_periodicidad.vacio && v.cosechaMinDias != null) {
+        _periodicidad.setDias(v.cosechaMinDias);
       }
       if (v.tipoAbono1 != null && _ciclosAbono.isNotEmpty) {
         final row = _ciclosAbono.first;
@@ -370,7 +477,7 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
         if (_ciclosAbono.length < 2) {
           _ciclosAbono.add(CicloAbonoEditorRow(
             tipo: v.tipoAbono2,
-            dias: '${v.abono2Dias}',
+            dias: v.abono2Dias,
           ));
         }
       }
@@ -385,10 +492,16 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
   }
 
   /// Programa una verificación contra EPPO Global Database con debounce
-  /// de 700 ms. Silencioso si no hay token configurado.
+  /// de 1500 ms (se consulta solo cuando el usuario deja de escribir).
+  /// Silencioso si no hay token configurado. Ignora disparos donde el
+  /// texto no cambió — los listeners de TextEditingController también se
+  /// disparan al mover el cursor o la selección.
   void _agendarVerificacionEppo() {
+    final actual = '${_nombre.text.trim()}|${_especie.text.trim()}';
+    if (actual == _ultimoTextoEppo) return;
+    _ultimoTextoEppo = actual;
     _debounceEppo?.cancel();
-    _debounceEppo = Timer(const Duration(milliseconds: 700), _verificarEppo);
+    _debounceEppo = Timer(const Duration(milliseconds: 1500), _verificarEppo);
   }
 
   /// Consulta EPPO para nombre común y especie ingresados. Actualiza
@@ -424,10 +537,14 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
         especieOk = r.isNotEmpty;
       }
       if (!mounted) return;
-      setState(() {
-        _eppoNombreOk = nombreOk;
-        _eppoEspecieOk = especieOk;
-      });
+      // Solo reconstruir si el resultado cambió: cada rebuild innecesario
+      // del diálogo interfiere con el campo que el usuario está editando.
+      if (_eppoNombreOk != nombreOk || _eppoEspecieOk != especieOk) {
+        setState(() {
+          _eppoNombreOk = nombreOk;
+          _eppoEspecieOk = especieOk;
+        });
+      }
     } catch (_) {
       // Error de red o timeout: silencioso, dejamos null.
       if (mounted) {
@@ -446,7 +563,7 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
   /// autocompleta la especie.
   void _quizasAutocompletarEspecie(String nombreSeleccionado) {
     if (_especie.text.trim().isNotEmpty) return;
-    final plantas = ref.read(plantasProvider);
+    final plantas = ref.read(plantasListadoProvider);
     final match = plantas.firstWhere(
       (p) => p.nombre.toLowerCase() == nombreSeleccionado.toLowerCase(),
       orElse: () => plantas.isNotEmpty
@@ -462,7 +579,9 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.existing != null;
+    final isEdit = widget.existing != null && !widget.existing!.esComunidad;
+    final desdeComunidad =
+        widget.existing != null && widget.existing!.esComunidad;
     final esGerm = _metodo == 'germinador';
     return Padding(
       padding: EdgeInsets.only(
@@ -475,7 +594,12 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(isEdit ? 'Editar variedad' : 'Nueva variedad',
+            Text(
+                isEdit
+                    ? 'Editar variedad'
+                    : desdeComunidad
+                        ? 'Copiar variedad comunitaria'
+                        : 'Nueva variedad',
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             _autocompleteNombreComun(),
@@ -605,13 +729,10 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
             ),
             if (esGerm) ...[
               const SizedBox(height: 8),
-              TextField(
+              DuracionField(
                 controller: _germinadorDias,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                    labelText: 'Días en germinador *',
-                    hintText: 'Ej: 30',
-                    border: OutlineInputBorder()),
+                label: 'Tiempo en germinador *',
+                hintText: 'Ej: 30',
               ),
             ],
             const SizedBox(height: 16),
@@ -637,60 +758,44 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
             ),
             const SizedBox(height: 12),
             if (_tipoCultivo == 'perenne') ...[
-              TextField(
+              DuracionField(
                 controller: _cosechaMin,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Días hasta primera cosecha',
-                  border: OutlineInputBorder(),
-                ),
+                label: 'Tiempo hasta primera cosecha',
               ),
               const SizedBox(height: 8),
               Row(children: [
                 Expanded(
-                  child: TextField(
+                  child: DuracionField(
                     controller: _periodicidad,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Periodicidad entre cosechas (días)',
-                      border: OutlineInputBorder(),
-                    ),
+                    label: 'Periodicidad entre cosechas',
+                    dense: true,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: TextField(
+                  child: DuracionField(
                     controller: _esperanzaVida,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Esperanza de vida (días)',
-                      helperText: 'Hasta renovación',
-                      border: OutlineInputBorder(),
-                    ),
+                    label: 'Esperanza de vida',
+                    helperText: 'Hasta renovación',
+                    dense: true,
                   ),
                 ),
               ]),
             ] else ...[
               Row(children: [
                 Expanded(
-                  child: TextField(
+                  child: DuracionField(
                     controller: _cosechaMin,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Cosecha 1 — verde/tierno (días)',
-                      border: OutlineInputBorder(),
-                    ),
+                    label: 'Cosecha 1 — verde/tierno',
+                    dense: true,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: TextField(
+                  child: DuracionField(
                     controller: _cosechaMax,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Cosecha 2 — maduro/seco (días)',
-                      border: OutlineInputBorder(),
-                    ),
+                    label: 'Cosecha 2 — maduro/seco',
+                    dense: true,
                   ),
                 ),
               ]),
@@ -762,7 +867,7 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
   /// digitado, y si la especie ya está llenada, restringe a plantas que
   /// pertenezcan a esa especie.
   Widget _autocompleteNombreComun() {
-    final plantas = ref.watch(plantasProvider);
+    final plantas = ref.watch(plantasListadoProvider);
     return Autocomplete<String>(
       initialValue: TextEditingValue(text: _nombre.text),
       optionsBuilder: (TextEditingValue tev) {
@@ -773,8 +878,6 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
           base = base.where(
               (p) => p.especie.toLowerCase().contains(especieFiltro));
         }
-        // Únicos por nombre (evita duplicados si varias entradas comparten
-        // nombreComun con distinta variedad).
         final set = <String>{};
         final salida = <String>[];
         for (final p in base) {
@@ -792,11 +895,27 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
         _agendarVerificacionEppo();
       },
       fieldViewBuilder: (ctx, controller, focus, onSubmit) {
-        // Sincroniza el controller interno del Autocomplete con nuestro _nombre.
-        controller.value = TextEditingValue(text: _nombre.text);
-        controller.addListener(() {
-          if (controller.text != _nombre.text) _nombre.text = controller.text;
-        });
+        // Sincroniza el controller interno del Autocomplete con nuestro
+        // _nombre. OJO: este builder corre en CADA rebuild del diálogo
+        // (p. ej. cuando llega una verificación EPPO). Reasignar
+        // `controller.value` incondicionalmente reseteaba el cursor al
+        // inicio mientras el usuario escribía (bug 2026-07-30) — solo se
+        // toca cuando hay un cambio programático real (sugerencia del
+        // banco comunitario), colocando el cursor al final.
+        if (!identical(_acNombreCtrl, controller)) {
+          _acNombreCtrl = controller;
+          controller.addListener(() {
+            if (controller.text != _nombre.text) {
+              _nombre.text = controller.text;
+            }
+          });
+        }
+        if (controller.text != _nombre.text) {
+          controller.value = TextEditingValue(
+            text: _nombre.text,
+            selection: TextSelection.collapsed(offset: _nombre.text.length),
+          );
+        }
         return TextField(
           controller: controller,
           focusNode: focus,
@@ -813,7 +932,7 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
   /// Autocomplete para especie (nombre científico). Sugiere especies
   /// existentes en la BD, filtradas por lo digitado.
   Widget _autocompleteEspecie() {
-    final plantas = ref.watch(plantasProvider);
+    final plantas = ref.watch(plantasListadoProvider);
     return Autocomplete<String>(
       initialValue: TextEditingValue(text: _especie.text),
       optionsBuilder: (TextEditingValue tev) {
@@ -834,10 +953,22 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
         _agendarVerificacionEppo();
       },
       fieldViewBuilder: (ctx, controller, focus, onSubmit) {
-        controller.value = TextEditingValue(text: _especie.text);
-        controller.addListener(() {
-          if (controller.text != _especie.text) _especie.text = controller.text;
-        });
+        // Misma protección del cursor que en _autocompleteNombreComun:
+        // listener una sola vez y sync solo ante cambios programáticos.
+        if (!identical(_acEspecieCtrl, controller)) {
+          _acEspecieCtrl = controller;
+          controller.addListener(() {
+            if (controller.text != _especie.text) {
+              _especie.text = controller.text;
+            }
+          });
+        }
+        if (controller.text != _especie.text) {
+          controller.value = TextEditingValue(
+            text: _especie.text,
+            selection: TextSelection.collapsed(offset: _especie.text.length),
+          );
+        }
         return TextField(
           controller: controller,
           focusNode: focus,
@@ -1022,12 +1153,6 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
         ),
       );
 
-  int? _i(TextEditingController c) {
-    final v = c.text.trim();
-    if (v.isEmpty) return null;
-    return int.tryParse(v);
-  }
-
   String? _s(TextEditingController c) {
     final v = c.text.trim();
     return v.isEmpty ? null : v;
@@ -1040,24 +1165,24 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
           content: Text('El nombre común es obligatorio')));
       return;
     }
-    if (_metodo == 'germinador' && (_i(_germinadorDias) ?? 0) <= 0) {
+    if (_metodo == 'germinador' && (_germinadorDias.dias ?? 0) <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
-              'Ingresa días en germinador (> 0) o cambia a siembra directa')));
+              'Ingresa el tiempo en germinador (> 0) o cambia a siembra directa')));
       return;
     }
     if (_tipoCultivo == 'perenne') {
-      if ((_i(_cosechaMin) ?? 0) <= 0 ||
-          (_i(_periodicidad) ?? 0) <= 0 ||
-          (_i(_esperanzaVida) ?? 0) <= 0) {
+      if ((_cosechaMin.dias ?? 0) <= 0 ||
+          (_periodicidad.dias ?? 0) <= 0 ||
+          (_esperanzaVida.dias ?? 0) <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
-                'Indica días hasta 1ª cosecha, periodicidad y esperanza de vida')));
+                'Indica tiempo hasta 1ª cosecha, periodicidad y esperanza de vida')));
         return;
       }
-    } else if ((_i(_cosechaMin) ?? 0) <= 0) {
+    } else if ((_cosechaMin.dias ?? 0) <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Indica los días hasta Cosecha 1 (verde/tierno)')));
+          content: Text('Indica el tiempo hasta Cosecha 1 (verde/tierno)')));
       return;
     }
 
@@ -1068,7 +1193,7 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             behavior: SnackBarBehavior.floating,
             content: Text(
-                'Revisa Abono ${i + 1}: indica el tipo y días válidos (≥ 0)')));
+                'Revisa Abono ${i + 1}: indica el tipo y un tiempo válido (≥ 0)')));
         return;
       }
       ciclos.add(c);
@@ -1081,18 +1206,18 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
     try {
       final mut = ref.read(dataMutationsProvider);
       int patologiasNuevas = 0;
-      if (widget.existing == null) {
+      if (widget.existing == null || widget.existing!.esComunidad) {
         final res = await mut.addPlanta(
           nombreComun: nombre,
           especie: _s(_especie),
-          tiempoCosechaMinDias: _i(_cosechaMin),
-          tiempoCosechaMaxDias: esPerenne ? null : _i(_cosechaMax),
+          tiempoCosechaMinDias: _cosechaMin.dias,
+          tiempoCosechaMaxDias: esPerenne ? null : _cosechaMax.dias,
           tipoCultivoDefault: _tipoCultivo,
-          periodicidadCosechaDias: esPerenne ? _i(_periodicidad) : null,
-          esperanzaVidaDias: esPerenne ? _i(_esperanzaVida) : null,
+          periodicidadCosechaDias: esPerenne ? _periodicidad.dias : null,
+          esperanzaVidaDias: esPerenne ? _esperanzaVida.dias : null,
           ciclosAbonoJson: ciclosJson,
           metodoSiembra: _metodo,
-          germinadorDias: _metodo == 'germinador' ? _i(_germinadorDias) : null,
+          germinadorDias: _metodo == 'germinador' ? _germinadorDias.dias : null,
           tipoAbono1: ciclos.isNotEmpty ? ciclos.first.tipo : null,
           tipoAbono2: ciclos.length > 1 ? ciclos[1].tipo : null,
           diasAbono2: ciclos.length > 1 ? ciclos[1].dias : null,
@@ -1105,14 +1230,14 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
           id: widget.existing!.id,
           nombreComun: nombre,
           especie: _s(_especie),
-          tiempoCosechaMinDias: _i(_cosechaMin),
-          tiempoCosechaMaxDias: esPerenne ? null : _i(_cosechaMax),
+          tiempoCosechaMinDias: _cosechaMin.dias,
+          tiempoCosechaMaxDias: esPerenne ? null : _cosechaMax.dias,
           tipoCultivoDefault: _tipoCultivo,
-          periodicidadCosechaDias: esPerenne ? _i(_periodicidad) : null,
-          esperanzaVidaDias: esPerenne ? _i(_esperanzaVida) : null,
+          periodicidadCosechaDias: esPerenne ? _periodicidad.dias : null,
+          esperanzaVidaDias: esPerenne ? _esperanzaVida.dias : null,
           ciclosAbonoJson: ciclosJson,
           metodoSiembra: _metodo,
-          germinadorDias: _metodo == 'germinador' ? _i(_germinadorDias) : null,
+          germinadorDias: _metodo == 'germinador' ? _germinadorDias.dias : null,
           tipoAbono1: ciclos.isNotEmpty ? ciclos.first.tipo : null,
           tipoAbono2: ciclos.length > 1 ? ciclos[1].tipo : null,
           diasAbono2: ciclos.length > 1 ? ciclos[1].dias : null,
@@ -1126,9 +1251,9 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
           especie: _s(_especie),
           metodoSiembra: _metodo,
           germinadorDias:
-              _metodo == 'germinador' ? _i(_germinadorDias) : null,
-          cosechaMinDias: _i(_cosechaMin),
-          cosechaMaxDias: esPerenne ? null : _i(_cosechaMax),
+              _metodo == 'germinador' ? _germinadorDias.dias : null,
+          cosechaMinDias: _cosechaMin.dias,
+          cosechaMaxDias: esPerenne ? null : _cosechaMax.dias,
           tipoAbono1: ciclos.isNotEmpty ? ciclos.first.tipo : null,
           tipoAbono2: ciclos.length > 1 ? ciclos[1].tipo : null,
           abono2Dias: ciclos.length > 1 ? ciclos[1].dias : null,
@@ -1137,9 +1262,11 @@ class _PlantaEditorState extends ConsumerState<_PlantaEditor> {
       }
       if (mounted) {
         Navigator.pop(context);
-        final base = widget.existing == null
-            ? 'Variedad "$nombre" creada'
-            : 'Variedad "$nombre" actualizada';
+        final base = widget.existing?.esComunidad == true
+            ? 'Variedad "$nombre" copiada a tu catálogo'
+            : widget.existing == null
+                ? 'Variedad "$nombre" creada'
+                : 'Variedad "$nombre" actualizada';
         final suf = patologiasNuevas > 0
             ? ' · $patologiasNuevas patología${patologiasNuevas == 1 ? "" : "s"} añadida${patologiasNuevas == 1 ? "" : "s"} al catálogo'
             : '';

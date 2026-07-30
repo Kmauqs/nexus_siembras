@@ -284,6 +284,7 @@ class BackupService {
               factura: Value(row['factura'] as String?),
               tipo: Value(row['tipo'] as String?),
               notas: Value(row['notas'] as String?),
+              createdByUserId: Value(row['createdByUserId'] as String?),
             ));
       }
 
@@ -435,6 +436,7 @@ class BackupService {
         'factura': c.factura,
         'tipo': c.tipo,
         'notas': c.notas,
+        'createdByUserId': c.createdByUserId,
       };
 
   Map<String, dynamic> _provToJson(Proveedore p) => {

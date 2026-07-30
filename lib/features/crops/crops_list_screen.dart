@@ -6,6 +6,7 @@ import '../../core/reports/report_data_builder.dart';
 import '../../core/theme/themes.dart';
 import '../../core/units/units_catalog.dart';
 import '../../core/widgets/app_shell.dart';
+import '../../core/widgets/duracion_field.dart';
 import '../../core/widgets/status_dot.dart';
 import '../../data/repositories/cultivo_repository.dart';
 import '../../state/app_state.dart';
@@ -340,7 +341,7 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
   DateTime _fecha = DateTime.now();
   final _hh = TextEditingController(text: '1');
   final _notas = TextEditingController();
-  final _periodicidadCosecha = TextEditingController();
+  final _periodicidadCosecha = DuracionController();
   String? _act1;
   String? _act2;
   final List<_InsumoRow> _insumos = [];
@@ -374,7 +375,7 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
     final esPerenne = cul.esPerenne;
     if (!_periodicidadInicializada && cul.periodicidadCosechaDias != null) {
       _periodicidadInicializada = true;
-      _periodicidadCosecha.text = '${cul.periodicidadCosechaDias}';
+      _periodicidadCosecha.setDias(cul.periodicidadCosechaDias);
     }
     final opts = [
       ..._actividadesBaseComun,
@@ -455,15 +456,11 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
           ]),
           if (_muestraPeriodicidad) ...[
             const SizedBox(height: 8),
-            TextField(
+            DuracionField(
               controller: _periodicidadCosecha,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Periodicidad de cosecha (días)',
-                helperText:
-                    'Se programan cosechas periódicas hasta el fin del ciclo de vida',
-                border: OutlineInputBorder(),
-              ),
+              label: 'Periodicidad de cosecha',
+              helperText:
+                  'Se programan cosechas periódicas hasta el fin del ciclo de vida',
             ),
           ],
           const SizedBox(height: 12),
@@ -593,11 +590,11 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
       return;
     }
     if (_muestraPeriodicidad) {
-      final p = int.tryParse(_periodicidadCosecha.text.trim());
+      final p = _periodicidadCosecha.dias;
       if (p == null || p <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
-                'Indica la periodicidad de cosecha (días) para «Cosecha periódica»')));
+                'Indica la periodicidad de cosecha para «Cosecha periódica»')));
         return;
       }
     }
@@ -620,9 +617,8 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
       actividades: acts,
       insumos: insumosBase,
       notas: _notas.text.trim().isEmpty ? null : _notas.text.trim(),
-      periodicidadCosechaDias: _muestraPeriodicidad
-          ? int.tryParse(_periodicidadCosecha.text.trim())
-          : null,
+      periodicidadCosechaDias:
+          _muestraPeriodicidad ? _periodicidadCosecha.dias : null,
     );
     // Descuenta cada insumo del inventario (en unidad base ya convertida)
     for (final ins in insumosBase) {

@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -5,6 +7,8 @@ import 'app.dart';
 import 'core/log.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
+import 'services/variedades_comunitarias_service.dart';
+import 'state/app_state.dart';
 import 'state/auth_state.dart';
 
 Future<void> main() async {
@@ -33,6 +37,11 @@ Future<void> main() async {
         await SupabaseService.instance.init();
         container.read(supabaseReadyProvider.notifier).state =
             SupabaseService.instance.isInitialized;
+        // Banco comunitario de variedades → espejo local (v18).
+        if (SupabaseService.instance.client?.auth.currentSession != null) {
+          unawaited(VariedadesComunitariasService.sincronizarEnLocal(
+              container.read(databaseProvider)));
+        }
       } catch (e) {
         Log.e('[main] init Supabase diferida falló', e);
       }

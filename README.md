@@ -4,12 +4,12 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 - **Desarrollador:** NEXUS CREATIO
 - **Package Android:** `com.nexuscreatio.nexus_siembras`
-- **Versión:** 0.2.2
-- **Fase actual:** Fase 3 completa + tipos de cultivo perenne/ciclo único, periodos configurables y cronograma dinámico (2026-07-25). Próximo: banco comunitario de variedades (ampliar campos de periodos al RPC).
+- **Versión:** 0.2.5 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
+- **Fase actual:** Fase 3 completa + banco comunitario de variedades, colaboración multi-propietario reforzada, trazabilidad de compras y paquete ZIP de comprobantes (2026-07-30). Próximo: web de consulta (drift_wasm).
 
 ## Alcance funcional
 
-- Catálogo de plantas/variedades con condiciones edafoclimáticas óptimas, **tipo de cultivo por defecto** (ciclo único o perenne), **periodos de cosecha** y **ciclos de fertilización** configurables (múltiples abonos con tipo y días desde siembra/trasplante).
+- Catálogo de plantas/variedades con condiciones edafoclimáticas óptimas, **tipo de cultivo por defecto** (ciclo único o perenne), **periodos de cosecha** y **ciclos de fertilización** configurables (múltiples abonos con tipo y días desde siembra/trasplante). **Banco comunitario:** descarga de variedades compartidas por otros usuarios (caché local + botón **Sincronizar comunidad**); listado unificado en Plantas, Agregar cultivo y el asistente.
 - Registro de cultivos por predio y lote con georreferenciación GNSS y **tipo de ciclo productivo**:
   - **Ciclo único:** días estimados hasta Cosecha 1 (verde/tierno) y Cosecha 2 (maduro/seco).
   - **Cultivo perenne:** días hasta la primera cosecha, periodicidad entre cosechas y esperanza de vida hasta renovación.
@@ -17,15 +17,17 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 - Modelo de etapas fenológicas: siembra directa vs. germinador → trasplante → fenología; eventos de abono generados desde los ciclos definidos en la variedad.
 - Cronograma en tres vistas: Gantt, calendario y actividades registradas. **Ajuste dinámico:** al registrar una tarea con fecha distinta a la programada, los eventos pendientes posteriores se desplazan automáticamente; el detalle del cultivo muestra tipo, periodos configurados y cronograma completo.
 - Registro de tareas completadas con acumulación de HH e insumos consumidos del inventario. Actividades base ampliadas para perennes: **Cosecha periódica** (con periodicidad configurable; extiende eventos futuros) y **Renovación** (marca el cultivo como finalizado).
-- Compras por año fiscal con **comprobante adjunto real** (PDF o foto), archivado como `soportes/{año}/{Proveedor}-{factura}.{ext}`.
+- Compras por año fiscal con **comprobante adjunto real** (PDF o foto), archivado como `soportes/{año}/{Proveedor}-{factura}.{ext}`. En predios con **co-propietarios**, cada compra muestra **quién la registró** (email). Exportación **CSV/PDF** resumida y paquete **ZIP completo** (reporte extendido con identificación de facturas + carpeta `comprobantes/` con los adjuntos).
 - Análisis fisicoquímicos de suelo por lote (con **PDF del laboratorio adjunto** opcional) y condiciones edafoclimáticas por predio.
-- **Onboarding con geolocalización:** "Obtener GPS" llena coordenadas/altitud y detecta país/región/municipio por geocodificación inversa (Nominatim), creando en el catálogo local los lugares que falten.
+- **Onboarding con geolocalización:** "Obtener GPS" llena coordenadas/altitud y detecta país/región/municipio por geocodificación inversa (Nominatim). Paso **Ubicación omitible**; fix Android de BD cifrada tras reinstalar (SQLCipher + exclusión del `.sqlite` del backup en la nube).
 - **Asistente paso a paso** (10 pasos): guía la configuración inicial — predio → lote → condiciones → análisis de suelo → proveedores → variedades → compra → inventario → cultivos → mapa. Con avance/retroceso sin perder progreso (el estado se deriva de la BD) y pasos obligatorios validados. Se ofrece tras el onboarding y queda accesible desde el menú y la barra superior.
-- **Multi-usuario:** un mismo predio puede tener propietario + colaboradores con roles `trabajador` o `consultor`, con permisos diferenciados por RLS de Postgres.
+- **Multi-usuario:** un mismo predio puede tener propietario + colaboradores con roles `trabajador` o `consultor`, con permisos diferenciados por RLS de Postgres. **Hidratación garantizada** de recursos compartidos en cada sync (condiciones, suelo, lotes, cultivos, inventario, compras para co-propietarios, eventos y tareas).
 - **Contribución comunitaria** (opt-in): compartir reportes de patologías anonimizados al catálogo global (fotos re-encodificadas sin EXIF/GPS).
 - **Pantalla Mapa** (`/map`): capas base OSM/Satélite (Catastro IGAC deshabilitado por defecto), polígonos de lotes, marcadores de cultivos, capas opcionales (todos mis cultivos, heatmap de patologías) y tap sobre zonas calientes del heatmap. **Brújula flotante** con indicador **N** que rota según la orientación del mapa (giro con dos dedos); al tocarla, reorienta automáticamente con el norte arriba (`MapController.rotate(0)`). **Botón de ubicación GPS** inicia un stream en tiempo real (`Geolocator.getPositionStream`), muestra marcador azul con halo de precisión, centra el mapa y lo sigue hasta que el usuario arrastra la vista manualmente. El mapa se renderiza aunque no haya cultivos ni lotes (útil para orientarse con GPS desde el primer uso).
-- Integración **EPPO Global Database** (token opcional) con verificación de salud del API y certificate pinning.
+- Integración **EPPO Global Database** (token opcional) con verificación de salud del API y certificate pinning. Modal **Nueva variedad** con debounce ampliado para evitar consultas EPPO excesivas mientras se escribe.
+- **Catálogo de patologías** con reclasificación manual por grupo (abióticas, hongos, bacterias, virus, plagas, deficiencias, otras) sin que «Actualizar» pise la elección del usuario.
 - **Catálogo de tratamientos por patología** con 214 entradas y priorización automática por el país del predio activo: primero los tratamientos nacionales, luego los globales, y dentro de cada grupo los de mayor sostenibilidad (culturales y biológicos antes que químicos).
+- **Campos de duración con unidad** (días / semanas / meses / años) en variedades, cultivos y tareas; la BD sigue guardando días.
 - Notificaciones locales de eventos próximos y vencidos.
 - **Exportación CSV/PDF en todas las pantallas de datos:** Dashboard (reporte integral: alertas de cultivos, próximos eventos, compras del año con gráfico circular, HH por mes, distribución por cultivo y por usuario), Cultivos (estado + patologías activas), Inventario, Compras y Proveedores. Encabezado con los datos reales del predio activo.
 - **Pantalla Reportes:** genera todos los reportes (integral, cultivos, inventario, compras, proveedores) y un **consolidado** en un solo PDF; listado de reportes generados con Ver/Compartir/Eliminar; logotipo personalizado para el encabezado (con el ícono de la app como respaldo); y logs de diagnóstico con compartir y limpieza de caché.
@@ -38,14 +40,14 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 - **Framework:** Flutter 3.22+ / Dart 3.4+
 - **Estado:** Riverpod (`flutter_riverpod ^2`)
 - **Router:** `go_router`
-- **BD local:** Drift 2.x sobre **SQLCipher** (schema **v16**, cifrada) — offline-first. Clave en `flutter_secure_storage` (Keystore/Keychain/DPAPI). Requiere OpenSSL para compilar en Windows.
+- **BD local:** Drift 2.x sobre **SQLCipher** (schema **v19**, cifrada) — offline-first. Clave en `flutter_secure_storage` (Keystore/Keychain/DPAPI). Requiere OpenSSL para compilar en Windows.
 - **Sync remoto:** Supabase (Postgres + Auth + Storage + RLS) — pull paginado, push por lotes, cursor con tiempo del servidor, verificación de `schema_meta`.
 - **Auth:** email/password vía `supabase_flutter ^2.16` (publishable key)
 - **Permisos:** `permission_handler ^11.3`
 - **GNSS:** `geolocator` (captura puntual en formularios + stream en tiempo real en Mapa) · **Geocodificación inversa:** Nominatim (OSM)
 - **Mapa:** `flutter_map` + `latlong2` (capas, rotación, brújula, seguimiento GPS)
 - **Notificaciones:** `flutter_local_notifications`
-- **Reportes:** `pdf` + `printing` + `csv`
+- **Reportes:** `pdf` + `printing` + `csv` + `archive` (ZIP de compras)
 - **Adjuntos:** `file_picker` + `image_picker` (+ `image` para strip de EXIF)
 - **Seguridad:** `crypto` (pinning TLS EPPO), `sqlcipher_flutter_libs`
 - **Env:** `flutter_dotenv`
@@ -92,8 +94,10 @@ Para habilitar sync/multi-usuario:
    `schema.sql` → `schema_3e.sql` → `schema_3e_v2..v4.sql` →
    `schema_3g.sql` → `fix_predio_shares_updated_at.sql` →
    `migrations/0007_schema_meta_y_triggers_updated_at.sql` (tabla
-   `schema_meta` + triggers `updated_at` del lado servidor). El cliente
-   verifica `schema_meta.version` antes de cada sync.
+   `schema_meta` + triggers `updated_at` del lado servidor), luego
+   `migrations/0008_banco_variedades.sql`, `0009_rls_reportes_privacidad.sql`,
+   `0010_cultivos_tipo_ciclo.sql`, `0011_compras_created_by.sql`.
+   El cliente verifica `schema_meta.version` antes de cada sync.
 
 4. **Pin TLS de EPPO** (si se usará el token EPPO): ejecutar
    `dart run tool/eppo_fingerprint.dart` desde una red de confianza y
@@ -158,10 +162,10 @@ nexus_siembras/
 │   │   ├── models/         # CicloAbono (ciclos de fertilización JSON)
 │   │   ├── theme/          # Material y accesible
 │   │   ├── units/          # Catálogo y conversiones de unidades
-│   │   ├── widgets/        # AppShell, SyncBadge, UnitDropdown…
-│   │   └── reports/        # exportCsv/exportPdf, reporte integral Dashboard, export_helpers
+│   │   ├── widgets/        # AppShell, SyncBadge, UnitDropdown, DuracionField, AutorLabel…
+│   │   └── reports/        # exportCsv/exportPdf, ZIP compras, reporte integral, export_helpers
 │   ├── data/
-│   │   ├── database/       # Schema Drift (v16), migraciones, conexión SQLCipher
+│   │   ├── database/       # Schema Drift (v19), migraciones, conexión SQLCipher
 │   │   ├── repositories/   # CultivoRepository, PlantaRepository…
 │   │   └── seed/           # Catálogo inicial (idempotente)
 │   ├── features/
@@ -179,8 +183,8 @@ nexus_siembras/
 │   │   ├── wizard/         # Asistente paso a paso (10 pasos)
 │   │   ├── reports/        # Central de reportes + logs de diagnóstico
 │   │   └── settings/       # Configuración general
-│   ├── services/           # SupabaseService, SyncService (batch+paginado),
-│   │                       # SecureStore, SoporteService (adjuntos),
+│   ├── services/           # SupabaseService, SyncService (batch+paginado+hidratación),
+│   │                       # VariedadesComunitariasService, SecureStore, SoporteService,
 │   │                       # GeocodingService, EppoClient (pinning TLS),
 │   │                       # BackupService, NotificationService…
 │   └── state/              # Providers Riverpod (auth_state, data_state, app_state)
@@ -198,16 +202,19 @@ nexus_siembras/
 
 ## Modelo de datos
 
-**Local (Drift sobre SQLCipher, schema v16).** Tablas principales: `predios`, `lotes`, `cultivos`, `plantas`, `plantaFotos`, `inventarios`, `compras` (con `soportePath`), `proveedores`, `analisisSuelo` (con `soportePath`/`soporteTipo`), `condicionesPredio`, `eventosCultivo`, `tareasCompletadas`, `patologias`, `cultivoPatologias`, `patologiasEspecies`, `tratamientosPatologias`, `predioColaboradores`, `patologiasReportadas`, `configs`, `syncMappings`, `syncTables`.
+**Local (Drift sobre SQLCipher, schema v19).** Tablas principales: `predios`, `lotes`, `cultivos`, `plantas`, `plantaFotos`, `inventarios`, `compras` (con `soportePath` y `createdByUserId`), `proveedores`, `analisisSuelo` (con `soportePath`/`soporteTipo`), `condicionesPredio`, `eventosCultivo`, `tareasCompletadas`, `patologias`, `cultivoPatologias`, `patologiasEspecies`, `tratamientosPatologias`, `predioColaboradores`, `patologiasReportadas`, `variedadesComunitariasCache`, `configs`, `syncMappings`, `syncTables`, `syncOps`.
 
-Campos relevantes añadidos en **v15–v16**:
+Campos relevantes añadidos en **v15–v19**:
 
-| Tabla | Columnas nuevas | Uso |
+| Versión | Tabla / cambio | Uso |
 |---|---|---|
-| `cultivos` | `tipoCultivo`, `cosecha1Dias`, `cosecha2Dias`, `periodicidadCosechaDias`, `esperanzaVidaDias` | Tipo de ciclo y periodos del cultivo concreto |
-| `plantas` | `tipoCultivoDefault`, `periodicidadCosechaDias`, `esperanzaVidaDias`, `ciclosAbonoJson` | Valores por defecto al agregar cultivo; abonos como JSON `[{tipo, dias}, …]` |
+| v15 | `cultivos.*` tipo/periodos | Ciclo único vs perenne en cada cultivo |
+| v16 | `plantas.*` tipo/periodos/abonos JSON | Defaults al agregar cultivo |
+| v17 | `patologias.tipoManual` | Reclasificación manual de patologías |
+| v18 | `variedades_comunitarias_cache` | Espejo local del banco comunitario Supabase |
+| v19 | `compras.createdByUserId` | Autor de cada compra (co-propietarios) |
 
-**Remoto (Postgres + RLS).** Espejo de las tablas anteriores más `predio_shares`, `schema_meta` (versión de esquema verificada por el cliente) y funciones `SECURITY DEFINER`. Migración **`supabase/migrations/0010_cultivos_tipo_ciclo.sql`** añade las columnas de tipo/periodos en `cultivos` (aplicar tras el orden documentado en `supabase/migrations/README.md`).
+**Remoto (Postgres + RLS).** Espejo de las tablas anteriores más `predio_shares`, `variedades_comunitarias`, `schema_meta` (versión de esquema verificada por el cliente) y funciones `SECURITY DEFINER`. Migraciones en `supabase/migrations/`: **`0010_cultivos_tipo_ciclo.sql`**, **`0011_compras_created_by.sql`**, **`0008_banco_variedades.sql`**, etc. (orden completo en `supabase/migrations/README.md`).
 
 - `rol_en_predio(predio_id)` → `'propietario' | 'trabajador' | 'consultor' | NULL`
 - `puede_ver_predio(predio_id)` — cualquier rol
@@ -223,7 +230,15 @@ Reglas de acceso resumidas:
 | Inventario | R/W | R/W (consumo) | R |
 | Compras | R/W | — | — |
 | Análisis suelo, condiciones | R/W | R | R |
-| Colaboradores | R/W | — | — |
+| Colaboradores | R/W (solo dueño invita) | — | — |
+
+La columna «Propietario» cubre tanto al **dueño del predio** como a los
+**colaboradores invitados con rol `propietario`** (co-propietarios): ambos
+ven y registran compras del mismo predio, y esas compras se sincronizan
+entre ellos. Trabajador y consultor no ven la pantalla Compras (ni en el
+menú, dashboard, reportes ni el asistente). Invitar o cambiar roles sigue
+reservado al dueño real del predio, para no generar shares invertidos
+(`predio_shares.owner_id` debe coincidir con `predios.owner_id`).
 
 ## Estado de fases
 
@@ -271,6 +286,14 @@ Reglas de acceso resumidas:
   - **Actividades perennes:** «Cosecha periódica» y «Renovación» en el modal de tareas; cosechas periódicas se extienden hasta fin de ciclo de vida.
   - **Cronograma dinámico** (`cultivo_repository.dart`): al registrar una tarea, los eventos pendientes posteriores se desplazan según la diferencia entre fecha real y programada; «Resincronizar eventos» reconstruye el cronograma desde la configuración del cultivo y reaplica tareas.
   - Schema Drift **v15** en `cultivos` + sync/backup actualizados; migración Postgres `0010_cultivos_tipo_ciclo.sql`.
+- [x] **3m (2026-07-29)** — Campos de tiempo con unidad seleccionable (`core/widgets/duracion_field.dart`): `DuracionField` + `DuracionController` reemplazan los `TextField` que pedían días crudos. La unidad (días / semanas / meses / años) se elige en una lista desplegable **dentro del mismo campo** y el valor se convierte a días antes de persistir, así que la BD sigue almacenando solo días. Al precargar un valor existente se muestra en la unidad más legible (1095 → «3 años», 90 → «3 meses») y el helper indica la equivalencia («= 90 días») cuando la unidad no es días; acepta decimales («1,5 meses» → 45 días). Equivalencias fijas: **mes = 30 días, año = 365 días**. Migrados: variedades (germinador, cosechas 1/2, periodicidad, esperanza de vida), ciclos de abono, agregar cultivo y periodicidad del modal de tareas. Cubierto por pruebas unitarias en `test/widget_test.dart`.
+- [x] **3n (2026-07-29)** — Reclasificación manual de patologías: cada tarjeta del catálogo (`pathologies_screen.dart`) tiene un botón que abre un selector de grupo (abióticas, hongos, bacterias, virus, plagas, deficiencias nutricionales, otras) para moverla cuando la clasificación automática no acierta. La elección se guarda en `patologias.tipoManual` (**Drift v17**) y no en `tipo`, porque «Actualizar» reescribe `tipo` desde el asset/EPPO en cada corrida y pisaría la decisión del usuario. El catálogo de grupos y la resolución del grupo efectivo viven en `features/pathologies/agrupacion_patologias.dart` (única fuente para agrupar, encabezados e iconos); el diálogo está en `reclasificar_patologia_dialog.dart` y permite restaurar la agrupación automática. Las reclasificadas se marcan en la tarjeta y la tabla `patologias` sigue siendo local (sin migración Postgres ni sync).
+- [x] **3o (2026-07-30)** — Hidratación garantizada de predios compartidos (`sync_service.dart`): un colaborador podía quedar atascado con solo el predio y los lotes porque el pull incremental filtra por `updated_at > lastPulledAt` (las filas históricas del dueño quedan bajo el cut-off) y el backfill de 3e-9-8 solo se disparaba por EVENTO (share nuevo/reactivado/cambio de rol) — si ese momento pasaba o el backfill fallaba a mitad, nunca se reintentaba. Ahora `_hidratarPrediosCompartidos()` corre en cada `_pullAll()`: por cada predio ajeno con share activo verifica un marcador persistente en `syncTables` (`hidratado_predio_<remoteId>_<rol>`); si falta, ejecuta `_backfillRecursosDePredio` (condiciones, análisis de suelo, lotes, cultivos, inventario, compras si soy propietario, eventos y tareas) y solo escribe el marcador cuando TODAS las tablas respondieron — un fallo de red deja el marcador sin escribir y la próxima sincronización reintenta. El marcador incluye el rol, así un ascenso trabajador→propietario rehidrata y baja las compras. `_mergeShare` ya no llama al backfill directo: al detectar "recuperando acceso" invalida el marcador y delega. El backfill ahora pagina (500) para predios grandes y loguea filas descartadas.
+- [x] **3p (2026-07-30)** — Onboarding Android: fix `SqliteException(26) file is not a database` en el paso Ubicación y al pulsar Comenzar. Causas: (1) el isolate de fondo de Drift no aplicaba `applyWorkaroundToOpenSqlCipherOnOldAndroidVersions` ni el override de SQLCipher → la BD se creaba/leía con sqlite plano; (2) reinstalar con backup de Android restauraba el `.sqlite` cifrado sin la clave del Keystore. Fix en `db_connection_native.dart`: workaround completo en `isolateSetup`, sonda previa que elimina BD ilegible y la recrea, y exclusión del `.sqlite` del backup en la nube (`res/xml/backup_rules.xml`). Onboarding: paso Ubicación omitible (botón **Omitir** + salto automático si marcó «No crear predio propio»).
+- [x] **3q (2026-07-30)** — Banco comunitario en Plantas: tabla local `variedades_comunitarias_cache` (**Drift v18**) espejo de Supabase; sync al arrancar (con sesión), al iniciar sesión y con botón **Sincronizar comunidad** en la pantalla Plantas. El listado muestra propias + comunitarias (sin duplicar por nombre+especie); las comunitarias llevan chip y se copian al catálogo propio con el botón de copiar. Fix sync `UNIQUE constraint failed: sync_mappings.(tabla, remote_id)` en `_saveMapping` al reconciliar eventos por clave natural.
+- [x] **3r (2026-07-30)** — Listado unificado de variedades (`plantasListadoProvider`) en **Agregar cultivo**, paso 6 del asistente y autocompletados del modal Nueva variedad. Al sembrar con una variedad comunitaria, `addCultivo` la copia automáticamente al catálogo local (`ensurePlantaLocal`) antes de crear el cultivo.
+- [x] **3s (2026-07-30)** — Autor en compras: columna `created_by_user_id` (**Drift v19**, migración Postgres `0011_compras_created_by.sql`); se estampa al crear (sesión Supabase) y se muestra en el listado de Compras como «Registrada por: …» (email vía `emailPorUserIdProvider`).
+- [x] **3t (2026-07-30)** — Paquete ZIP en Compras: botón **ZIP completo** genera `compras_completo.pdf` (landscape, columnas extendidas con factura, código, autor y ruta del comprobante), `compras_completo.csv` y carpeta `comprobantes/` con los PDF/imagen adjuntos; compartible vía `share_plus`. PDF resumido de compras: columnas **Cant.** / **Und.**, sin columna Comprobante, anchos optimizados para Fecha/Valor/Factura.
 - [ ] **Futura** — Web de consulta y reportes (drift_wasm + adaptaciones para navegador).
 
 ## Notas de desarrollo
@@ -278,8 +301,8 @@ Reglas de acceso resumidas:
 - **Offline-first.** Todas las mutaciones escriben primero a Drift local. El `SyncService` reconcilia con Supabase respetando `updated_at` (last-write-wins, con timestamps acotados por el servidor vía trigger `cap_updated_at`). Push por lotes de 200 filas con fallback fila-a-fila; pull paginado (500) con cursor basado en el `updated_at` remoto — nunca el reloj del dispositivo.
 - **Seguridad.** BD local cifrada (SQLCipher; la clave vive en el almacén seguro del SO y se genera en el primer arranque). En Android el override de librería debe aplicarse también en el isolate de Drift (`isolateSetup`). TLS a EPPO validado por pinning (hoja + intermedio). `.env` está fuera de git; usar publishable keys.
 - **Modo local.** Sin `.env` la app funciona 100% local; el usuario ve el aviso en la pantalla de Cuenta. El backup JSON de Configuración cubre el respaldo para usuarios sin cuenta.
-- **Migraciones locales.** Cada bump de `schemaVersion` en `database.dart` requiere una rama `onUpgrade`; correr `dart run build_runner build` antes de compilar. Versiones recientes: **v15** (tipo/periodos en cultivos), **v16** (tipo/periodos/abonos en plantas). El seed es idempotente (puede re-ejecutarse sobre una BD poblada sin duplicar).
-- **Migraciones remotas.** Nuevo esquema = nuevo archivo en `supabase/migrations/` (p. ej. `0010_cultivos_tipo_ciclo.sql`) que incremente `schema_meta.version`, y subir `SyncService.schemaRemotoRequerido` en el cliente.
+- **Migraciones locales.** Cada bump de `schemaVersion` en `database.dart` requiere una rama `onUpgrade`; correr `dart run build_runner build` antes de compilar. Versiones recientes: **v15–v19** (cultivos, plantas, patologías, caché comunitaria, autor en compras). El seed es idempotente (puede re-ejecutarse sobre una BD poblada sin duplicar).
+- **Migraciones remotas.** Nuevo esquema = nuevo archivo en `supabase/migrations/` (p. ej. `0011_compras_created_by.sql`) que incremente `schema_meta.version`, y subir `SyncService.schemaRemotoRequerido` en el cliente cuando aplique.
 - **Windows.** Compilar requiere OpenSSL (SQLCipher): instalar el paquete completo de slproweb y definir `OPENSSL_ROOT_DIR`.
 - **Reset total.** El botón en Cuenta borra la BD local en transacción **antes** de `signOut()` — si se invierte, `signOut` desmonta el widget y corta la ejecución.
 - **Android SDK.** Forzado a compileSdk 36 en `android/build.gradle.kts` para compatibilidad con `file_picker`. Kotlin incremental deshabilitado en Windows para evitar errores de caché.
@@ -287,4 +310,17 @@ Reglas de acceso resumidas:
 
 ## Licencia
 
-Propietario — NEXUS CREATIO. Todos los derechos reservados.
+Copyright (C) 2026 NEXUS CREATIO
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://gnu.org>.

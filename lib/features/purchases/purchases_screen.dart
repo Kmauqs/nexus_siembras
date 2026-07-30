@@ -1,13 +1,17 @@
 import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:share_plus/share_plus.dart';
 import '../../core/reports/adjunto_viewer.dart';
+import '../../core/reports/compras_zip_export.dart';
 import '../../core/reports/export_helpers.dart';
 import '../../core/reports/report_data_builder.dart';
 import '../../core/units/units_catalog.dart';
 import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
+import '../../core/widgets/autor_label.dart';
 import '../../core/widgets/unit_dropdown.dart';
 import '../../services/soporte_service.dart';
 import '../../state/app_state.dart';
@@ -37,17 +41,26 @@ class PurchasesScreen extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(children: [
-              if (puedeEditar) ...[
-                FilledButton.icon(
-                  onPressed: () => _showEditModal(context, ref, null),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Nueva compra'),
-                ),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: [
+                if (puedeEditar) ...[
+                  FilledButton.icon(
+                    onPressed: () => _showEditModal(context, ref, null),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Nueva compra'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                ExportButtons(onExport: (fmt) => _exportar(context, ref, fmt)),
                 const SizedBox(width: 8),
-              ],
-              ExportButtons(onExport: (fmt) => _exportar(context, ref, fmt)),
-            ]),
+                OutlinedButton.icon(
+                  onPressed: () => _exportarZip(context, ref),
+                  icon: const Icon(Icons.folder_zip_outlined, size: 18),
+                  label: const Text('ZIP completo'),
+                ),
+              ]),
+            ),
           ),
           Expanded(
             child: compras.isEmpty
@@ -89,6 +102,33 @@ class PurchasesScreen extends ConsumerWidget {
       columns: t.columns,
       rows: t.rows,
     );
+  }
+
+  /// Paquete ZIP: reporte completo (PDF+CSV) + comprobantes adjuntos.
+  static Future<void> _exportarZip(
+      BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(const SnackBar(
+      content: Text('Generando paquete ZIP…'),
+      duration: Duration(seconds: 2),
+    ));
+    try {
+      final zip = await exportComprasPaqueteZip(ref);
+      if (!context.mounted) return;
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(zip.path, mimeType: 'application/zip')],
+        subject: 'Compras — reporte completo',
+        text: 'Paquete con reporte PDF/CSV y facturas adjuntas.',
+      ));
+      if (!context.mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text('ZIP generado: ${zip.path}'),
+        duration: const Duration(seconds: 6),
+      ));
+    } catch (e) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('Error al generar ZIP: $e')));
+    }
   }
 }
 
@@ -442,6 +482,12 @@ class _CompraTile extends ConsumerWidget {
               Text(item.desc2!,
                   style: TextStyle(color: Theme.of(context).hintColor)),
             Text('${item.proveedor} · ${item.factura} · ${item.fecha}'),
+            if (item.createdByUserId != null &&
+                item.createdByUserId!.isNotEmpty)
+              AutorLabel(
+                userId: item.createdByUserId!,
+                prefix: 'Registrada por: ',
+              ),
             Row(children: [
               _TipoChip(tipo: item.tipo),
               if (item.soporteName != null) ...[

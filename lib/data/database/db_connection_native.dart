@@ -30,15 +30,21 @@ import '../../services/secure_store.dart';
 /// la BD y dejaba la app muda (bug "Comenzar no hace nada" en el
 /// onboarding). El check `PRAGMA cipher_version` de abajo confirma que
 /// la librería cargada es realmente SQLCipher.
-Future<void> _configurarSqlCipher() async {
+///
+/// IMPORTANTE (fix 2026-07-30): en Android el workaround y el override
+/// deben aplicarse también dentro del isolate de Drift (`isolateSetup`).
+/// Sin eso, el isolate de fondo carga libsqlite3.so del sistema (sin
+/// cifrado) y la BD recién creada queda ilegible → SqliteException(26)
+/// "file is not a database" en PRAGMA user_version (onboarding Ubicación).
+Future<void> _configurarSqlCipherEnIsolate() async {
   if (Platform.isAndroid) {
-    // Android sí necesita el override: el sistema trae un libsqlite3.so
-    // propio (sin cifrado) que ganaría la resolución de símbolos.
     await applyWorkaroundToOpenSqlCipherOnOldAndroidVersions();
     open.overrideFor(OperatingSystem.android, openCipherOnAndroid);
   }
-  // Windows/Linux: la librería empaquetada por el plugin ya es SQLCipher.
-  // iOS/macOS: el pod de sqlcipher_flutter_libs enlaza SQLCipher.
+}
+
+Future<void> _configurarSqlCipher() async {
+  await _configurarSqlCipherEnIsolate();
 }
 
 LazyDatabase openConnection() {
@@ -48,6 +54,10 @@ LazyDatabase openConnection() {
     final file = File(p.join(dbFolder.path, 'nexus_siembras.sqlite'));
     final key = await SecureStore.obtenerOCrearClaveDb();
     await _migrarACifradoSiHaceFalta(file, key);
+    // Si quedó un archivo ilegible (p. ej. backup de Android restauró la
+    // BD cifrada pero no la clave del Keystore), lo eliminamos antes de
+    // que Drift falle en el primer SELECT del onboarding.
+    await _eliminarBdIlegibleSiHaceFalta(file, key);
     // Limpieza de respaldos en texto claro dejados por la versión anterior
     // de la migración (revisión 2026-07-20 #1).
     final legacyBak = File('${file.path}.pre-cifrado.bak');
@@ -69,9 +79,7 @@ LazyDatabase openConnection() {
       // ("Failed to load dynamic library libsqlite3.so"). isolateSetup
       // corre dentro del isolate de la BD, antes de abrir.
       isolateSetup: () async {
-        if (Platform.isAndroid) {
-          open.overrideFor(OperatingSystem.android, openCipherOnAndroid);
-        }
+        await _configurarSqlCipherEnIsolate();
       },
       setup: (db) {
         // La clave debe fijarse antes de cualquier otra sentencia.
@@ -162,4 +170,52 @@ Future<void> _migrarACifradoSiHaceFalta(File file, String key) async {
   await enc.rename(file.path);
   Log.i('[db] Migración a BD cifrada completada y verificada; el archivo '
       'original sin cifrar fue eliminado.');
+}
+
+/// Detecta una BD existente que no abre con la clave actual (típico tras
+/// reinstalar Android con backup en la nube: restaura el .sqlite pero no
+/// la clave del Keystore) y la elimina para que Drift cree una nueva.
+Future<void> _eliminarBdIlegibleSiHaceFalta(File file, String key) async {
+  if (!await file.exists()) return;
+  final escapedKey = key.replaceAll("'", "''");
+  Database? db;
+  try {
+    db = sqlite3.open(file.path);
+    db.execute("PRAGMA key = '$escapedKey';");
+    if (db.select('PRAGMA cipher_version;').isEmpty) {
+      throw StateError('SQLCipher no disponible');
+    }
+    // Dispara "file is not a database" si la clave no coincide o el
+    // archivo quedó creado con sqlite plano (bug del isolate, 2026-07-30).
+    db.select('PRAGMA user_version;');
+  } catch (e) {
+    if (!_esErrorBdIlegible(e)) rethrow;
+    Log.w('[db] BD local ilegible — se eliminará y se creará de nuevo: $e');
+    await _eliminarArchivosBd(file);
+  } finally {
+    db?.dispose();
+  }
+}
+
+bool _esErrorBdIlegible(Object e) {
+  final msg = e.toString().toLowerCase();
+  return msg.contains('file is not a database') ||
+      msg.contains('not a database') ||
+      msg.contains('code 26');
+}
+
+Future<void> _eliminarArchivosBd(File file) async {
+  for (final path in [
+    file.path,
+    '${file.path}-wal',
+    '${file.path}-shm',
+    '${file.path}-journal',
+    '${file.path}.enc',
+    '${file.path}.pre-cifrado.bak',
+  ]) {
+    try {
+      final f = File(path);
+      if (await f.exists()) await f.delete();
+    } catch (_) {}
+  }
 }

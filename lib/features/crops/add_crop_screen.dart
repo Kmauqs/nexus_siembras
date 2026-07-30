@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
+import '../../core/widgets/duracion_field.dart';
 import '../../core/widgets/unit_dropdown.dart';
 import '../../state/data_state.dart';
 
@@ -27,10 +28,10 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
   final _lngCtrl = TextEditingController();
   final _altCtrl = TextEditingController();
   String _tipoCultivo = 'ciclo_unico';
-  final _cosecha1DiasCtrl = TextEditingController();
-  final _cosecha2DiasCtrl = TextEditingController();
-  final _periodicidadCtrl = TextEditingController();
-  final _esperanzaVidaCtrl = TextEditingController();
+  final _cosecha1DiasCtrl = DuracionController();
+  final _cosecha2DiasCtrl = DuracionController();
+  final _periodicidadCtrl = DuracionController();
+  final _esperanzaVidaCtrl = DuracionController();
   int? _loteId;
   bool _obtainingGnss = false;
 
@@ -55,33 +56,56 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
 
   void _hidratarPeriodosDesdePlanta(Planta pl) {
     if (_plantaHidratadaId == pl.id) return;
-    setState(() {
-      _plantaHidratadaId = pl.id;
-      _tipoCultivo = pl.tipoCultivoDefault;
-      if (pl.esPerenneDefault) {
-        _cosecha1DiasCtrl.text =
-            pl.cosechaMin != null ? '${pl.cosechaMin}' : '';
-        _periodicidadCtrl.text = pl.periodicidadCosechaDias != null
-            ? '${pl.periodicidadCosechaDias}'
-            : '90';
-        _esperanzaVidaCtrl.text = pl.esperanzaVidaDias != null
-            ? '${pl.esperanzaVidaDias}'
-            : '1095';
-        _cosecha2DiasCtrl.clear();
-      } else {
-        _cosecha1DiasCtrl.text =
-            pl.cosechaMin != null ? '${pl.cosechaMin}' : '';
-        _cosecha2DiasCtrl.text =
-            pl.cosechaMax != null ? '${pl.cosechaMax}' : '';
-        _periodicidadCtrl.clear();
-        _esperanzaVidaCtrl.clear();
-      }
+    _plantaHidratadaId = pl.id;
+    // Se invoca desde `build`: diferimos la mutación de controllers y el
+    // setState al siguiente frame para no reconstruir durante el build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _tipoCultivo = pl.tipoCultivoDefault;
+        _cosecha1DiasCtrl.setDias(pl.cosechaMin);
+        if (pl.esPerenneDefault) {
+          _periodicidadCtrl.setDias(pl.periodicidadCosechaDias ?? 90);
+          _esperanzaVidaCtrl.setDias(pl.esperanzaVidaDias ?? 1095);
+          _cosecha2DiasCtrl.limpiar();
+        } else {
+          _cosecha2DiasCtrl.setDias(pl.cosechaMax);
+          _periodicidadCtrl.limpiar();
+          _esperanzaVidaCtrl.limpiar();
+        }
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final plantas = ref.watch(plantasProvider);
+    final plantas = ref.watch(plantasListadoProvider);
+    if (plantas.isEmpty) {
+      return AppShell(
+        title: 'Agregar cultivo',
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'No hay variedades disponibles. Agrega una propia o '
+                  'sincroniza el banco comunitario desde Plantas.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () => context.push('/plants'),
+                  icon: const Icon(Icons.grass),
+                  label: const Text('Ir a Plantas'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     final pl = plantas[_selectedIdx.clamp(0, plantas.length - 1)];
     _hidratarPeriodosDesdePlanta(pl);
     final esGerminador = pl.metodoSiembra == 'germinador';
@@ -113,8 +137,12 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
             decoration: const InputDecoration(
                 labelText: 'Planta', border: OutlineInputBorder()),
             value: _selectedIdx,
-            items: List.generate(plantas.length, (i) =>
-                DropdownMenuItem(value: i, child: Text(plantas[i].nombre))),
+            items: List.generate(
+                plantas.length,
+                (i) => DropdownMenuItem(
+                      value: i,
+                      child: Text(plantas[i].nombreEnSelector),
+                    )),
             onChanged: (v) => setState(() {
               _selectedIdx = v ?? 0;
               _plantaHidratadaId = null;
@@ -150,24 +178,18 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
             const SizedBox(height: 8),
             Row(children: [
               Expanded(
-                child: TextField(
+                child: DuracionField(
                   controller: _cosecha1DiasCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Días hasta Cosecha 1',
-                    border: OutlineInputBorder(),
-                  ),
+                  label: 'Hasta Cosecha 1',
+                  dense: true,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: TextField(
+                child: DuracionField(
                   controller: _cosecha2DiasCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Días hasta Cosecha 2',
-                    border: OutlineInputBorder(),
-                  ),
+                  label: 'Hasta Cosecha 2',
+                  dense: true,
                 ),
               ),
             ]),
@@ -179,37 +201,27 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
                   fontSize: 12, color: Theme.of(context).hintColor),
             ),
             const SizedBox(height: 8),
-            TextField(
+            DuracionField(
               controller: _cosecha1DiasCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Días hasta primera cosecha',
-                border: OutlineInputBorder(),
-              ),
+              label: 'Tiempo hasta primera cosecha',
             ),
             const SizedBox(height: 8),
             Row(children: [
               Expanded(
-                child: TextField(
+                child: DuracionField(
                   controller: _periodicidadCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Periodicidad de cosecha (días)',
-                    helperText: 'Desde la primera cosecha en adelante',
-                    border: OutlineInputBorder(),
-                  ),
+                  label: 'Periodicidad de cosecha',
+                  helperText: 'Desde la primera cosecha en adelante',
+                  dense: true,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: TextField(
+                child: DuracionField(
                   controller: _esperanzaVidaCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Esperanza de vida (días)',
-                    helperText: 'Hasta renovación del cultivo',
-                    border: OutlineInputBorder(),
-                  ),
+                  label: 'Esperanza de vida',
+                  helperText: 'Hasta renovación del cultivo',
+                  dense: true,
                 ),
               ),
             ]),
@@ -524,9 +536,10 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
   }
 
   Future<void> _save() async {
-    final plantas = ref.read(plantasProvider);
+    final plantas = ref.read(plantasListadoProvider);
     if (plantas.isEmpty) return;
     final pl = plantas[_selectedIdx.clamp(0, plantas.length - 1)];
+    final eraComunidad = pl.esComunidad;
     final area = double.tryParse(_areaCtrl.text) ?? 0;
     final semilla = double.tryParse(_semillaCtrl.text) ?? 0;
     final hh = double.tryParse(_hhCtrl.text) ?? 0;
@@ -540,23 +553,23 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
     int? periodicidad;
     int? esperanzaVida;
     if (_tipoCultivo == 'ciclo_unico') {
-      cosecha1Dias = int.tryParse(_cosecha1DiasCtrl.text.trim());
-      cosecha2Dias = int.tryParse(_cosecha2DiasCtrl.text.trim());
+      cosecha1Dias = _cosecha1DiasCtrl.dias;
+      cosecha2Dias = _cosecha2DiasCtrl.dias;
       if (cosecha1Dias == null || cosecha1Dias <= 0) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Indica los días estimados hasta Cosecha 1')));
+            content: Text('Indica el tiempo estimado hasta Cosecha 1')));
         return;
       }
     } else {
-      cosecha1Dias = int.tryParse(_cosecha1DiasCtrl.text.trim());
-      periodicidad = int.tryParse(_periodicidadCtrl.text.trim());
-      esperanzaVida = int.tryParse(_esperanzaVidaCtrl.text.trim());
+      cosecha1Dias = _cosecha1DiasCtrl.dias;
+      periodicidad = _periodicidadCtrl.dias;
+      esperanzaVida = _esperanzaVidaCtrl.dias;
       if (cosecha1Dias == null || cosecha1Dias <= 0) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
-                'Indica los días estimados hasta la primera cosecha')));
+                'Indica el tiempo estimado hasta la primera cosecha')));
         return;
       }
       if (periodicidad == null ||
@@ -566,7 +579,7 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
-                'Indica periodicidad de cosecha y esperanza de vida (días)')));
+                'Indica periodicidad de cosecha y esperanza de vida')));
         return;
       }
     }
@@ -593,10 +606,13 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
             esperanzaVidaDias: esperanzaVida,
           );
       if (!mounted) return;
+      final sufijoComunidad = eraComunidad
+          ? ' · "${pl.nombre}" copiada a tu catálogo'
+          : '';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(semilla > 0
-            ? 'Cultivo guardado · $semilla $_semillaUnit descontado(s) del inventario'
-            : 'Cultivo guardado'),
+            ? 'Cultivo guardado · $semilla $_semillaUnit descontado(s) del inventario$sufijoComunidad'
+            : 'Cultivo guardado$sufijoComunidad'),
       ));
       context.go('/crops');
     } catch (e) {

@@ -34,6 +34,7 @@ class CompraRepository {
     int? plantaRef,
     String? soporteName,
     String? soporteTipo,
+    String? createdByUserId,
   }) async {
     // Conversión a unidad base SI antes de persistir.
     final (baseVal, baseCode) = toBase(cantidad, unidad);
@@ -56,6 +57,7 @@ class CompraRepository {
           soportePath: Value(soporteName),
           soporteTipo: Value(soporteTipo),
           idUnico: Value(idUnico),
+          createdByUserId: Value(createdByUserId),
         ));
     if (_consumibles.contains(tipo)) {
       await inv.addOrIncrement(

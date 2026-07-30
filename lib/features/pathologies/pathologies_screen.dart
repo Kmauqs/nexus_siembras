@@ -5,7 +5,9 @@ import '../../core/theme/themes.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../data/database/database.dart' as drift;
 import '../../state/data_state.dart';
+import 'agrupacion_patologias.dart';
 import 'patologia_activa_card.dart';
+import 'reclasificar_patologia_dialog.dart';
 import 'reportar_patologia_modal.dart';
 import 'tratamientos_dialog.dart';
 
@@ -134,9 +136,6 @@ class PathologiesScreen extends ConsumerWidget {
     );
   }
 
-  static void _snack(BuildContext c, String msg) =>
-      ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(msg)));
-
   static String _iso(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, "0")}-${d.day.toString().padLeft(2, "0")}';
 
@@ -194,7 +193,7 @@ class PathologiesScreen extends ConsumerWidget {
   }
 }
 
-/// Tarjeta del catálogo de patologías: nombre común + científico + tipo,
+/// Tarjeta del catálogo de patologías: nombre común + científico + grupo,
 /// y chips con las plantas del predio que se ven afectadas.
 class _CatCard extends StatelessWidget {
   const _CatCard({required this.p, required this.plantasAfectadas});
@@ -204,6 +203,8 @@ class _CatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final grupo = grupoPorCodigo(grupoEfectivo(p));
+    final esManual = reclasificadaManualmente(p);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -219,13 +220,27 @@ class _CatCard extends StatelessWidget {
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(
-                        '${p.nombreCientifico ?? "?"} · ${p.tipo ?? "?"}',
+                        '${p.nombreCientifico ?? "?"} · ${grupo.etiqueta}'
+                        '${esManual ? " · reclasificada" : ""}',
                         style: TextStyle(
                             fontStyle: FontStyle.italic,
                             fontSize: 12,
                             color: theme.hintColor)),
                   ],
                 ),
+              ),
+              IconButton(
+                icon: Icon(
+                    esManual ? Icons.category : Icons.category_outlined,
+                    color: esManual
+                        ? theme.colorScheme.primary
+                        : theme.hintColor,
+                    size: 20),
+                tooltip: esManual
+                    ? 'Reclasificada en ${grupo.etiqueta} — pulsa para cambiar'
+                    : 'Reclasificar en otro grupo',
+                onPressed: () => showReclasificarPatologiaDialog(
+                    context: context, patologia: p),
               ),
               IconButton(
                 icon: Icon(Icons.medical_services_outlined,
@@ -363,27 +378,13 @@ class _CatalogoAgrupado extends StatelessWidget {
   final List<drift.Patologia> filtradas;
   final Map<int, List<String>> porPlantasMap;
 
-  /// Orden preferido y label de cada tipo. Los que no coincidan van a
-  /// "Otras" al final.
-  static const _tiposOrden = [
-    ('abiotica', '🌡️  Abióticas', Icons.thermostat),
-    ('hongo', '🍄 Hongos', Icons.blur_on),
-    ('bacteria', '🦠 Bacterias', Icons.circle_outlined),
-    ('virus', '🧬 Virus', Icons.polyline),
-    ('plaga', '🐛 Plagas', Icons.bug_report),
-    ('nutricional', '🌱 Deficiencias nutricionales', Icons.grass),
-    ('otra', '❓ Otras / sin clasificar', Icons.help_outline),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    // Agrupa por tipo normalizado (lowercase). Tipos desconocidos → "otra".
-    final tiposConocidos = _tiposOrden.map((e) => e.$1).toSet();
+    // Agrupa por el tipo efectivo: la reclasificación manual del usuario
+    // manda sobre el tipo taxonómico del catálogo.
     final porTipo = <String, List<drift.Patologia>>{};
     for (final p in filtradas) {
-      final tipo = (p.tipo ?? '').trim().toLowerCase();
-      final key = tiposConocidos.contains(tipo) ? tipo : 'otra';
-      porTipo.putIfAbsent(key, () => []).add(p);
+      porTipo.putIfAbsent(grupoEfectivo(p), () => []).add(p);
     }
     // Ordena cada grupo alfabéticamente por nombre científico (fallback
     // a nombre común). Esto agrupa naturalmente las especies del mismo
@@ -399,12 +400,16 @@ class _CatalogoAgrupado extends StatelessWidget {
     }
     return Column(
       children: [
-        for (final entry in _tiposOrden)
-          if ((porTipo[entry.$1] ?? const []).isNotEmpty)
+        for (final g in gruposPatologias)
+          if ((porTipo[g.codigo] ?? const []).isNotEmpty)
             _GrupoExpansion(
-              titulo: entry.$2,
-              icono: entry.$3,
-              patologias: porTipo[entry.$1]!,
+              // Sin key, al reclasificar una patología (un grupo puede quedar
+              // vacío y desaparecer) el estado de expansión se desplazaría al
+              // grupo vecino.
+              key: ValueKey(g.codigo),
+              titulo: g.titulo,
+              icono: g.icono,
+              patologias: porTipo[g.codigo]!,
               porPlantasMap: porPlantasMap,
             ),
       ],
@@ -416,6 +421,7 @@ class _CatalogoAgrupado extends StatelessWidget {
 /// _CatCard solo se construyen al expandir la primera vez).
 class _GrupoExpansion extends StatefulWidget {
   const _GrupoExpansion({
+    super.key,
     required this.titulo,
     required this.icono,
     required this.patologias,

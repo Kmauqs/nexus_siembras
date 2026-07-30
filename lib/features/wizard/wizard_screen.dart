@@ -328,19 +328,23 @@ class WizardScreen extends ConsumerWidget {
   }
 
   _PasoDef _pasoPlantas(BuildContext context, WidgetRef ref) {
-    final plantas = ref.watch(plantasProvider);
+    final plantas = ref.watch(plantasListadoProvider);
+    final propias = ref.watch(plantasProvider);
+    final comunitarias = plantas.length - propias.length;
     return _PasoDef(
       titulo: '6. Variedades de plantas',
       descripcion:
-          'El catálogo trae variedades comunes precargadas. Agrega las '
-          'tuyas si cultivas otras (nombre, ciclos de cosecha, abonado).',
-      obligatorio: plantas.isEmpty, // el seed normalmente ya las carga
+          'El catálogo trae variedades comunes precargadas. Puedes agregar '
+          'las tuyas o sincronizar variedades compartidas por la comunidad.',
+      obligatorio: plantas.isEmpty,
       cumplido: plantas.isNotEmpty,
       contenido: [
         _Estado(
             ok: plantas.isNotEmpty,
-            okTxt: '${plantas.length} variedad(es) en el catálogo ✓',
-            noTxt: 'Catálogo vacío — crea al menos una variedad'),
+            okTxt: comunitarias > 0
+                ? '${plantas.length} variedad(es) (${propias.length} propias + $comunitarias comunidad) ✓'
+                : '${plantas.length} variedad(es) en el catálogo ✓',
+            noTxt: 'Catálogo vacío — crea una variedad o sincroniza comunidad'),
         const SizedBox(height: 8),
         _AccionBtn(
           icono: Icons.grass,

@@ -571,13 +571,18 @@ class SyncService {
       final predioRemote = prediosMap[r.predioId]?.remoteId;
       if (predioRemote == null) continue;
       if (r.colaboradorUserId == null) continue; // no puedo compartir sin uuid
-      // NO subir filas con rol='propietario'. Estas filas se crean en la
-      // BD local del INVITADO por `_mergeShare` para mostrar al dueño en
-      // la card de colaboradores. Si las subiéramos, se generaría un share
-      // invertido (yo como owner, el propietario como shared_with_id) que
-      // luego al bajarse haría aparecer al otro colaborador como
-      // "Propietario" en la UI (bug reportado 2026-07-19).
-      if (r.rol == 'propietario') continue;
+      // Filas con rol='propietario': solo son subibles si YO soy el dueño
+      // real del predio — es una invitación de co-propietario legítima
+      // (2026-07-29: permite compartir compras con co-propietarios).
+      //
+      // Si NO soy el dueño, la fila es la informativa que `_mergeShare`
+      // crea en la BD del INVITADO para mostrar al dueño en la card de
+      // colaboradores. Subirla generaría un share invertido (yo como
+      // owner, el propietario como shared_with_id) que al bajarse haría
+      // aparecer a otro colaborador como "Propietario" (bug 2026-07-19).
+      if (r.rol == 'propietario' && !await _soyOwnerRealDePredio(r.predioId)) {
+        continue;
+      }
       // NO subir mi fila representativa (colaboradorUserId == mi userId).
       // Solo existe en la BD local del invitado para que
       // `rolEnPredioProvider` sepa mi rol; subirla generaría un share
@@ -977,6 +982,7 @@ class SyncService {
           'factura': r.factura,
           'tipo': r.tipo,
           'notas': r.notas,
+          'created_by_user_id': r.createdByUserId,
           'updated_at': r.updatedAt.toUtc().toIso8601String(),
           'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
         },
@@ -1096,6 +1102,12 @@ class SyncService {
     // Postgres SÍ lo será. Reintentamos ignorando el timestamp del primer
     // pass para forzar la revalidación por RLS.
     total += await _repullPrediosCompartidos();
+    // Hidratación completa (one-shot con marcador persistente) de los
+    // predios compartidos conmigo: el pull incremental de arriba nunca
+    // baja las filas históricas del owner (updated_at < mi lastPulledAt),
+    // así que la primera vez que un predio ajeno aparece hay que traer
+    // TODO su contenido por predio_id/cultivo_id ignorando timestamps.
+    total += await _hidratarPrediosCompartidos();
     // Detectar shares eliminados: si el owner me removió como colaborador
     // el remoto hace DELETE físico (no soft-delete) → el pull incremental
     // no lo trae. Aquí comparamos el conjunto remoto con el local para
@@ -1108,12 +1120,15 @@ class SyncService {
     return total;
   }
 
-  /// Purga filas locales con rol='propietario' que NO corresponden al owner
-  /// real del predio. En una BD sana solo puede existir una fila con
-  /// rol='propietario' por predio y es la que representa al owner real
-  /// para mostrarlo a los colaboradores invitados. Si YO soy el owner no
-  /// debe haber ninguna (la UI me pinta con `_propietarioSelfTile`).
+  /// Purga filas locales con rol='propietario' que no se explican por
+  /// ninguno de los casos legítimos:
+  ///   - la fila informativa del owner real (para mostrarlo al invitado);
+  ///   - mi propia fila de rol (la que consulta `rolEnPredioProvider`);
+  ///   - un co-propietario que YO invité en un predio de mi propiedad
+  ///     (2026-07-29 — habilita compartir compras con co-propietarios).
+  /// Cualquier otra es residuo del bug histórico de shares invertidos.
   Future<void> _limpiarSharesInvertidos() async {
+    final userId = _sb.auth.currentUser?.id;
     try {
       final filas = await (db.select(db.predioColaboradores)
             ..where((c) => c.rol.equals('propietario'))
@@ -1126,8 +1141,11 @@ class SyncService {
         if (predio == null) continue;
         final ownerReal = predio.ownerUserId;
         if (ownerReal == null) continue; // sin ownerId → no puedo decidir
-        if (f.colaboradorUserId == ownerReal) continue; // fila legítima
-        // La fila apunta a alguien que NO es el owner real → invertida.
+        if (f.colaboradorUserId == ownerReal) continue; // fila del owner real
+        if (userId == null) continue;
+        if (f.colaboradorUserId == userId) continue; // mi propia fila de rol
+        if (ownerReal == userId) continue; // co-propietario que yo invité
+        // La fila apunta a un tercero en un predio ajeno → invertida.
         await (db.delete(db.predioColaboradores)
               ..where((c) => c.id.equals(f.id)))
             .go();
@@ -1293,6 +1311,20 @@ class SyncService {
     final ownerId = row['owner_id'] as String;
     final sharedId = row['shared_with_id'] as String;
     final rolInvitado = row['rol'] as String;
+    // Descarta shares invertidos legados: `owner_id` que no coincide con el
+    // dueño real del predio (residuo del bug 2026-07-19, ver también
+    // supabase/fix_shares_invertidos.sql). Sin este filtro, un share
+    // espurio reaparece en cada pull y pinta a un colaborador cualquiera
+    // como "Propietario".
+    final predioLocal = await (db.select(db.predios)
+          ..where((p) => p.id.equals(predioLocalId)))
+        .getSingleOrNull();
+    final ownerRealPredio = predioLocal?.ownerUserId;
+    if (ownerRealPredio != null && ownerRealPredio != ownerId) {
+      Log.w('[sync] share invertido ignorado (predio=$predioRemoteId, '
+          'owner_id=${_short(ownerId)} ≠ dueño ${_short(ownerRealPredio)})');
+      return;
+    }
     // Determina el "otro" y el rol REAL de ese otro:
     //   - si yo soy dueño (ownerId==userId): el otro es el invitado con
     //     el rol que le asigné (rolInvitado).
@@ -1429,46 +1461,151 @@ class SyncService {
       }
     }
 
-    // Backfill al recuperar acceso: los pulls incrementales previos
-    // avanzaron `lastPulledAt` sin bajar filas que RLS bloqueaba. Al
-    // reanudar acceso, esos registros históricos quedarían por debajo
-    // del cut-off temporal. Traemos TODO lo del predio filtrando por
-    // predio_id/cultivo_id sin filtro `since`.
+    // Al recuperar acceso (share nuevo, revivido o con cambio de rol) se
+    // invalida el marcador de hidratación del predio: los pulls
+    // incrementales previos avanzaron `lastPulledAt` sin bajar filas que
+    // RLS bloqueaba, así que hay que volver a traer TODO lo del predio.
+    // La descarga en sí la hace `_hidratarPrediosCompartidos()` al final
+    // de `_pullAll()` — con marcador persistente y reintento si falla.
     if (recuperandoAcceso) {
-      await _backfillRecursosDePredio(predioLocalId);
+      await _invalidarHidratacionPredio(predioRemoteId);
     }
   }
 
-  /// Trae todos los recursos ligados a un predio sin filtro incremental.
-  /// Se usa cuando el usuario acaba de recuperar acceso a un predio (share
-  /// nuevo o reactivado): los pulls incrementales anteriores no vieron
-  /// esas filas por RLS, y luego el `lastPulledAt` avanzó dejándolas fuera
-  /// del cut-off. Este método las recupera sin duplicar (los mergers hacen
-  /// LWW por updated_at contra la copia local).
-  Future<int> _backfillRecursosDePredio(int predioLocalId) async {
-    final predioRemote = await _resolveRemoteId('predios', predioLocalId);
-    if (predioRemote == null) return 0;
-    var total = 0;
+  /// Prefijo de los marcadores de hidratación en `syncTables`. Son filas
+  /// pseudo-tabla (`hidratado_predio_<remoteId>_<rol>`) que registran que
+  /// un predio compartido ya se descargó completo con ese rol. Se borran
+  /// junto con el resto de `syncTables` en logout/mantenimiento, lo que
+  /// fuerza una rehidratación — comportamiento deseado.
+  static const _prefijoHidratacion = 'hidratado_predio_';
 
-    Future<void> pullPorPredio(
+  /// Borra los marcadores de hidratación de un predio (todos los roles).
+  Future<void> _invalidarHidratacionPredio(int predioRemoteId) async {
+    await (db.delete(db.syncTables)
+          ..where((s) => s.tabla.like('$_prefijoHidratacion${predioRemoteId}_%')))
+        .go();
+  }
+
+  /// Hidratación one-shot de predios compartidos conmigo, controlada por
+  /// ESTADO y no por evento: en cada sync, para cada predio ajeno donde
+  /// tengo un share activo, verifica un marcador persistente en
+  /// `syncTables`; si no existe, baja TODO el contenido del predio con
+  /// `_backfillRecursosDePredio` y solo entonces escribe el marcador.
+  ///
+  /// Esto cubre los huecos del disparo por evento en `_mergeShare`:
+  ///   - shares que ya existían localmente antes de que existiera el
+  ///     backfill (colaboradores atascados con solo predio+lotes);
+  ///   - backfills interrumpidos a mitad (red): sin marcador → reintento
+  ///     automático en la próxima sincronización;
+  ///   - ascensos de rol (el marcador incluye el rol: trabajador →
+  ///     propietario rehidrata y ahora sí bajan las compras).
+  Future<int> _hidratarPrediosCompartidos() async {
+    final userId = _sb.auth.currentUser?.id;
+    if (userId == null) return 0;
+    var total = 0;
+    try {
+      // Mis filas de rol activas (predios donde soy colaborador).
+      final misShares = await (db.select(db.predioColaboradores)
+            ..where((c) => c.colaboradorUserId.equals(userId))
+            ..where((c) => c.deletedAt.isNull()))
+          .get();
+      for (final share in misShares) {
+        final predio = await (db.select(db.predios)
+              ..where((p) => p.id.equals(share.predioId))
+              ..where((p) => p.deletedAt.isNull()))
+            .getSingleOrNull();
+        if (predio == null) continue;
+        // Mis propios predios ya se cubren con el pull incremental normal.
+        if (predio.ownerUserId == null || predio.ownerUserId == userId) {
+          continue;
+        }
+        final predioRemote = await _resolveRemoteId('predios', share.predioId);
+        if (predioRemote == null) continue;
+        final marcador = '$_prefijoHidratacion${predioRemote}_${share.rol}';
+        final ya = await (db.select(db.syncTables)
+              ..where((s) => s.tabla.equals(marcador)))
+            .getSingleOrNull();
+        if (ya != null) continue;
+        final resultado = await _backfillRecursosDePredio(share.predioId);
+        total += resultado.filas;
+        // Solo se marca como hidratado si TODAS las tablas respondieron.
+        // Si alguna falló (p. ej. se cayó la red a mitad), el marcador no
+        // se escribe y la próxima sincronización lo reintenta.
+        if (resultado.completo) {
+          await db.into(db.syncTables).insertOnConflictUpdate(
+                SyncTablesCompanion.insert(
+                  tabla: marcador,
+                  lastPulledAt: Value(DateTime.now()),
+                  lastAttemptAt: Value(DateTime.now()),
+                ),
+              );
+        }
+      }
+    } catch (e) {
+      Log.w('[sync] _hidratarPrediosCompartidos fallo: $e');
+    }
+    return total;
+  }
+
+  /// Trae todos los recursos ligados a un predio sin filtro incremental.
+  /// Se usa cuando el usuario tiene acceso a un predio compartido cuyos
+  /// datos históricos nunca llegaron: los pulls incrementales anteriores
+  /// no vieron esas filas por RLS, y luego el `lastPulledAt` avanzó
+  /// dejándolas fuera del cut-off. Recupera sin duplicar (los mergers
+  /// hacen LWW por updated_at contra la copia local).
+  ///
+  /// Devuelve las filas mergeadas y si el backfill fue COMPLETO (ninguna
+  /// tabla falló). Los errores de fila individual se registran pero no
+  /// marcan el backfill como incompleto — una fila corrupta permanente no
+  /// debe provocar re-descargas infinitas del predio entero.
+  Future<({int filas, bool completo})> _backfillRecursosDePredio(
+      int predioLocalId) async {
+    final predioRemote = await _resolveRemoteId('predios', predioLocalId);
+    if (predioRemote == null) return (filas: 0, completo: false);
+    var total = 0;
+    var completo = true;
+
+    // Aplica el merger a cada fila, paginando: PostgREST trunca en
+    // silencio a su límite por defecto (auditoría P3) y un predio grande
+    // (p. ej. tareas_completadas) puede superarlo.
+    Future<void> mergearPaginado(
       String tabla,
+      PostgrestFilterBuilder<List<Map<String, dynamic>>> Function() query,
       Future<void> Function(Map<String, dynamic>) merger,
     ) async {
       try {
-        final rows =
-            await _sb.from(tabla).select().eq('predio_id', predioRemote);
-        for (final raw in (rows as List<dynamic>)) {
-          try {
-            await merger(raw as Map<String, dynamic>);
-            total++;
-          } catch (_) {}
+        var offset = 0;
+        while (true) {
+          final rows = await query()
+              .order('id', ascending: true)
+              .range(offset, offset + _pageSize - 1);
+          for (final raw in rows) {
+            try {
+              await merger(raw);
+              total++;
+            } catch (e) {
+              _erroresFilas++;
+              Log.w('[sync] backfill $tabla: fila id=${raw['id']} '
+                  'descartada: $e');
+            }
+          }
+          if (rows.length < _pageSize) break;
+          offset += _pageSize;
         }
       } catch (e) {
+        completo = false;
         _erroresFilas++;
         Log.w(
             '[sync] _backfillRecursosDePredio($tabla, predio=$predioRemote) fallo: $e');
       }
     }
+
+    Future<void> pullPorPredio(
+      String tabla,
+      Future<void> Function(Map<String, dynamic>) merger,
+    ) =>
+        mergearPaginado(
+            tabla, () => _sb.from(tabla).select().eq('predio_id', predioRemote), merger);
 
     await pullPorPredio('lotes', _mergeLote);
     await pullPorPredio('condiciones_predio', _mergeCondiciones);
@@ -1496,34 +1633,22 @@ class SyncService {
         Future<void> pullPorCultivo(
           String tabla,
           Future<void> Function(Map<String, dynamic>) merger,
-        ) async {
-          try {
-            final rows = await _sb
-                .from(tabla)
-                .select()
-                .inFilter('cultivo_id', cultivoIds);
-            for (final raw in (rows as List<dynamic>)) {
-              try {
-                await merger(raw as Map<String, dynamic>);
-                total++;
-              } catch (_) {}
-            }
-          } catch (e) {
-            _erroresFilas++;
-            Log.w(
-                '[sync] _backfillRecursosDePredio($tabla por cultivo) fallo: $e');
-          }
-        }
+        ) =>
+            mergearPaginado(
+                tabla,
+                () => _sb.from(tabla).select().inFilter('cultivo_id', cultivoIds),
+                merger);
 
         await pullPorCultivo('eventos_cultivo', _mergeEvento);
         await pullPorCultivo('tareas_completadas', _mergeTarea);
       }
     } catch (e) {
+      completo = false;
       _erroresFilas++;
       Log.w('[sync] _backfillRecursosDePredio cultivos-ids fallo: $e');
     }
 
-    return total;
+    return (filas: total, completo: completo);
   }
 
   static String _short(String uuid) {
@@ -2036,6 +2161,7 @@ class SyncService {
       factura: Value(row['factura'] as String?),
       tipo: Value(row['tipo'] as String?),
       notas: Value(row['notas'] as String?),
+      createdByUserId: Value(row['created_by_user_id'] as String?),
       updatedAt: Value(updatedRemote),
       deletedAt: Value(_parseDateOrNull(row['deleted_at'])),
     );
@@ -2260,6 +2386,21 @@ class SyncService {
     return share?.rol == 'trabajador';
   }
 
+  /// True solo si soy el DUEÑO REAL del predio (`predios.ownerUserId`), sin
+  /// contar shares con rol `propietario`. Se usa para decidir qué filas de
+  /// colaboradores puedo subir: únicamente el dueño real crea shares, de lo
+  /// contrario se generan shares invertidos (`owner_id` ≠ dueño del predio).
+  Future<bool> _soyOwnerRealDePredio(int predioLocalId) async {
+    final userId = _sb.auth.currentUser?.id;
+    if (userId == null) return true; // modo local
+    final predio = await (db.select(db.predios)
+          ..where((p) => p.id.equals(predioLocalId)))
+        .getSingleOrNull();
+    if (predio == null) return false;
+    // Sin ownerUserId aún → creado localmente antes del primer sync.
+    return predio.ownerUserId == null || predio.ownerUserId == userId;
+  }
+
   /// True si el usuario puede ver/editar compras del predio: dueño real
   /// (`ownerUserId`) o colaborador con rol `propietario` en el share.
   Future<bool> _soyPropietarioPredioLocal(int predioLocalId) async {
@@ -2282,6 +2423,14 @@ class SyncService {
 
   Future<void> _saveMapping(String tabla, int localId, int remoteId,
       {bool bumpLastPushed = true}) async {
+    // Si otro localId ya tenía este remoteId (reconciliación por clave
+    // natural tras reemplazar nube / duplicados), eliminar el mapping
+    // viejo antes de insertar — evita UNIQUE (tabla, remote_id).
+    await (db.delete(db.syncMappings)
+          ..where((s) => s.tabla.equals(tabla))
+          ..where((s) => s.remoteId.equals(remoteId))
+          ..where((s) => s.localId.isNotValue(localId)))
+        .go();
     // Upsert: si ya existe (tabla, localId), actualiza el remoteId.
     // `bumpLastPushed=false` desde los mergers (pull): actualizar el
     // timestamp durante el pull hace que `_debeSubir` crea que no hay

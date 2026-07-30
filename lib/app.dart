@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'core/i18n/app_localizations.dart';
 import 'core/theme/themes.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'router.dart';
+import 'services/variedades_comunitarias_service.dart';
 import 'state/app_state.dart';
 import 'state/auth_state.dart';
 import 'state/data_state.dart';
@@ -35,6 +38,9 @@ class NexusSiembrasApp extends ConsumerWidget {
     ref.listen<bool>(isLoggedInProvider, (prev, next) {
       if (next) {
         ref.read(autoSyncServiceProvider).iniciar();
+        // Refrescar banco comunitario de variedades en local.
+        unawaited(VariedadesComunitariasService.sincronizarEnLocal(
+            ref.read(databaseProvider)));
       } else {
         ref.read(autoSyncServiceProvider).detener();
       }

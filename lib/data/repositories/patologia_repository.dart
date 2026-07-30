@@ -58,6 +58,22 @@ class PatologiaRepository {
   Stream<List<PlantaPatologia>> watchPlantaPatologias() =>
       db.select(db.plantaPatologias).watch();
 
+  /// Reclasifica una patología del catálogo en otro grupo. `tipoManual = null`
+  /// devuelve la patología a su agrupación automática.
+  ///
+  /// No toca `tipo`: el catálogo lo sobrescribe en cada "Actualizar", así que
+  /// la elección del usuario debe vivir aparte para sobrevivir.
+  Future<void> reclasificar({
+    required int patologiaId,
+    required String? tipoManual,
+  }) async {
+    await (db.update(db.patologias)..where((p) => p.id.equals(patologiaId)))
+        .write(PatologiasCompanion(
+      tipoManual: Value(tipoManual),
+      updatedAt: Value(DateTime.now()),
+    ));
+  }
+
   /// Registra intervención: agrega nota + baja severidad a inicial (estado naranja).
   Future<void> registrarIntervencion({
     required int cpId,

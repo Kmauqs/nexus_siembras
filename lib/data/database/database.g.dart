@@ -4656,6 +4656,12 @@ class $PatologiasTable extends Patologias
   late final GeneratedColumn<String> tipo = GeneratedColumn<String>(
       'tipo', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _tipoManualMeta =
+      const VerificationMeta('tipoManual');
+  @override
+  late final GeneratedColumn<String> tipoManual = GeneratedColumn<String>(
+      'tipo_manual', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _descripcionMeta =
       const VerificationMeta('descripcion');
   @override
@@ -4701,6 +4707,7 @@ class $PatologiasTable extends Patologias
         nombreComun,
         nombreCientifico,
         tipo,
+        tipoManual,
         descripcion,
         sintomas,
         fuente,
@@ -4738,6 +4745,12 @@ class $PatologiasTable extends Patologias
     if (data.containsKey('tipo')) {
       context.handle(
           _tipoMeta, tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta));
+    }
+    if (data.containsKey('tipo_manual')) {
+      context.handle(
+          _tipoManualMeta,
+          tipoManual.isAcceptableOrUnknown(
+              data['tipo_manual']!, _tipoManualMeta));
     }
     if (data.containsKey('descripcion')) {
       context.handle(
@@ -4782,6 +4795,8 @@ class $PatologiasTable extends Patologias
           DriftSqlType.string, data['${effectivePrefix}nombre_cientifico']),
       tipo: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}tipo']),
+      tipoManual: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tipo_manual']),
       descripcion: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}descripcion']),
       sintomas: attachedDatabase.typeMapping
@@ -4808,6 +4823,12 @@ class Patologia extends DataClass implements Insertable<Patologia> {
   final String nombreComun;
   final String? nombreCientifico;
   final String? tipo;
+
+  /// Reclasificación manual del usuario (mismos valores que `tipo`). Cuando
+  /// no es null manda sobre `tipo` para agrupar en el listado. Va en columna
+  /// aparte porque `PatologiaCatalogService` reescribe `tipo` en cada
+  /// "Actualizar" y la elección del usuario tiene que sobrevivir a eso.
+  final String? tipoManual;
   final String? descripcion;
   final String? sintomas;
   final String? fuente;
@@ -4819,6 +4840,7 @@ class Patologia extends DataClass implements Insertable<Patologia> {
       required this.nombreComun,
       this.nombreCientifico,
       this.tipo,
+      this.tipoManual,
       this.descripcion,
       this.sintomas,
       this.fuente,
@@ -4835,6 +4857,9 @@ class Patologia extends DataClass implements Insertable<Patologia> {
     }
     if (!nullToAbsent || tipo != null) {
       map['tipo'] = Variable<String>(tipo);
+    }
+    if (!nullToAbsent || tipoManual != null) {
+      map['tipo_manual'] = Variable<String>(tipoManual);
     }
     if (!nullToAbsent || descripcion != null) {
       map['descripcion'] = Variable<String>(descripcion);
@@ -4861,6 +4886,9 @@ class Patologia extends DataClass implements Insertable<Patologia> {
           ? const Value.absent()
           : Value(nombreCientifico),
       tipo: tipo == null && nullToAbsent ? const Value.absent() : Value(tipo),
+      tipoManual: tipoManual == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tipoManual),
       descripcion: descripcion == null && nullToAbsent
           ? const Value.absent()
           : Value(descripcion),
@@ -4885,6 +4913,7 @@ class Patologia extends DataClass implements Insertable<Patologia> {
       nombreComun: serializer.fromJson<String>(json['nombreComun']),
       nombreCientifico: serializer.fromJson<String?>(json['nombreCientifico']),
       tipo: serializer.fromJson<String?>(json['tipo']),
+      tipoManual: serializer.fromJson<String?>(json['tipoManual']),
       descripcion: serializer.fromJson<String?>(json['descripcion']),
       sintomas: serializer.fromJson<String?>(json['sintomas']),
       fuente: serializer.fromJson<String?>(json['fuente']),
@@ -4901,6 +4930,7 @@ class Patologia extends DataClass implements Insertable<Patologia> {
       'nombreComun': serializer.toJson<String>(nombreComun),
       'nombreCientifico': serializer.toJson<String?>(nombreCientifico),
       'tipo': serializer.toJson<String?>(tipo),
+      'tipoManual': serializer.toJson<String?>(tipoManual),
       'descripcion': serializer.toJson<String?>(descripcion),
       'sintomas': serializer.toJson<String?>(sintomas),
       'fuente': serializer.toJson<String?>(fuente),
@@ -4915,6 +4945,7 @@ class Patologia extends DataClass implements Insertable<Patologia> {
           String? nombreComun,
           Value<String?> nombreCientifico = const Value.absent(),
           Value<String?> tipo = const Value.absent(),
+          Value<String?> tipoManual = const Value.absent(),
           Value<String?> descripcion = const Value.absent(),
           Value<String?> sintomas = const Value.absent(),
           Value<String?> fuente = const Value.absent(),
@@ -4928,6 +4959,7 @@ class Patologia extends DataClass implements Insertable<Patologia> {
             ? nombreCientifico.value
             : this.nombreCientifico,
         tipo: tipo.present ? tipo.value : this.tipo,
+        tipoManual: tipoManual.present ? tipoManual.value : this.tipoManual,
         descripcion: descripcion.present ? descripcion.value : this.descripcion,
         sintomas: sintomas.present ? sintomas.value : this.sintomas,
         fuente: fuente.present ? fuente.value : this.fuente,
@@ -4944,6 +4976,8 @@ class Patologia extends DataClass implements Insertable<Patologia> {
           ? data.nombreCientifico.value
           : this.nombreCientifico,
       tipo: data.tipo.present ? data.tipo.value : this.tipo,
+      tipoManual:
+          data.tipoManual.present ? data.tipoManual.value : this.tipoManual,
       descripcion:
           data.descripcion.present ? data.descripcion.value : this.descripcion,
       sintomas: data.sintomas.present ? data.sintomas.value : this.sintomas,
@@ -4961,6 +4995,7 @@ class Patologia extends DataClass implements Insertable<Patologia> {
           ..write('nombreComun: $nombreComun, ')
           ..write('nombreCientifico: $nombreCientifico, ')
           ..write('tipo: $tipo, ')
+          ..write('tipoManual: $tipoManual, ')
           ..write('descripcion: $descripcion, ')
           ..write('sintomas: $sintomas, ')
           ..write('fuente: $fuente, ')
@@ -4972,8 +5007,18 @@ class Patologia extends DataClass implements Insertable<Patologia> {
   }
 
   @override
-  int get hashCode => Object.hash(id, nombreComun, nombreCientifico, tipo,
-      descripcion, sintomas, fuente, createdAt, updatedAt, deletedAt);
+  int get hashCode => Object.hash(
+      id,
+      nombreComun,
+      nombreCientifico,
+      tipo,
+      tipoManual,
+      descripcion,
+      sintomas,
+      fuente,
+      createdAt,
+      updatedAt,
+      deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4982,6 +5027,7 @@ class Patologia extends DataClass implements Insertable<Patologia> {
           other.nombreComun == this.nombreComun &&
           other.nombreCientifico == this.nombreCientifico &&
           other.tipo == this.tipo &&
+          other.tipoManual == this.tipoManual &&
           other.descripcion == this.descripcion &&
           other.sintomas == this.sintomas &&
           other.fuente == this.fuente &&
@@ -4995,6 +5041,7 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
   final Value<String> nombreComun;
   final Value<String?> nombreCientifico;
   final Value<String?> tipo;
+  final Value<String?> tipoManual;
   final Value<String?> descripcion;
   final Value<String?> sintomas;
   final Value<String?> fuente;
@@ -5006,6 +5053,7 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
     this.nombreComun = const Value.absent(),
     this.nombreCientifico = const Value.absent(),
     this.tipo = const Value.absent(),
+    this.tipoManual = const Value.absent(),
     this.descripcion = const Value.absent(),
     this.sintomas = const Value.absent(),
     this.fuente = const Value.absent(),
@@ -5018,6 +5066,7 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
     required String nombreComun,
     this.nombreCientifico = const Value.absent(),
     this.tipo = const Value.absent(),
+    this.tipoManual = const Value.absent(),
     this.descripcion = const Value.absent(),
     this.sintomas = const Value.absent(),
     this.fuente = const Value.absent(),
@@ -5030,6 +5079,7 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
     Expression<String>? nombreComun,
     Expression<String>? nombreCientifico,
     Expression<String>? tipo,
+    Expression<String>? tipoManual,
     Expression<String>? descripcion,
     Expression<String>? sintomas,
     Expression<String>? fuente,
@@ -5042,6 +5092,7 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
       if (nombreComun != null) 'nombre_comun': nombreComun,
       if (nombreCientifico != null) 'nombre_cientifico': nombreCientifico,
       if (tipo != null) 'tipo': tipo,
+      if (tipoManual != null) 'tipo_manual': tipoManual,
       if (descripcion != null) 'descripcion': descripcion,
       if (sintomas != null) 'sintomas': sintomas,
       if (fuente != null) 'fuente': fuente,
@@ -5056,6 +5107,7 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
       Value<String>? nombreComun,
       Value<String?>? nombreCientifico,
       Value<String?>? tipo,
+      Value<String?>? tipoManual,
       Value<String?>? descripcion,
       Value<String?>? sintomas,
       Value<String?>? fuente,
@@ -5067,6 +5119,7 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
       nombreComun: nombreComun ?? this.nombreComun,
       nombreCientifico: nombreCientifico ?? this.nombreCientifico,
       tipo: tipo ?? this.tipo,
+      tipoManual: tipoManual ?? this.tipoManual,
       descripcion: descripcion ?? this.descripcion,
       sintomas: sintomas ?? this.sintomas,
       fuente: fuente ?? this.fuente,
@@ -5090,6 +5143,9 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
     }
     if (tipo.present) {
       map['tipo'] = Variable<String>(tipo.value);
+    }
+    if (tipoManual.present) {
+      map['tipo_manual'] = Variable<String>(tipoManual.value);
     }
     if (descripcion.present) {
       map['descripcion'] = Variable<String>(descripcion.value);
@@ -5119,6 +5175,7 @@ class PatologiasCompanion extends UpdateCompanion<Patologia> {
           ..write('nombreComun: $nombreComun, ')
           ..write('nombreCientifico: $nombreCientifico, ')
           ..write('tipo: $tipo, ')
+          ..write('tipoManual: $tipoManual, ')
           ..write('descripcion: $descripcion, ')
           ..write('sintomas: $sintomas, ')
           ..write('fuente: $fuente, ')
@@ -7444,6 +7501,12 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
   late final GeneratedColumn<String> notas = GeneratedColumn<String>(
       'notas', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdByUserIdMeta =
+      const VerificationMeta('createdByUserId');
+  @override
+  late final GeneratedColumn<String> createdByUserId = GeneratedColumn<String>(
+      'created_by_user_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -7487,6 +7550,7 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
         tipo,
         plantaRef,
         notas,
+        createdByUserId,
         createdAt,
         updatedAt,
         deletedAt
@@ -7608,6 +7672,12 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
       context.handle(
           _notasMeta, notas.isAcceptableOrUnknown(data['notas']!, _notasMeta));
     }
+    if (data.containsKey('created_by_user_id')) {
+      context.handle(
+          _createdByUserIdMeta,
+          createdByUserId.isAcceptableOrUnknown(
+              data['created_by_user_id']!, _createdByUserIdMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -7667,6 +7737,8 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
           .read(DriftSqlType.int, data['${effectivePrefix}planta_ref']),
       notas: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notas']),
+      createdByUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}created_by_user_id']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -7702,6 +7774,9 @@ class Compra extends DataClass implements Insertable<Compra> {
   final String? tipo;
   final int? plantaRef;
   final String? notas;
+
+  /// UUID Supabase del usuario que registró la compra (co-propietarios).
+  final String? createdByUserId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -7725,6 +7800,7 @@ class Compra extends DataClass implements Insertable<Compra> {
       this.tipo,
       this.plantaRef,
       this.notas,
+      this.createdByUserId,
       required this.createdAt,
       required this.updatedAt,
       this.deletedAt});
@@ -7773,6 +7849,9 @@ class Compra extends DataClass implements Insertable<Compra> {
     }
     if (!nullToAbsent || notas != null) {
       map['notas'] = Variable<String>(notas);
+    }
+    if (!nullToAbsent || createdByUserId != null) {
+      map['created_by_user_id'] = Variable<String>(createdByUserId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -7823,6 +7902,9 @@ class Compra extends DataClass implements Insertable<Compra> {
           : Value(plantaRef),
       notas:
           notas == null && nullToAbsent ? const Value.absent() : Value(notas),
+      createdByUserId: createdByUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdByUserId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -7854,6 +7936,7 @@ class Compra extends DataClass implements Insertable<Compra> {
       tipo: serializer.fromJson<String?>(json['tipo']),
       plantaRef: serializer.fromJson<int?>(json['plantaRef']),
       notas: serializer.fromJson<String?>(json['notas']),
+      createdByUserId: serializer.fromJson<String?>(json['createdByUserId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -7882,6 +7965,7 @@ class Compra extends DataClass implements Insertable<Compra> {
       'tipo': serializer.toJson<String?>(tipo),
       'plantaRef': serializer.toJson<int?>(plantaRef),
       'notas': serializer.toJson<String?>(notas),
+      'createdByUserId': serializer.toJson<String?>(createdByUserId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -7908,6 +7992,7 @@ class Compra extends DataClass implements Insertable<Compra> {
           Value<String?> tipo = const Value.absent(),
           Value<int?> plantaRef = const Value.absent(),
           Value<String?> notas = const Value.absent(),
+          Value<String?> createdByUserId = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           Value<DateTime?> deletedAt = const Value.absent()}) =>
@@ -7936,6 +8021,9 @@ class Compra extends DataClass implements Insertable<Compra> {
         tipo: tipo.present ? tipo.value : this.tipo,
         plantaRef: plantaRef.present ? plantaRef.value : this.plantaRef,
         notas: notas.present ? notas.value : this.notas,
+        createdByUserId: createdByUserId.present
+            ? createdByUserId.value
+            : this.createdByUserId,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -7976,6 +8064,9 @@ class Compra extends DataClass implements Insertable<Compra> {
       tipo: data.tipo.present ? data.tipo.value : this.tipo,
       plantaRef: data.plantaRef.present ? data.plantaRef.value : this.plantaRef,
       notas: data.notas.present ? data.notas.value : this.notas,
+      createdByUserId: data.createdByUserId.present
+          ? data.createdByUserId.value
+          : this.createdByUserId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -8004,6 +8095,7 @@ class Compra extends DataClass implements Insertable<Compra> {
           ..write('tipo: $tipo, ')
           ..write('plantaRef: $plantaRef, ')
           ..write('notas: $notas, ')
+          ..write('createdByUserId: $createdByUserId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -8032,6 +8124,7 @@ class Compra extends DataClass implements Insertable<Compra> {
         tipo,
         plantaRef,
         notas,
+        createdByUserId,
         createdAt,
         updatedAt,
         deletedAt
@@ -8059,6 +8152,7 @@ class Compra extends DataClass implements Insertable<Compra> {
           other.tipo == this.tipo &&
           other.plantaRef == this.plantaRef &&
           other.notas == this.notas &&
+          other.createdByUserId == this.createdByUserId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -8084,6 +8178,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
   final Value<String?> tipo;
   final Value<int?> plantaRef;
   final Value<String?> notas;
+  final Value<String?> createdByUserId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -8107,6 +8202,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     this.tipo = const Value.absent(),
     this.plantaRef = const Value.absent(),
     this.notas = const Value.absent(),
+    this.createdByUserId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -8131,6 +8227,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     this.tipo = const Value.absent(),
     this.plantaRef = const Value.absent(),
     this.notas = const Value.absent(),
+    this.createdByUserId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -8160,6 +8257,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     Expression<String>? tipo,
     Expression<int>? plantaRef,
     Expression<String>? notas,
+    Expression<String>? createdByUserId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -8184,6 +8282,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       if (tipo != null) 'tipo': tipo,
       if (plantaRef != null) 'planta_ref': plantaRef,
       if (notas != null) 'notas': notas,
+      if (createdByUserId != null) 'created_by_user_id': createdByUserId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -8210,6 +8309,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       Value<String?>? tipo,
       Value<int?>? plantaRef,
       Value<String?>? notas,
+      Value<String?>? createdByUserId,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<DateTime?>? deletedAt}) {
@@ -8233,6 +8333,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       tipo: tipo ?? this.tipo,
       plantaRef: plantaRef ?? this.plantaRef,
       notas: notas ?? this.notas,
+      createdByUserId: createdByUserId ?? this.createdByUserId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -8299,6 +8400,9 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     if (notas.present) {
       map['notas'] = Variable<String>(notas.value);
     }
+    if (createdByUserId.present) {
+      map['created_by_user_id'] = Variable<String>(createdByUserId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -8333,6 +8437,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
           ..write('tipo: $tipo, ')
           ..write('plantaRef: $plantaRef, ')
           ..write('notas: $notas, ')
+          ..write('createdByUserId: $createdByUserId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -17574,6 +17679,805 @@ class SyncOpsCompanion extends UpdateCompanion<SyncOp> {
   }
 }
 
+class $VariedadesComunitariasCacheTable extends VariedadesComunitariasCache
+    with
+        TableInfo<$VariedadesComunitariasCacheTable,
+            VariedadesComunitariasCacheData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VariedadesComunitariasCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _remoteIdMeta =
+      const VerificationMeta('remoteId');
+  @override
+  late final GeneratedColumn<int> remoteId = GeneratedColumn<int>(
+      'remote_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _nombreComunMeta =
+      const VerificationMeta('nombreComun');
+  @override
+  late final GeneratedColumn<String> nombreComun = GeneratedColumn<String>(
+      'nombre_comun', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _especieKeyMeta =
+      const VerificationMeta('especieKey');
+  @override
+  late final GeneratedColumn<String> especieKey = GeneratedColumn<String>(
+      'especie_key', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _especieMeta =
+      const VerificationMeta('especie');
+  @override
+  late final GeneratedColumn<String> especie = GeneratedColumn<String>(
+      'especie', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _metodoSiembraMeta =
+      const VerificationMeta('metodoSiembra');
+  @override
+  late final GeneratedColumn<String> metodoSiembra = GeneratedColumn<String>(
+      'metodo_siembra', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _germinadorDiasMeta =
+      const VerificationMeta('germinadorDias');
+  @override
+  late final GeneratedColumn<int> germinadorDias = GeneratedColumn<int>(
+      'germinador_dias', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _cosechaMinDiasMeta =
+      const VerificationMeta('cosechaMinDias');
+  @override
+  late final GeneratedColumn<int> cosechaMinDias = GeneratedColumn<int>(
+      'cosecha_min_dias', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _cosechaMaxDiasMeta =
+      const VerificationMeta('cosechaMaxDias');
+  @override
+  late final GeneratedColumn<int> cosechaMaxDias = GeneratedColumn<int>(
+      'cosecha_max_dias', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _tipoAbono1Meta =
+      const VerificationMeta('tipoAbono1');
+  @override
+  late final GeneratedColumn<String> tipoAbono1 = GeneratedColumn<String>(
+      'tipo_abono1', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _tipoAbono2Meta =
+      const VerificationMeta('tipoAbono2');
+  @override
+  late final GeneratedColumn<String> tipoAbono2 = GeneratedColumn<String>(
+      'tipo_abono2', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _abono2DiasMeta =
+      const VerificationMeta('abono2Dias');
+  @override
+  late final GeneratedColumn<int> abono2Dias = GeneratedColumn<int>(
+      'abono2_dias', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _fuenteMeta = const VerificationMeta('fuente');
+  @override
+  late final GeneratedColumn<String> fuente = GeneratedColumn<String>(
+      'fuente', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _contribucionesMeta =
+      const VerificationMeta('contribuciones');
+  @override
+  late final GeneratedColumn<int> contribuciones = GeneratedColumn<int>(
+      'contribuciones', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _remoteUpdatedAtMeta =
+      const VerificationMeta('remoteUpdatedAt');
+  @override
+  late final GeneratedColumn<DateTime> remoteUpdatedAt =
+      GeneratedColumn<DateTime>('remote_updated_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _syncedAtMeta =
+      const VerificationMeta('syncedAt');
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+      'synced_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        remoteId,
+        nombreComun,
+        especieKey,
+        especie,
+        metodoSiembra,
+        germinadorDias,
+        cosechaMinDias,
+        cosechaMaxDias,
+        tipoAbono1,
+        tipoAbono2,
+        abono2Dias,
+        fuente,
+        contribuciones,
+        remoteUpdatedAt,
+        syncedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'variedades_comunitarias_cache';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<VariedadesComunitariasCacheData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(_remoteIdMeta,
+          remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta));
+    } else if (isInserting) {
+      context.missing(_remoteIdMeta);
+    }
+    if (data.containsKey('nombre_comun')) {
+      context.handle(
+          _nombreComunMeta,
+          nombreComun.isAcceptableOrUnknown(
+              data['nombre_comun']!, _nombreComunMeta));
+    } else if (isInserting) {
+      context.missing(_nombreComunMeta);
+    }
+    if (data.containsKey('especie_key')) {
+      context.handle(
+          _especieKeyMeta,
+          especieKey.isAcceptableOrUnknown(
+              data['especie_key']!, _especieKeyMeta));
+    }
+    if (data.containsKey('especie')) {
+      context.handle(_especieMeta,
+          especie.isAcceptableOrUnknown(data['especie']!, _especieMeta));
+    }
+    if (data.containsKey('metodo_siembra')) {
+      context.handle(
+          _metodoSiembraMeta,
+          metodoSiembra.isAcceptableOrUnknown(
+              data['metodo_siembra']!, _metodoSiembraMeta));
+    }
+    if (data.containsKey('germinador_dias')) {
+      context.handle(
+          _germinadorDiasMeta,
+          germinadorDias.isAcceptableOrUnknown(
+              data['germinador_dias']!, _germinadorDiasMeta));
+    }
+    if (data.containsKey('cosecha_min_dias')) {
+      context.handle(
+          _cosechaMinDiasMeta,
+          cosechaMinDias.isAcceptableOrUnknown(
+              data['cosecha_min_dias']!, _cosechaMinDiasMeta));
+    }
+    if (data.containsKey('cosecha_max_dias')) {
+      context.handle(
+          _cosechaMaxDiasMeta,
+          cosechaMaxDias.isAcceptableOrUnknown(
+              data['cosecha_max_dias']!, _cosechaMaxDiasMeta));
+    }
+    if (data.containsKey('tipo_abono1')) {
+      context.handle(
+          _tipoAbono1Meta,
+          tipoAbono1.isAcceptableOrUnknown(
+              data['tipo_abono1']!, _tipoAbono1Meta));
+    }
+    if (data.containsKey('tipo_abono2')) {
+      context.handle(
+          _tipoAbono2Meta,
+          tipoAbono2.isAcceptableOrUnknown(
+              data['tipo_abono2']!, _tipoAbono2Meta));
+    }
+    if (data.containsKey('abono2_dias')) {
+      context.handle(
+          _abono2DiasMeta,
+          abono2Dias.isAcceptableOrUnknown(
+              data['abono2_dias']!, _abono2DiasMeta));
+    }
+    if (data.containsKey('fuente')) {
+      context.handle(_fuenteMeta,
+          fuente.isAcceptableOrUnknown(data['fuente']!, _fuenteMeta));
+    }
+    if (data.containsKey('contribuciones')) {
+      context.handle(
+          _contribucionesMeta,
+          contribuciones.isAcceptableOrUnknown(
+              data['contribuciones']!, _contribucionesMeta));
+    }
+    if (data.containsKey('remote_updated_at')) {
+      context.handle(
+          _remoteUpdatedAtMeta,
+          remoteUpdatedAt.isAcceptableOrUnknown(
+              data['remote_updated_at']!, _remoteUpdatedAtMeta));
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(_syncedAtMeta,
+          syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VariedadesComunitariasCacheData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VariedadesComunitariasCacheData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      remoteId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}remote_id'])!,
+      nombreComun: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}nombre_comun'])!,
+      especieKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}especie_key'])!,
+      especie: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}especie']),
+      metodoSiembra: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metodo_siembra']),
+      germinadorDias: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}germinador_dias']),
+      cosechaMinDias: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cosecha_min_dias']),
+      cosechaMaxDias: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cosecha_max_dias']),
+      tipoAbono1: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tipo_abono1']),
+      tipoAbono2: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tipo_abono2']),
+      abono2Dias: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}abono2_dias']),
+      fuente: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}fuente']),
+      contribuciones: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}contribuciones'])!,
+      remoteUpdatedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}remote_updated_at']),
+      syncedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}synced_at'])!,
+    );
+  }
+
+  @override
+  $VariedadesComunitariasCacheTable createAlias(String alias) {
+    return $VariedadesComunitariasCacheTable(attachedDatabase, alias);
+  }
+}
+
+class VariedadesComunitariasCacheData extends DataClass
+    implements Insertable<VariedadesComunitariasCacheData> {
+  final int id;
+  final int remoteId;
+  final String nombreComun;
+
+  /// Clave de especie normalizada ('' si no hay) para deduplicar localmente.
+  final String especieKey;
+  final String? especie;
+  final String? metodoSiembra;
+  final int? germinadorDias;
+  final int? cosechaMinDias;
+  final int? cosechaMaxDias;
+  final String? tipoAbono1;
+  final String? tipoAbono2;
+  final int? abono2Dias;
+  final String? fuente;
+  final int contribuciones;
+  final DateTime? remoteUpdatedAt;
+  final DateTime syncedAt;
+  const VariedadesComunitariasCacheData(
+      {required this.id,
+      required this.remoteId,
+      required this.nombreComun,
+      required this.especieKey,
+      this.especie,
+      this.metodoSiembra,
+      this.germinadorDias,
+      this.cosechaMinDias,
+      this.cosechaMaxDias,
+      this.tipoAbono1,
+      this.tipoAbono2,
+      this.abono2Dias,
+      this.fuente,
+      required this.contribuciones,
+      this.remoteUpdatedAt,
+      required this.syncedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['remote_id'] = Variable<int>(remoteId);
+    map['nombre_comun'] = Variable<String>(nombreComun);
+    map['especie_key'] = Variable<String>(especieKey);
+    if (!nullToAbsent || especie != null) {
+      map['especie'] = Variable<String>(especie);
+    }
+    if (!nullToAbsent || metodoSiembra != null) {
+      map['metodo_siembra'] = Variable<String>(metodoSiembra);
+    }
+    if (!nullToAbsent || germinadorDias != null) {
+      map['germinador_dias'] = Variable<int>(germinadorDias);
+    }
+    if (!nullToAbsent || cosechaMinDias != null) {
+      map['cosecha_min_dias'] = Variable<int>(cosechaMinDias);
+    }
+    if (!nullToAbsent || cosechaMaxDias != null) {
+      map['cosecha_max_dias'] = Variable<int>(cosechaMaxDias);
+    }
+    if (!nullToAbsent || tipoAbono1 != null) {
+      map['tipo_abono1'] = Variable<String>(tipoAbono1);
+    }
+    if (!nullToAbsent || tipoAbono2 != null) {
+      map['tipo_abono2'] = Variable<String>(tipoAbono2);
+    }
+    if (!nullToAbsent || abono2Dias != null) {
+      map['abono2_dias'] = Variable<int>(abono2Dias);
+    }
+    if (!nullToAbsent || fuente != null) {
+      map['fuente'] = Variable<String>(fuente);
+    }
+    map['contribuciones'] = Variable<int>(contribuciones);
+    if (!nullToAbsent || remoteUpdatedAt != null) {
+      map['remote_updated_at'] = Variable<DateTime>(remoteUpdatedAt);
+    }
+    map['synced_at'] = Variable<DateTime>(syncedAt);
+    return map;
+  }
+
+  VariedadesComunitariasCacheCompanion toCompanion(bool nullToAbsent) {
+    return VariedadesComunitariasCacheCompanion(
+      id: Value(id),
+      remoteId: Value(remoteId),
+      nombreComun: Value(nombreComun),
+      especieKey: Value(especieKey),
+      especie: especie == null && nullToAbsent
+          ? const Value.absent()
+          : Value(especie),
+      metodoSiembra: metodoSiembra == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metodoSiembra),
+      germinadorDias: germinadorDias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(germinadorDias),
+      cosechaMinDias: cosechaMinDias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cosechaMinDias),
+      cosechaMaxDias: cosechaMaxDias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cosechaMaxDias),
+      tipoAbono1: tipoAbono1 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tipoAbono1),
+      tipoAbono2: tipoAbono2 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tipoAbono2),
+      abono2Dias: abono2Dias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(abono2Dias),
+      fuente:
+          fuente == null && nullToAbsent ? const Value.absent() : Value(fuente),
+      contribuciones: Value(contribuciones),
+      remoteUpdatedAt: remoteUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteUpdatedAt),
+      syncedAt: Value(syncedAt),
+    );
+  }
+
+  factory VariedadesComunitariasCacheData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VariedadesComunitariasCacheData(
+      id: serializer.fromJson<int>(json['id']),
+      remoteId: serializer.fromJson<int>(json['remoteId']),
+      nombreComun: serializer.fromJson<String>(json['nombreComun']),
+      especieKey: serializer.fromJson<String>(json['especieKey']),
+      especie: serializer.fromJson<String?>(json['especie']),
+      metodoSiembra: serializer.fromJson<String?>(json['metodoSiembra']),
+      germinadorDias: serializer.fromJson<int?>(json['germinadorDias']),
+      cosechaMinDias: serializer.fromJson<int?>(json['cosechaMinDias']),
+      cosechaMaxDias: serializer.fromJson<int?>(json['cosechaMaxDias']),
+      tipoAbono1: serializer.fromJson<String?>(json['tipoAbono1']),
+      tipoAbono2: serializer.fromJson<String?>(json['tipoAbono2']),
+      abono2Dias: serializer.fromJson<int?>(json['abono2Dias']),
+      fuente: serializer.fromJson<String?>(json['fuente']),
+      contribuciones: serializer.fromJson<int>(json['contribuciones']),
+      remoteUpdatedAt: serializer.fromJson<DateTime?>(json['remoteUpdatedAt']),
+      syncedAt: serializer.fromJson<DateTime>(json['syncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'remoteId': serializer.toJson<int>(remoteId),
+      'nombreComun': serializer.toJson<String>(nombreComun),
+      'especieKey': serializer.toJson<String>(especieKey),
+      'especie': serializer.toJson<String?>(especie),
+      'metodoSiembra': serializer.toJson<String?>(metodoSiembra),
+      'germinadorDias': serializer.toJson<int?>(germinadorDias),
+      'cosechaMinDias': serializer.toJson<int?>(cosechaMinDias),
+      'cosechaMaxDias': serializer.toJson<int?>(cosechaMaxDias),
+      'tipoAbono1': serializer.toJson<String?>(tipoAbono1),
+      'tipoAbono2': serializer.toJson<String?>(tipoAbono2),
+      'abono2Dias': serializer.toJson<int?>(abono2Dias),
+      'fuente': serializer.toJson<String?>(fuente),
+      'contribuciones': serializer.toJson<int>(contribuciones),
+      'remoteUpdatedAt': serializer.toJson<DateTime?>(remoteUpdatedAt),
+      'syncedAt': serializer.toJson<DateTime>(syncedAt),
+    };
+  }
+
+  VariedadesComunitariasCacheData copyWith(
+          {int? id,
+          int? remoteId,
+          String? nombreComun,
+          String? especieKey,
+          Value<String?> especie = const Value.absent(),
+          Value<String?> metodoSiembra = const Value.absent(),
+          Value<int?> germinadorDias = const Value.absent(),
+          Value<int?> cosechaMinDias = const Value.absent(),
+          Value<int?> cosechaMaxDias = const Value.absent(),
+          Value<String?> tipoAbono1 = const Value.absent(),
+          Value<String?> tipoAbono2 = const Value.absent(),
+          Value<int?> abono2Dias = const Value.absent(),
+          Value<String?> fuente = const Value.absent(),
+          int? contribuciones,
+          Value<DateTime?> remoteUpdatedAt = const Value.absent(),
+          DateTime? syncedAt}) =>
+      VariedadesComunitariasCacheData(
+        id: id ?? this.id,
+        remoteId: remoteId ?? this.remoteId,
+        nombreComun: nombreComun ?? this.nombreComun,
+        especieKey: especieKey ?? this.especieKey,
+        especie: especie.present ? especie.value : this.especie,
+        metodoSiembra:
+            metodoSiembra.present ? metodoSiembra.value : this.metodoSiembra,
+        germinadorDias:
+            germinadorDias.present ? germinadorDias.value : this.germinadorDias,
+        cosechaMinDias:
+            cosechaMinDias.present ? cosechaMinDias.value : this.cosechaMinDias,
+        cosechaMaxDias:
+            cosechaMaxDias.present ? cosechaMaxDias.value : this.cosechaMaxDias,
+        tipoAbono1: tipoAbono1.present ? tipoAbono1.value : this.tipoAbono1,
+        tipoAbono2: tipoAbono2.present ? tipoAbono2.value : this.tipoAbono2,
+        abono2Dias: abono2Dias.present ? abono2Dias.value : this.abono2Dias,
+        fuente: fuente.present ? fuente.value : this.fuente,
+        contribuciones: contribuciones ?? this.contribuciones,
+        remoteUpdatedAt: remoteUpdatedAt.present
+            ? remoteUpdatedAt.value
+            : this.remoteUpdatedAt,
+        syncedAt: syncedAt ?? this.syncedAt,
+      );
+  VariedadesComunitariasCacheData copyWithCompanion(
+      VariedadesComunitariasCacheCompanion data) {
+    return VariedadesComunitariasCacheData(
+      id: data.id.present ? data.id.value : this.id,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      nombreComun:
+          data.nombreComun.present ? data.nombreComun.value : this.nombreComun,
+      especieKey:
+          data.especieKey.present ? data.especieKey.value : this.especieKey,
+      especie: data.especie.present ? data.especie.value : this.especie,
+      metodoSiembra: data.metodoSiembra.present
+          ? data.metodoSiembra.value
+          : this.metodoSiembra,
+      germinadorDias: data.germinadorDias.present
+          ? data.germinadorDias.value
+          : this.germinadorDias,
+      cosechaMinDias: data.cosechaMinDias.present
+          ? data.cosechaMinDias.value
+          : this.cosechaMinDias,
+      cosechaMaxDias: data.cosechaMaxDias.present
+          ? data.cosechaMaxDias.value
+          : this.cosechaMaxDias,
+      tipoAbono1:
+          data.tipoAbono1.present ? data.tipoAbono1.value : this.tipoAbono1,
+      tipoAbono2:
+          data.tipoAbono2.present ? data.tipoAbono2.value : this.tipoAbono2,
+      abono2Dias:
+          data.abono2Dias.present ? data.abono2Dias.value : this.abono2Dias,
+      fuente: data.fuente.present ? data.fuente.value : this.fuente,
+      contribuciones: data.contribuciones.present
+          ? data.contribuciones.value
+          : this.contribuciones,
+      remoteUpdatedAt: data.remoteUpdatedAt.present
+          ? data.remoteUpdatedAt.value
+          : this.remoteUpdatedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VariedadesComunitariasCacheData(')
+          ..write('id: $id, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('nombreComun: $nombreComun, ')
+          ..write('especieKey: $especieKey, ')
+          ..write('especie: $especie, ')
+          ..write('metodoSiembra: $metodoSiembra, ')
+          ..write('germinadorDias: $germinadorDias, ')
+          ..write('cosechaMinDias: $cosechaMinDias, ')
+          ..write('cosechaMaxDias: $cosechaMaxDias, ')
+          ..write('tipoAbono1: $tipoAbono1, ')
+          ..write('tipoAbono2: $tipoAbono2, ')
+          ..write('abono2Dias: $abono2Dias, ')
+          ..write('fuente: $fuente, ')
+          ..write('contribuciones: $contribuciones, ')
+          ..write('remoteUpdatedAt: $remoteUpdatedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      remoteId,
+      nombreComun,
+      especieKey,
+      especie,
+      metodoSiembra,
+      germinadorDias,
+      cosechaMinDias,
+      cosechaMaxDias,
+      tipoAbono1,
+      tipoAbono2,
+      abono2Dias,
+      fuente,
+      contribuciones,
+      remoteUpdatedAt,
+      syncedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VariedadesComunitariasCacheData &&
+          other.id == this.id &&
+          other.remoteId == this.remoteId &&
+          other.nombreComun == this.nombreComun &&
+          other.especieKey == this.especieKey &&
+          other.especie == this.especie &&
+          other.metodoSiembra == this.metodoSiembra &&
+          other.germinadorDias == this.germinadorDias &&
+          other.cosechaMinDias == this.cosechaMinDias &&
+          other.cosechaMaxDias == this.cosechaMaxDias &&
+          other.tipoAbono1 == this.tipoAbono1 &&
+          other.tipoAbono2 == this.tipoAbono2 &&
+          other.abono2Dias == this.abono2Dias &&
+          other.fuente == this.fuente &&
+          other.contribuciones == this.contribuciones &&
+          other.remoteUpdatedAt == this.remoteUpdatedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class VariedadesComunitariasCacheCompanion
+    extends UpdateCompanion<VariedadesComunitariasCacheData> {
+  final Value<int> id;
+  final Value<int> remoteId;
+  final Value<String> nombreComun;
+  final Value<String> especieKey;
+  final Value<String?> especie;
+  final Value<String?> metodoSiembra;
+  final Value<int?> germinadorDias;
+  final Value<int?> cosechaMinDias;
+  final Value<int?> cosechaMaxDias;
+  final Value<String?> tipoAbono1;
+  final Value<String?> tipoAbono2;
+  final Value<int?> abono2Dias;
+  final Value<String?> fuente;
+  final Value<int> contribuciones;
+  final Value<DateTime?> remoteUpdatedAt;
+  final Value<DateTime> syncedAt;
+  const VariedadesComunitariasCacheCompanion({
+    this.id = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.nombreComun = const Value.absent(),
+    this.especieKey = const Value.absent(),
+    this.especie = const Value.absent(),
+    this.metodoSiembra = const Value.absent(),
+    this.germinadorDias = const Value.absent(),
+    this.cosechaMinDias = const Value.absent(),
+    this.cosechaMaxDias = const Value.absent(),
+    this.tipoAbono1 = const Value.absent(),
+    this.tipoAbono2 = const Value.absent(),
+    this.abono2Dias = const Value.absent(),
+    this.fuente = const Value.absent(),
+    this.contribuciones = const Value.absent(),
+    this.remoteUpdatedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+  });
+  VariedadesComunitariasCacheCompanion.insert({
+    this.id = const Value.absent(),
+    required int remoteId,
+    required String nombreComun,
+    this.especieKey = const Value.absent(),
+    this.especie = const Value.absent(),
+    this.metodoSiembra = const Value.absent(),
+    this.germinadorDias = const Value.absent(),
+    this.cosechaMinDias = const Value.absent(),
+    this.cosechaMaxDias = const Value.absent(),
+    this.tipoAbono1 = const Value.absent(),
+    this.tipoAbono2 = const Value.absent(),
+    this.abono2Dias = const Value.absent(),
+    this.fuente = const Value.absent(),
+    this.contribuciones = const Value.absent(),
+    this.remoteUpdatedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+  })  : remoteId = Value(remoteId),
+        nombreComun = Value(nombreComun);
+  static Insertable<VariedadesComunitariasCacheData> custom({
+    Expression<int>? id,
+    Expression<int>? remoteId,
+    Expression<String>? nombreComun,
+    Expression<String>? especieKey,
+    Expression<String>? especie,
+    Expression<String>? metodoSiembra,
+    Expression<int>? germinadorDias,
+    Expression<int>? cosechaMinDias,
+    Expression<int>? cosechaMaxDias,
+    Expression<String>? tipoAbono1,
+    Expression<String>? tipoAbono2,
+    Expression<int>? abono2Dias,
+    Expression<String>? fuente,
+    Expression<int>? contribuciones,
+    Expression<DateTime>? remoteUpdatedAt,
+    Expression<DateTime>? syncedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (nombreComun != null) 'nombre_comun': nombreComun,
+      if (especieKey != null) 'especie_key': especieKey,
+      if (especie != null) 'especie': especie,
+      if (metodoSiembra != null) 'metodo_siembra': metodoSiembra,
+      if (germinadorDias != null) 'germinador_dias': germinadorDias,
+      if (cosechaMinDias != null) 'cosecha_min_dias': cosechaMinDias,
+      if (cosechaMaxDias != null) 'cosecha_max_dias': cosechaMaxDias,
+      if (tipoAbono1 != null) 'tipo_abono1': tipoAbono1,
+      if (tipoAbono2 != null) 'tipo_abono2': tipoAbono2,
+      if (abono2Dias != null) 'abono2_dias': abono2Dias,
+      if (fuente != null) 'fuente': fuente,
+      if (contribuciones != null) 'contribuciones': contribuciones,
+      if (remoteUpdatedAt != null) 'remote_updated_at': remoteUpdatedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+    });
+  }
+
+  VariedadesComunitariasCacheCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? remoteId,
+      Value<String>? nombreComun,
+      Value<String>? especieKey,
+      Value<String?>? especie,
+      Value<String?>? metodoSiembra,
+      Value<int?>? germinadorDias,
+      Value<int?>? cosechaMinDias,
+      Value<int?>? cosechaMaxDias,
+      Value<String?>? tipoAbono1,
+      Value<String?>? tipoAbono2,
+      Value<int?>? abono2Dias,
+      Value<String?>? fuente,
+      Value<int>? contribuciones,
+      Value<DateTime?>? remoteUpdatedAt,
+      Value<DateTime>? syncedAt}) {
+    return VariedadesComunitariasCacheCompanion(
+      id: id ?? this.id,
+      remoteId: remoteId ?? this.remoteId,
+      nombreComun: nombreComun ?? this.nombreComun,
+      especieKey: especieKey ?? this.especieKey,
+      especie: especie ?? this.especie,
+      metodoSiembra: metodoSiembra ?? this.metodoSiembra,
+      germinadorDias: germinadorDias ?? this.germinadorDias,
+      cosechaMinDias: cosechaMinDias ?? this.cosechaMinDias,
+      cosechaMaxDias: cosechaMaxDias ?? this.cosechaMaxDias,
+      tipoAbono1: tipoAbono1 ?? this.tipoAbono1,
+      tipoAbono2: tipoAbono2 ?? this.tipoAbono2,
+      abono2Dias: abono2Dias ?? this.abono2Dias,
+      fuente: fuente ?? this.fuente,
+      contribuciones: contribuciones ?? this.contribuciones,
+      remoteUpdatedAt: remoteUpdatedAt ?? this.remoteUpdatedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<int>(remoteId.value);
+    }
+    if (nombreComun.present) {
+      map['nombre_comun'] = Variable<String>(nombreComun.value);
+    }
+    if (especieKey.present) {
+      map['especie_key'] = Variable<String>(especieKey.value);
+    }
+    if (especie.present) {
+      map['especie'] = Variable<String>(especie.value);
+    }
+    if (metodoSiembra.present) {
+      map['metodo_siembra'] = Variable<String>(metodoSiembra.value);
+    }
+    if (germinadorDias.present) {
+      map['germinador_dias'] = Variable<int>(germinadorDias.value);
+    }
+    if (cosechaMinDias.present) {
+      map['cosecha_min_dias'] = Variable<int>(cosechaMinDias.value);
+    }
+    if (cosechaMaxDias.present) {
+      map['cosecha_max_dias'] = Variable<int>(cosechaMaxDias.value);
+    }
+    if (tipoAbono1.present) {
+      map['tipo_abono1'] = Variable<String>(tipoAbono1.value);
+    }
+    if (tipoAbono2.present) {
+      map['tipo_abono2'] = Variable<String>(tipoAbono2.value);
+    }
+    if (abono2Dias.present) {
+      map['abono2_dias'] = Variable<int>(abono2Dias.value);
+    }
+    if (fuente.present) {
+      map['fuente'] = Variable<String>(fuente.value);
+    }
+    if (contribuciones.present) {
+      map['contribuciones'] = Variable<int>(contribuciones.value);
+    }
+    if (remoteUpdatedAt.present) {
+      map['remote_updated_at'] = Variable<DateTime>(remoteUpdatedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VariedadesComunitariasCacheCompanion(')
+          ..write('id: $id, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('nombreComun: $nombreComun, ')
+          ..write('especieKey: $especieKey, ')
+          ..write('especie: $especie, ')
+          ..write('metodoSiembra: $metodoSiembra, ')
+          ..write('germinadorDias: $germinadorDias, ')
+          ..write('cosechaMinDias: $cosechaMinDias, ')
+          ..write('cosechaMaxDias: $cosechaMaxDias, ')
+          ..write('tipoAbono1: $tipoAbono1, ')
+          ..write('tipoAbono2: $tipoAbono2, ')
+          ..write('abono2Dias: $abono2Dias, ')
+          ..write('fuente: $fuente, ')
+          ..write('contribuciones: $contribuciones, ')
+          ..write('remoteUpdatedAt: $remoteUpdatedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ConfigsTable extends Configs with TableInfo<$ConfigsTable, Config> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -18303,6 +19207,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncMappingsTable syncMappings = $SyncMappingsTable(this);
   late final $SyncTablesTable syncTables = $SyncTablesTable(this);
   late final $SyncOpsTable syncOps = $SyncOpsTable(this);
+  late final $VariedadesComunitariasCacheTable variedadesComunitariasCache =
+      $VariedadesComunitariasCacheTable(this);
   late final $ConfigsTable configs = $ConfigsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -18338,6 +19244,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         syncMappings,
         syncTables,
         syncOps,
+        variedadesComunitariasCache,
         configs
       ];
 }
@@ -20444,6 +21351,7 @@ typedef $$PatologiasTableCreateCompanionBuilder = PatologiasCompanion Function({
   required String nombreComun,
   Value<String?> nombreCientifico,
   Value<String?> tipo,
+  Value<String?> tipoManual,
   Value<String?> descripcion,
   Value<String?> sintomas,
   Value<String?> fuente,
@@ -20456,6 +21364,7 @@ typedef $$PatologiasTableUpdateCompanionBuilder = PatologiasCompanion Function({
   Value<String> nombreComun,
   Value<String?> nombreCientifico,
   Value<String?> tipo,
+  Value<String?> tipoManual,
   Value<String?> descripcion,
   Value<String?> sintomas,
   Value<String?> fuente,
@@ -20485,6 +21394,9 @@ class $$PatologiasTableFilterComposer
 
   ColumnFilters<String> get tipo => $composableBuilder(
       column: $table.tipo, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tipoManual => $composableBuilder(
+      column: $table.tipoManual, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get descripcion => $composableBuilder(
       column: $table.descripcion, builder: (column) => ColumnFilters(column));
@@ -20527,6 +21439,9 @@ class $$PatologiasTableOrderingComposer
   ColumnOrderings<String> get tipo => $composableBuilder(
       column: $table.tipo, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get tipoManual => $composableBuilder(
+      column: $table.tipoManual, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get descripcion => $composableBuilder(
       column: $table.descripcion, builder: (column) => ColumnOrderings(column));
 
@@ -20566,6 +21481,9 @@ class $$PatologiasTableAnnotationComposer
 
   GeneratedColumn<String> get tipo =>
       $composableBuilder(column: $table.tipo, builder: (column) => column);
+
+  GeneratedColumn<String> get tipoManual => $composableBuilder(
+      column: $table.tipoManual, builder: (column) => column);
 
   GeneratedColumn<String> get descripcion => $composableBuilder(
       column: $table.descripcion, builder: (column) => column);
@@ -20613,6 +21531,7 @@ class $$PatologiasTableTableManager extends RootTableManager<
             Value<String> nombreComun = const Value.absent(),
             Value<String?> nombreCientifico = const Value.absent(),
             Value<String?> tipo = const Value.absent(),
+            Value<String?> tipoManual = const Value.absent(),
             Value<String?> descripcion = const Value.absent(),
             Value<String?> sintomas = const Value.absent(),
             Value<String?> fuente = const Value.absent(),
@@ -20625,6 +21544,7 @@ class $$PatologiasTableTableManager extends RootTableManager<
             nombreComun: nombreComun,
             nombreCientifico: nombreCientifico,
             tipo: tipo,
+            tipoManual: tipoManual,
             descripcion: descripcion,
             sintomas: sintomas,
             fuente: fuente,
@@ -20637,6 +21557,7 @@ class $$PatologiasTableTableManager extends RootTableManager<
             required String nombreComun,
             Value<String?> nombreCientifico = const Value.absent(),
             Value<String?> tipo = const Value.absent(),
+            Value<String?> tipoManual = const Value.absent(),
             Value<String?> descripcion = const Value.absent(),
             Value<String?> sintomas = const Value.absent(),
             Value<String?> fuente = const Value.absent(),
@@ -20649,6 +21570,7 @@ class $$PatologiasTableTableManager extends RootTableManager<
             nombreComun: nombreComun,
             nombreCientifico: nombreCientifico,
             tipo: tipo,
+            tipoManual: tipoManual,
             descripcion: descripcion,
             sintomas: sintomas,
             fuente: fuente,
@@ -21779,6 +22701,7 @@ typedef $$ComprasTableCreateCompanionBuilder = ComprasCompanion Function({
   Value<String?> tipo,
   Value<int?> plantaRef,
   Value<String?> notas,
+  Value<String?> createdByUserId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -21803,6 +22726,7 @@ typedef $$ComprasTableUpdateCompanionBuilder = ComprasCompanion Function({
   Value<String?> tipo,
   Value<int?> plantaRef,
   Value<String?> notas,
+  Value<String?> createdByUserId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -21875,6 +22799,10 @@ class $$ComprasTableFilterComposer
 
   ColumnFilters<String> get notas => $composableBuilder(
       column: $table.notas, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get createdByUserId => $composableBuilder(
+      column: $table.createdByUserId,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -21957,6 +22885,10 @@ class $$ComprasTableOrderingComposer
   ColumnOrderings<String> get notas => $composableBuilder(
       column: $table.notas, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get createdByUserId => $composableBuilder(
+      column: $table.createdByUserId,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -22033,6 +22965,9 @@ class $$ComprasTableAnnotationComposer
   GeneratedColumn<String> get notas =>
       $composableBuilder(column: $table.notas, builder: (column) => column);
 
+  GeneratedColumn<String> get createdByUserId => $composableBuilder(
+      column: $table.createdByUserId, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -22085,6 +23020,7 @@ class $$ComprasTableTableManager extends RootTableManager<
             Value<String?> tipo = const Value.absent(),
             Value<int?> plantaRef = const Value.absent(),
             Value<String?> notas = const Value.absent(),
+            Value<String?> createdByUserId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -22109,6 +23045,7 @@ class $$ComprasTableTableManager extends RootTableManager<
             tipo: tipo,
             plantaRef: plantaRef,
             notas: notas,
+            createdByUserId: createdByUserId,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -22133,6 +23070,7 @@ class $$ComprasTableTableManager extends RootTableManager<
             Value<String?> tipo = const Value.absent(),
             Value<int?> plantaRef = const Value.absent(),
             Value<String?> notas = const Value.absent(),
+            Value<String?> createdByUserId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -22157,6 +23095,7 @@ class $$ComprasTableTableManager extends RootTableManager<
             tipo: tipo,
             plantaRef: plantaRef,
             notas: notas,
+            createdByUserId: createdByUserId,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -26328,6 +27267,356 @@ typedef $$SyncOpsTableProcessedTableManager = ProcessedTableManager<
     (SyncOp, BaseReferences<_$AppDatabase, $SyncOpsTable, SyncOp>),
     SyncOp,
     PrefetchHooks Function()>;
+typedef $$VariedadesComunitariasCacheTableCreateCompanionBuilder
+    = VariedadesComunitariasCacheCompanion Function({
+  Value<int> id,
+  required int remoteId,
+  required String nombreComun,
+  Value<String> especieKey,
+  Value<String?> especie,
+  Value<String?> metodoSiembra,
+  Value<int?> germinadorDias,
+  Value<int?> cosechaMinDias,
+  Value<int?> cosechaMaxDias,
+  Value<String?> tipoAbono1,
+  Value<String?> tipoAbono2,
+  Value<int?> abono2Dias,
+  Value<String?> fuente,
+  Value<int> contribuciones,
+  Value<DateTime?> remoteUpdatedAt,
+  Value<DateTime> syncedAt,
+});
+typedef $$VariedadesComunitariasCacheTableUpdateCompanionBuilder
+    = VariedadesComunitariasCacheCompanion Function({
+  Value<int> id,
+  Value<int> remoteId,
+  Value<String> nombreComun,
+  Value<String> especieKey,
+  Value<String?> especie,
+  Value<String?> metodoSiembra,
+  Value<int?> germinadorDias,
+  Value<int?> cosechaMinDias,
+  Value<int?> cosechaMaxDias,
+  Value<String?> tipoAbono1,
+  Value<String?> tipoAbono2,
+  Value<int?> abono2Dias,
+  Value<String?> fuente,
+  Value<int> contribuciones,
+  Value<DateTime?> remoteUpdatedAt,
+  Value<DateTime> syncedAt,
+});
+
+class $$VariedadesComunitariasCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $VariedadesComunitariasCacheTable> {
+  $$VariedadesComunitariasCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nombreComun => $composableBuilder(
+      column: $table.nombreComun, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get especieKey => $composableBuilder(
+      column: $table.especieKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get especie => $composableBuilder(
+      column: $table.especie, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metodoSiembra => $composableBuilder(
+      column: $table.metodoSiembra, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get germinadorDias => $composableBuilder(
+      column: $table.germinadorDias,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get cosechaMinDias => $composableBuilder(
+      column: $table.cosechaMinDias,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get cosechaMaxDias => $composableBuilder(
+      column: $table.cosechaMaxDias,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tipoAbono1 => $composableBuilder(
+      column: $table.tipoAbono1, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tipoAbono2 => $composableBuilder(
+      column: $table.tipoAbono2, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get abono2Dias => $composableBuilder(
+      column: $table.abono2Dias, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fuente => $composableBuilder(
+      column: $table.fuente, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get contribuciones => $composableBuilder(
+      column: $table.contribuciones,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get remoteUpdatedAt => $composableBuilder(
+      column: $table.remoteUpdatedAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+      column: $table.syncedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$VariedadesComunitariasCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $VariedadesComunitariasCacheTable> {
+  $$VariedadesComunitariasCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nombreComun => $composableBuilder(
+      column: $table.nombreComun, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get especieKey => $composableBuilder(
+      column: $table.especieKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get especie => $composableBuilder(
+      column: $table.especie, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metodoSiembra => $composableBuilder(
+      column: $table.metodoSiembra,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get germinadorDias => $composableBuilder(
+      column: $table.germinadorDias,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get cosechaMinDias => $composableBuilder(
+      column: $table.cosechaMinDias,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get cosechaMaxDias => $composableBuilder(
+      column: $table.cosechaMaxDias,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tipoAbono1 => $composableBuilder(
+      column: $table.tipoAbono1, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tipoAbono2 => $composableBuilder(
+      column: $table.tipoAbono2, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get abono2Dias => $composableBuilder(
+      column: $table.abono2Dias, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fuente => $composableBuilder(
+      column: $table.fuente, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get contribuciones => $composableBuilder(
+      column: $table.contribuciones,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get remoteUpdatedAt => $composableBuilder(
+      column: $table.remoteUpdatedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+      column: $table.syncedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$VariedadesComunitariasCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VariedadesComunitariasCacheTable> {
+  $$VariedadesComunitariasCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<String> get nombreComun => $composableBuilder(
+      column: $table.nombreComun, builder: (column) => column);
+
+  GeneratedColumn<String> get especieKey => $composableBuilder(
+      column: $table.especieKey, builder: (column) => column);
+
+  GeneratedColumn<String> get especie =>
+      $composableBuilder(column: $table.especie, builder: (column) => column);
+
+  GeneratedColumn<String> get metodoSiembra => $composableBuilder(
+      column: $table.metodoSiembra, builder: (column) => column);
+
+  GeneratedColumn<int> get germinadorDias => $composableBuilder(
+      column: $table.germinadorDias, builder: (column) => column);
+
+  GeneratedColumn<int> get cosechaMinDias => $composableBuilder(
+      column: $table.cosechaMinDias, builder: (column) => column);
+
+  GeneratedColumn<int> get cosechaMaxDias => $composableBuilder(
+      column: $table.cosechaMaxDias, builder: (column) => column);
+
+  GeneratedColumn<String> get tipoAbono1 => $composableBuilder(
+      column: $table.tipoAbono1, builder: (column) => column);
+
+  GeneratedColumn<String> get tipoAbono2 => $composableBuilder(
+      column: $table.tipoAbono2, builder: (column) => column);
+
+  GeneratedColumn<int> get abono2Dias => $composableBuilder(
+      column: $table.abono2Dias, builder: (column) => column);
+
+  GeneratedColumn<String> get fuente =>
+      $composableBuilder(column: $table.fuente, builder: (column) => column);
+
+  GeneratedColumn<int> get contribuciones => $composableBuilder(
+      column: $table.contribuciones, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get remoteUpdatedAt => $composableBuilder(
+      column: $table.remoteUpdatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $$VariedadesComunitariasCacheTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $VariedadesComunitariasCacheTable,
+    VariedadesComunitariasCacheData,
+    $$VariedadesComunitariasCacheTableFilterComposer,
+    $$VariedadesComunitariasCacheTableOrderingComposer,
+    $$VariedadesComunitariasCacheTableAnnotationComposer,
+    $$VariedadesComunitariasCacheTableCreateCompanionBuilder,
+    $$VariedadesComunitariasCacheTableUpdateCompanionBuilder,
+    (
+      VariedadesComunitariasCacheData,
+      BaseReferences<_$AppDatabase, $VariedadesComunitariasCacheTable,
+          VariedadesComunitariasCacheData>
+    ),
+    VariedadesComunitariasCacheData,
+    PrefetchHooks Function()> {
+  $$VariedadesComunitariasCacheTableTableManager(
+      _$AppDatabase db, $VariedadesComunitariasCacheTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VariedadesComunitariasCacheTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VariedadesComunitariasCacheTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VariedadesComunitariasCacheTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> remoteId = const Value.absent(),
+            Value<String> nombreComun = const Value.absent(),
+            Value<String> especieKey = const Value.absent(),
+            Value<String?> especie = const Value.absent(),
+            Value<String?> metodoSiembra = const Value.absent(),
+            Value<int?> germinadorDias = const Value.absent(),
+            Value<int?> cosechaMinDias = const Value.absent(),
+            Value<int?> cosechaMaxDias = const Value.absent(),
+            Value<String?> tipoAbono1 = const Value.absent(),
+            Value<String?> tipoAbono2 = const Value.absent(),
+            Value<int?> abono2Dias = const Value.absent(),
+            Value<String?> fuente = const Value.absent(),
+            Value<int> contribuciones = const Value.absent(),
+            Value<DateTime?> remoteUpdatedAt = const Value.absent(),
+            Value<DateTime> syncedAt = const Value.absent(),
+          }) =>
+              VariedadesComunitariasCacheCompanion(
+            id: id,
+            remoteId: remoteId,
+            nombreComun: nombreComun,
+            especieKey: especieKey,
+            especie: especie,
+            metodoSiembra: metodoSiembra,
+            germinadorDias: germinadorDias,
+            cosechaMinDias: cosechaMinDias,
+            cosechaMaxDias: cosechaMaxDias,
+            tipoAbono1: tipoAbono1,
+            tipoAbono2: tipoAbono2,
+            abono2Dias: abono2Dias,
+            fuente: fuente,
+            contribuciones: contribuciones,
+            remoteUpdatedAt: remoteUpdatedAt,
+            syncedAt: syncedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int remoteId,
+            required String nombreComun,
+            Value<String> especieKey = const Value.absent(),
+            Value<String?> especie = const Value.absent(),
+            Value<String?> metodoSiembra = const Value.absent(),
+            Value<int?> germinadorDias = const Value.absent(),
+            Value<int?> cosechaMinDias = const Value.absent(),
+            Value<int?> cosechaMaxDias = const Value.absent(),
+            Value<String?> tipoAbono1 = const Value.absent(),
+            Value<String?> tipoAbono2 = const Value.absent(),
+            Value<int?> abono2Dias = const Value.absent(),
+            Value<String?> fuente = const Value.absent(),
+            Value<int> contribuciones = const Value.absent(),
+            Value<DateTime?> remoteUpdatedAt = const Value.absent(),
+            Value<DateTime> syncedAt = const Value.absent(),
+          }) =>
+              VariedadesComunitariasCacheCompanion.insert(
+            id: id,
+            remoteId: remoteId,
+            nombreComun: nombreComun,
+            especieKey: especieKey,
+            especie: especie,
+            metodoSiembra: metodoSiembra,
+            germinadorDias: germinadorDias,
+            cosechaMinDias: cosechaMinDias,
+            cosechaMaxDias: cosechaMaxDias,
+            tipoAbono1: tipoAbono1,
+            tipoAbono2: tipoAbono2,
+            abono2Dias: abono2Dias,
+            fuente: fuente,
+            contribuciones: contribuciones,
+            remoteUpdatedAt: remoteUpdatedAt,
+            syncedAt: syncedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$VariedadesComunitariasCacheTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $VariedadesComunitariasCacheTable,
+        VariedadesComunitariasCacheData,
+        $$VariedadesComunitariasCacheTableFilterComposer,
+        $$VariedadesComunitariasCacheTableOrderingComposer,
+        $$VariedadesComunitariasCacheTableAnnotationComposer,
+        $$VariedadesComunitariasCacheTableCreateCompanionBuilder,
+        $$VariedadesComunitariasCacheTableUpdateCompanionBuilder,
+        (
+          VariedadesComunitariasCacheData,
+          BaseReferences<_$AppDatabase, $VariedadesComunitariasCacheTable,
+              VariedadesComunitariasCacheData>
+        ),
+        VariedadesComunitariasCacheData,
+        PrefetchHooks Function()>;
 typedef $$ConfigsTableCreateCompanionBuilder = ConfigsCompanion Function({
   Value<int> id,
   Value<String> idioma,
@@ -26685,6 +27974,10 @@ class $AppDatabaseManager {
       $$SyncTablesTableTableManager(_db, _db.syncTables);
   $$SyncOpsTableTableManager get syncOps =>
       $$SyncOpsTableTableManager(_db, _db.syncOps);
+  $$VariedadesComunitariasCacheTableTableManager
+      get variedadesComunitariasCache =>
+          $$VariedadesComunitariasCacheTableTableManager(
+              _db, _db.variedadesComunitariasCache);
   $$ConfigsTableTableManager get configs =>
       $$ConfigsTableTableManager(_db, _db.configs);
 }

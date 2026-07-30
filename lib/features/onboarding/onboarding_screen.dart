@@ -130,11 +130,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   if (_step > 0)
                     OutlinedButton(
-                      onPressed: () => setState(() => _step--),
+                      onPressed: () => setState(() => _step = _anteriorPaso(_step)),
                       child: const Text('Anterior'),
                     )
                   else
                     const SizedBox(width: 100),
+                  if (_step == 3)
+                    TextButton(
+                      onPressed: () => setState(() => _step = 4),
+                      child: const Text('Omitir'),
+                    ),
                   FilledButton(
                     onPressed: _step < 6 ? _next : _finish,
                     child: Text(_step < 6 ? 'Siguiente' : 'Comenzar'),
@@ -271,8 +276,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         'Solo trabajaré sobre predios compartidos.',
                         style: TextStyle(fontSize: 11)),
                     value: _sinPredioPropio,
-                    onChanged: (v) =>
-                        setState(() => _sinPredioPropio = v ?? false),
+                    onChanged: (v) => setState(() {
+                      _sinPredioPropio = v ?? false;
+                      // Si estaba en Ubicación y ya no creará predio, saltar.
+                      if (_sinPredioPropio && _step == 3) _step = 4;
+                    }),
                   ),
                 ],
               ),
@@ -315,8 +323,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const Text('Ubicación',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
-        const Text('País/región/municipio del predio + coordenadas si las conoces.',
-            style: TextStyle(color: Colors.grey)),
+        Text(
+            _sinPredioPropio
+                ? 'Opcional — puedes omitir este paso si no creas un predio propio.'
+                : 'País/región/municipio del predio + coordenadas si las conoces. '
+                    'Puedes omitirlo y completarlo después.',
+            style: const TextStyle(color: Colors.grey)),
         const SizedBox(height: 20),
         paisesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -1261,6 +1273,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
+  /// Paso siguiente respetando saltos (p. ej. omitir Ubicación sin predio).
+  int _siguientePaso(int actual) {
+    var next = actual + 1;
+    if (_sinPredioPropio && next == 3) next = 4;
+    return next;
+  }
+
+  /// Paso anterior respetando saltos.
+  int _anteriorPaso(int actual) {
+    var prev = actual - 1;
+    if (_sinPredioPropio && prev == 3) prev = 2;
+    return prev;
+  }
+
   bool _canProceed() {
     // Orden actual de steps (definido en _buildStep):
     //   0: Iniciar sesión   (opcional)
@@ -1316,7 +1342,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_step == 4 && !_permisosSolicitados) {
       await _solicitarPermisosSO();
     }
-    setState(() => _step++);
+    setState(() => _step = _siguientePaso(_step));
   }
 
   Future<void> _finish() async {

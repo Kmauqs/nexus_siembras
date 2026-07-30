@@ -4,6 +4,8 @@
 // pantalla. Los usan tanto los botones "Exportar" de cada pantalla como
 // la pantalla Reportes (incluido el reporte consolidado).
 
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import '../../data/repositories/cultivo_repository.dart';
@@ -130,7 +132,7 @@ List<List<Object?>> dashboardCsvBlocks(DashboardReportData data) => [
         '== 3. COMPRAS AÑO FISCAL ${data.anio} '
             '(total \$ ${data.comprasTotal.toStringAsFixed(0)}) =='
       ],
-      ['Fecha', 'Descripción', 'Tipo', 'Proveedor', 'Cantidad', 'Unidad', 'Valor'],
+      ['Fecha', 'Descripción', 'Tipo', 'Proveedor', 'Cant.', 'Und.', 'Valor'],
       ...data.comprasRows,
       [],
       ['== 4. HORAS-HOMBRE POR MES =='],
@@ -248,7 +250,6 @@ TablaReporte buildComprasReporte(WidgetRef ref) {
       d.value.toStringAsFixed(dec),
       d.codigo,
       '\$ ${c.valor.toStringAsFixed(0)}',
-      c.soporteName != null ? p.basename(c.soporteName!) : '',
     ];
   }).toList();
   return TablaReporte(
@@ -256,11 +257,105 @@ TablaReporte buildComprasReporte(WidgetRef ref) {
     titulo: 'Compras del predio',
     columns: const [
       'Fecha', 'Descripción', 'Tipo', 'Proveedor', 'Factura',
-      'Cantidad', 'Unidad', 'Valor', 'Comprobante'
+      'Cant.', 'Und.', 'Valor',
     ],
     rows: rows,
   );
 }
+
+/// Datos para el paquete ZIP de compras (reporte extendido + adjuntos).
+class ComprasPaqueteExport {
+  const ComprasPaqueteExport({
+    required this.tabla,
+    required this.adjuntos,
+  });
+  final TablaReporte tabla;
+  final List<CompraAdjuntoEnZip> adjuntos;
+}
+
+/// Referencia local → ruta dentro del ZIP (`comprobantes/...`).
+class CompraAdjuntoEnZip {
+  const CompraAdjuntoEnZip({required this.rutaLocal, required this.rutaEnZip});
+  final String rutaLocal;
+  final String rutaEnZip;
+}
+
+/// Reporte completo: factura, código, autor, ruta del comprobante en el ZIP.
+Future<ComprasPaqueteExport> buildComprasPaqueteExport(WidgetRef ref) async {
+  final sistema = ref.read(unitSystemProvider);
+  final compras = ref.read(comprasProvider);
+  final rows = <List<String>>[];
+  final adjuntos = <CompraAdjuntoEnZip>[];
+  final nombresUsados = <String>{};
+
+  for (final c in compras) {
+    final d = displayInSystem(c.cantidad, c.unidad, sistema);
+    final dec = d.value == d.value.roundToDouble() ? 0 : 2;
+    String registradaPor = '—';
+    final uid = c.createdByUserId;
+    if (uid != null && uid.isNotEmpty) {
+      final email = await ref.read(emailPorUserIdProvider(uid).future);
+      registradaPor = email ?? '${uid.substring(0, 8)}…';
+    }
+    var comprobanteZip = '—';
+    final soporte = c.soporteName;
+    if (soporte != null && soporte.isNotEmpty && await File(soporte).exists()) {
+      final enZip = _rutaComprobanteEnZip(c, nombresUsados);
+      nombresUsados.add(enZip);
+      adjuntos.add(CompraAdjuntoEnZip(rutaLocal: soporte, rutaEnZip: enZip));
+      comprobanteZip = enZip;
+    }
+    rows.add([
+      c.fecha,
+      c.desc,
+      c.desc2 ?? '',
+      c.tipo,
+      c.proveedor,
+      c.factura,
+      c.cod,
+      d.value.toStringAsFixed(dec),
+      d.codigo,
+      '\$ ${c.valor.toStringAsFixed(0)}',
+      registradaPor,
+      comprobanteZip,
+    ]);
+  }
+
+  return ComprasPaqueteExport(
+    tabla: TablaReporte(
+      scope: 'compras_completo',
+      titulo: 'Compras del predio — reporte completo',
+      columns: const [
+        'Fecha', 'Descripción', 'Desc. 2', 'Tipo', 'Proveedor', 'Factura',
+        'Código', 'Cant.', 'Und.', 'Valor', 'Registrada por',
+        'Comprobante (ZIP)',
+      ],
+      rows: rows,
+    ),
+    adjuntos: adjuntos,
+  );
+}
+
+String _rutaComprobanteEnZip(Compra c, Set<String> usados) {
+  final factura = _sanitizarNombreArchivo(
+      c.factura.trim().isEmpty ? 'sin_factura' : c.factura.trim());
+  final fecha = c.fecha.replaceAll('-', '');
+  final ext = p.extension(c.soporteName ?? '').toLowerCase();
+  final extSegura =
+      ext.isNotEmpty ? ext : '.pdf';
+  var base = 'comprobantes/${fecha}_${factura}_id${c.id}$extSegura';
+  var n = 2;
+  while (usados.contains(base)) {
+    base =
+        'comprobantes/${fecha}_${factura}_id${c.id}_$n$extSegura';
+    n++;
+  }
+  return base;
+}
+
+String _sanitizarNombreArchivo(String s) => s
+    .replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1F]'), '_')
+    .replaceAll(RegExp(r'\s+'), '_');
 
 /// Directorio de proveedores activos.
 Future<TablaReporte> buildProveedoresReporte(WidgetRef ref) async {
