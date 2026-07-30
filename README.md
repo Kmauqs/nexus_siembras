@@ -4,7 +4,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 - **Desarrollador:** NEXUS CREATIO
 - **Package Android:** `com.nexuscreatio.nexus_siembras`
-- **Versión:** 0.2.5 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
+- **Versión:** 0.2.6 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
 - **Fase actual:** Fase 3 completa + banco comunitario de variedades, colaboración multi-propietario reforzada, trazabilidad de compras y paquete ZIP de comprobantes (2026-07-30). Próximo: web de consulta (drift_wasm).
 
 ## Alcance funcional
