@@ -1,6 +1,6 @@
 # NEXUS Siembras
 
-![](media/d094c3c347bf99bd8b41aea72289e336.png)
+![](media/4536c35e645f3babc2f265526b146a6e.png)
 
 Aplicación de control agropecuario para pequeños productores. Un solo código Flutter que corre en **Android**, **Web** y **Windows Desktop**, con sincronización offline-first vía Supabase.
 
