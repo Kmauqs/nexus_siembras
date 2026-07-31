@@ -11,28 +11,69 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 ## Alcance funcional
 
+![](media/d98e96bb2099ac4e875f4684d2c179e5.png) ![](media/69a81f0b49d1a6f04ef18f9e1a3231ac.png) ![](media/8c5363aa19df71e33d959ebf4f980efc.png)
+
 -   Catálogo de plantas/variedades con condiciones edafoclimáticas óptimas, **tipo de cultivo por defecto** (ciclo único o perenne), **periodos de cosecha** y **ciclos de fertilización** configurables (múltiples abonos con tipo y días desde siembra/trasplante). **Banco comunitario:** descarga de variedades compartidas por otros usuarios (caché local + botón **Sincronizar comunidad**); listado unificado en Plantas, Agregar cultivo y el asistente.
 -   Registro de cultivos por predio y lote con georreferenciación GNSS y **tipo de ciclo productivo**:
     -   **Ciclo único:** días estimados hasta Cosecha 1 (verde/tierno) y Cosecha 2 (maduro/seco).
     -   **Cultivo perenne:** días hasta la primera cosecha, periodicidad entre cosechas y esperanza de vida hasta renovación.
     -   Los valores se **precargan desde la variedad** seleccionada y pueden ajustarse al crear el cultivo.
 -   Modelo de etapas fenológicas: siembra directa vs. germinador → trasplante → fenología; eventos de abono generados desde los ciclos definidos en la variedad.
+
+![](media/a0b8914da902e528b44f93304ae4f150.png)![](media/831752bf2915b9ca13ee7bb3c669118e.png)
+
 -   Cronograma en tres vistas: Gantt, calendario y actividades registradas. **Ajuste dinámico:** al registrar una tarea con fecha distinta a la programada, los eventos pendientes posteriores se desplazan automáticamente; el detalle del cultivo muestra tipo, periodos configurados y cronograma completo.
+
+![](media/8621c3396c400e4c7d53d1d49e3fcc50.png) ![](media/834457152c8088540b88b204b303c8fc.png) ![](media/3b3f74bc8a90d845ac642706a709b494.png)
+
 -   Registro de tareas completadas con acumulación de HH e insumos consumidos del inventario. Actividades base ampliadas para perennes: **Cosecha periódica** (con periodicidad configurable; extiende eventos futuros) y **Renovación** (marca el cultivo como finalizado).
+
+![](media/ff81b24e5976fba325b858f3d7913e10.png) ![](media/6d97e56d1b7ae2136f602d2a095d7ca5.png)
+
 -   Compras por año fiscal con **comprobante adjunto real** (PDF o foto), archivado como `soportes/{año}/{Proveedor}-{factura}.{ext}`. En predios con **co-propietarios**, cada compra muestra **quién la registró** (email). Exportación **CSV/PDF** resumida y paquete **ZIP completo** (reporte extendido con identificación de facturas + carpeta `comprobantes/` con los adjuntos).
+
+![](media/868e26dab2c287c7371f1fb696d41b2d.png) ![](media/ea014fe6203bb96af3ad0ead6df0b29c.png)
+
 -   Análisis fisicoquímicos de suelo por lote (con **PDF del laboratorio adjunto** opcional) y condiciones edafoclimáticas por predio.
+
+![](media/341f20182c9d9289c07c6ce031fc27ad.png)
+
 -   **Onboarding con geolocalización:** "Obtener GPS" llena coordenadas/altitud y detecta país/región/municipio por geocodificación inversa (Nominatim). Paso **Ubicación omitible**; fix Android de BD cifrada tras reinstalar (SQLCipher + exclusión del `.sqlite` del backup en la nube).
+
+![](media/8596e117baad488c2af955a32dcf4a4d.png) ![](media/b2800dae7eb534d8b7258d7d349a6a69.png)
+
 -   **Asistente paso a paso** (10 pasos): guía la configuración inicial — predio → lote → condiciones → análisis de suelo → proveedores → variedades → compra → inventario → cultivos → mapa. Con avance/retroceso sin perder progreso (el estado se deriva de la BD) y pasos obligatorios validados. Se ofrece tras el onboarding y queda accesible desde el menú y la barra superior.
+
+![](media/97ffea595561fc4b72290e5a4cb49aae.png)
+
 -   **Multi-usuario:** un mismo predio puede tener propietario + colaboradores con roles `trabajador` o `consultor`, con permisos diferenciados por RLS de Postgres. **Hidratación garantizada** de recursos compartidos en cada sync (condiciones, suelo, lotes, cultivos, inventario, compras para co-propietarios, eventos, tareas y **proveedores del equipo**). Los co-propietarios pueden crear cultivos y demás recursos editables; todo se sincroniza con el dueño del predio.
+
+![](media/626c6089d5f3183a669a07ba7497070a.png)
+
 -   **Contribución comunitaria** (opt-in): compartir reportes de patologías anonimizados al catálogo global (fotos re-encodificadas sin EXIF/GPS).
+
+![](media/a6b7025ef49d93098e9c6ae1a8c3cd17.png)
+
 -   **Pantalla Mapa** (`/map`): capas base OSM/Satélite (Catastro IGAC deshabilitado por defecto), polígonos de lotes, marcadores de cultivos, capas opcionales (todos mis cultivos, heatmap de patologías) y tap sobre zonas calientes del heatmap. **Brújula flotante** con indicador **N** que rota según la orientación del mapa (giro con dos dedos); al tocarla, reorienta automáticamente con el norte arriba (`MapController.rotate(0)`). **Botón de ubicación GPS** inicia un stream en tiempo real (`Geolocator.getPositionStream`), muestra marcador azul con halo de precisión, centra el mapa y lo sigue hasta que el usuario arrastra la vista manualmente. El mapa se renderiza aunque no haya cultivos ni lotes (útil para orientarse con GPS desde el primer uso).
+
+![](media/6196a72cadcb7a29e13f63cb2f4058cc.png)
+
 -   Integración **EPPO Global Database** (token opcional) con verificación de salud del API y certificate pinning. Modal **Nueva variedad** con debounce ampliado para evitar consultas EPPO excesivas mientras se escribe.
+
+![](media/5d1a84df37dc43a4660f88504a7f2dd4.png)
+
 -   **Catálogo de patologías** con reclasificación manual por grupo (abióticas, hongos, bacterias, virus, plagas, deficiencias, otras) sin que «Actualizar» pise la elección del usuario.
+
+![](media/a6b7025ef49d93098e9c6ae1a8c3cd17.png)
+
 -   **Catálogo de tratamientos por patología** con 214 entradas y priorización automática por el país del predio activo: primero los tratamientos nacionales, luego los globales, y dentro de cada grupo los de mayor sostenibilidad (culturales y biológicos antes que químicos).
 -   **Campos de duración con unidad** (días / semanas / meses / años) en variedades, cultivos y tareas; la BD sigue guardando días.
 -   Notificaciones locales de eventos próximos y vencidos.
 -   **Exportación CSV/PDF en todas las pantallas de datos:** Dashboard (reporte integral: alertas de cultivos, próximos eventos, compras del año con gráfico circular, HH por mes, distribución por cultivo y por usuario), Cultivos (estado + patologías activas), Inventario, Compras y Proveedores. Encabezado con los datos reales del predio activo.
 -   **Pantalla Reportes:** genera todos los reportes (integral, cultivos, inventario, compras, proveedores) y un **consolidado** en un solo PDF; listado de reportes generados con Ver/Compartir/Eliminar; logotipo personalizado para el encabezado (con el ícono de la app como respaldo); y logs de diagnóstico con compartir y limpieza de caché.
+
+    ![](media/30ae310a35b9b5a57578a25e010b13d6.png)
+
 -   **Adjuntos visualizables:** los comprobantes de compra y PDFs de laboratorio se abren desde la app (preview nativo para PDF, visor con zoom para fotos) y se comparten con apps externas.
 -   **Backup local** (sin cuenta): exportar/importar el predio completo a JSON desde Configuración.
 -   **Seguridad:** BD local cifrada (SQLCipher, clave en Keystore/Keychain/DPAPI), sync por lotes con verificación de versión de esquema remoto.
