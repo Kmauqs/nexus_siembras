@@ -859,9 +859,29 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 20) {
             // v20: sync de patologías por cultivo entre colaboradores.
-            await m.addColumn(
-                cultivoPatologias, cultivoPatologias.patologiaNombre);
-            await m.addColumn(cultivoPatologias, cultivoPatologias.updatedAt);
+            // NO usar m.addColumn para updatedAt: su default
+            // (currentDateAndTime) no es constante y SQLite lo prohíbe en
+            // ALTER TABLE ("Cannot add a column with non-constant default",
+            // bug 2026-07-31). Se agrega con default constante y se
+            // backfillea desde created_at. Guard por PRAGMA para tolerar
+            // una migración previa que quedó a medias.
+            final cols = await customSelect(
+              "SELECT name FROM pragma_table_info('cultivo_patologias')",
+            ).get();
+            final nombres = {
+              for (final row in cols) row.read<String>('name'),
+            };
+            if (!nombres.contains('patologia_nombre')) {
+              await m.addColumn(
+                  cultivoPatologias, cultivoPatologias.patologiaNombre);
+            }
+            if (!nombres.contains('updated_at')) {
+              await customStatement(
+                  'ALTER TABLE cultivo_patologias '
+                  'ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0');
+              await customStatement(
+                  'UPDATE cultivo_patologias SET updated_at = created_at');
+            }
           }
         },
       );

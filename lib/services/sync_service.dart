@@ -2582,11 +2582,24 @@ class SyncService {
       }
       if (remoteId != null) {
         // UPDATE preservando owner_id original. Quitamos campos que no
-        // debemos tocar en un UPDATE de fila ajena.
+        // debemos tocar en un UPDATE de fila ajena. `.select('id')`
+        // verifica que RLS realmente escribió: sin él, un UPDATE
+        // bloqueado "tiene éxito" en HTTP y el mapping se marcaría como
+        // pusheado dejando el cambio local perdido para siempre.
         final updatePayload = Map<String, dynamic>.from(payload)
           ..remove('cliente_id')
           ..remove('owner_id');
-        await _sb.from(tabla).update(updatePayload).eq('id', remoteId);
+        final res = await _sb
+            .from(tabla)
+            .update(updatePayload)
+            .eq('id', remoteId)
+            .select('id');
+        if ((res as List).isEmpty) {
+          _erroresFilas++;
+          Log.w('[sync] _upsert UPDATE $tabla remote=$remoteId sin filas '
+              'afectadas (¿RLS?) — no se marca como pusheado');
+          return null;
+        }
         return remoteId;
       }
       // Nuevo registro: INSERT con upsert por (owner_id, cliente_id) para
