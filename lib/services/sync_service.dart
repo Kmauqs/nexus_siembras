@@ -484,6 +484,10 @@ class SyncService {
     }
 
     // 2) EXISTENTES — update por PK remota.
+    // IMPORTANTE: `.select('id')` verifica que RLS realmente escribió.
+    // Sin eso, un upsert bloqueado por RLS "tiene éxito" en HTTP y
+    // bumpeábamos lastPushedAt → el soft-delete nunca se reintentaba
+    // (cultivo borrado por co-propietario no llegaba al remoto).
     for (var i = 0; i < existentes.length; i += _batchSize) {
       final chunk =
           existentes.sublist(i, min(i + _batchSize, existentes.length));
@@ -497,10 +501,21 @@ class SyncService {
               ..remove('owner_id')
               ..['id'] = f.remoteId)
         ];
-        await _sb.from(tabla).upsert(payloads);
+        final res = await _sb.from(tabla).upsert(payloads).select('id');
+        final written = <int>{
+          for (final raw in (res as List<dynamic>))
+            ((raw as Map<String, dynamic>)['id'] as num).toInt(),
+        };
         for (final f in chunk) {
-          await _saveMapping(tabla, f.localId, f.remoteId!);
-          count++;
+          final rid = f.remoteId!;
+          if (written.contains(rid)) {
+            await _saveMapping(tabla, f.localId, rid);
+            count++;
+          } else {
+            _erroresFilas++;
+            Log.w('[sync] UPDATE $tabla local=${f.localId} remote=$rid '
+                'sin filas afectadas (¿RLS?) — no se marca como pusheado');
+          }
         }
       } catch (e) {
         Log.w('[sync] batch UPDATE $tabla (${chunk.length} filas) falló, '
@@ -545,6 +560,7 @@ class SyncService {
     total += await _pushLotes();
     total += await _pushCondiciones();
     total += await _pushCultivos();
+    total += await _pushCultivoPatologias();
     total += await _pushInventarios();
     total += await _pushAnalisis();
     total += await _pushCompras();
@@ -841,6 +857,69 @@ class SyncService {
     return _pushBatch('cultivos', filas);
   }
 
+  Future<int> _pushCultivoPatologias() async {
+    final rows = await db.select(db.cultivoPatologias).get();
+    final mappings = await _mappingsDe('cultivo_patologias');
+    final cultivosMap = await _mappingsDe('cultivos');
+    final cultivosById = {
+      for (final c in await db.select(db.cultivos).get()) c.id: c
+    };
+    final patologiasById = {
+      for (final p in await db.select(db.patologias).get()) p.id: p
+    };
+    final filas = <_FilaPush>[];
+    for (final r in rows) {
+      if (!_debeSubirEnMapa(mappings, r.id, r.updatedAt)) continue;
+      final cultivoRemote = cultivosMap[r.cultivoId]?.remoteId;
+      if (cultivoRemote == null) continue;
+      final cultivo = cultivosById[r.cultivoId];
+      if (cultivo == null) continue;
+      if (!await _puedoEditarPredioCached(cultivo.predioId)) continue;
+      final cat = r.patologiaId == null ? null : patologiasById[r.patologiaId!];
+      final nombre = (r.patologiaNombre?.trim().isNotEmpty == true)
+          ? r.patologiaNombre!.trim()
+          : (cat?.nombreComun ?? '');
+      dynamic intervenciones;
+      try {
+        intervenciones = jsonDecode(r.intervencionesJson);
+      } catch (_) {
+        intervenciones = [];
+      }
+      filas.add(_FilaPush(
+        localId: r.id,
+        remoteId: mappings[r.id]?.remoteId,
+        payload: <String, dynamic>{
+          'cliente_id': r.id,
+          'cultivo_id': cultivoRemote,
+          'patologia_nombre': nombre,
+          'patologia_cientifico': cat?.nombreCientifico,
+          'patologia_tipo': cat?.tipoManual ?? cat?.tipo,
+          'fecha_deteccion': _fmtDate(r.fechaDeteccion),
+          'severidad': r.severidad,
+          'fuente_diagnostico': r.fuenteDiagnostico,
+          'confianza': r.confianza,
+          'resuelta_at': r.resueltaAt?.toUtc().toIso8601String(),
+          'cura_fecha': _fmtDateOrNull(r.curaFecha),
+          'intervenciones_json': intervenciones,
+          'notas': r.notas,
+          'lat': r.lat,
+          'lng': r.lng,
+          'alt_m': r.altM,
+          'compartida': r.compartida,
+          'updated_at': r.updatedAt.toUtc().toIso8601String(),
+          'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
+        },
+      ));
+    }
+    if (filas.isEmpty) return 0;
+    try {
+      return await _pushBatch('cultivo_patologias', filas);
+    } catch (e) {
+      Log.w('[sync] push cultivo_patologias omitido (¿falta 0013?): $e');
+      return 0;
+    }
+  }
+
   Future<int> _pushInventarios() async {
     final rows = await db.select(db.inventarios).get();
     var mappings = await _mappingsDe('inventarios');
@@ -1077,6 +1156,12 @@ class SyncService {
     total += await _pullTable('lotes', _mergeLote);
     total += await _pullTable('condiciones_predio', _mergeCondiciones);
     total += await _pullTable('cultivos', _mergeCultivo);
+    try {
+      total += await _pullTable('cultivo_patologias', _mergeCultivoPatologia);
+    } catch (e) {
+      // Tabla ausente hasta aplicar migration 0013.
+      Log.w('[sync] pull cultivo_patologias omitido: $e');
+    }
     total += await _pullTable('inventarios', _mergeInventario);
     total += await _pullTable('analisis_suelo', _mergeAnalisis);
     total += await _pullTable('compras', _mergeCompra);
@@ -1470,6 +1555,7 @@ class SyncService {
     if (recuperandoAcceso) {
       await _invalidarHidratacionPredio(predioRemoteId);
       await _invalidarPullTabla('proveedores');
+      await _invalidarPullTabla('cultivo_patologias');
     }
   }
 
@@ -1654,6 +1740,13 @@ class SyncService {
 
         await pullPorCultivo('eventos_cultivo', _mergeEvento);
         await pullPorCultivo('tareas_completadas', _mergeTarea);
+        try {
+          await pullPorCultivo('cultivo_patologias', _mergeCultivoPatologia);
+        } catch (e) {
+          // Migration 0013 aún no aplicada: no marcar backfill incompleto
+          // de forma permanente si la tabla no existe.
+          Log.w('[sync] backfill cultivo_patologias omitido: $e');
+        }
       }
     } catch (e) {
       completo = false;
@@ -2032,7 +2125,8 @@ class SyncService {
                 ..where((s) => s.localId.equals(localId!))
                 ..where((s) => s.remoteId.isNotValue(remoteId)))
               .go();
-          await _saveMapping('cultivos', localId, remoteId);
+          await _saveMapping('cultivos', localId, remoteId,
+              bumpLastPushed: false);
           break;
         }
       }
@@ -2106,13 +2200,108 @@ class SyncService {
       final local = await (db.select(db.cultivos)
             ..where((x) => x.id.equals(resolved)))
           .getSingleOrNull();
-      if (local != null && local.updatedAt.isAfter(updatedRemote)) return;
+      if (local != null) {
+        final remoteDeleted = _parseDateOrNull(row['deleted_at']);
+        // Tombstone remota gana: si el remoto está borrado y lo local no,
+        // aplicar el borrado aunque el reloj local diga "más nuevo"
+        // (evita que B ignore el soft-delete de A por skew de reloj).
+        final tombstoneGana =
+            remoteDeleted != null && local.deletedAt == null;
+        if (!tombstoneGana && local.updatedAt.isAfter(updatedRemote)) {
+          return;
+        }
+      }
       await (db.update(db.cultivos)..where((x) => x.id.equals(resolved)))
           .write(c);
-      await _saveMapping('cultivos', resolved, remoteId);
+      // Pull: no bumpear lastPushedAt (si no, un soft-delete local
+      // pendiente puede quedar marcado como "ya subido").
+      await _saveMapping('cultivos', resolved, remoteId,
+          bumpLastPushed: false);
     } else {
       final newId = await db.into(db.cultivos).insert(c);
-      await _saveMapping('cultivos', newId, remoteId);
+      await _saveMapping('cultivos', newId, remoteId, bumpLastPushed: false);
+    }
+  }
+
+  Future<void> _mergeCultivoPatologia(Map<String, dynamic> row) async {
+    final remoteId = row['id'] as int;
+    final cultivoLocalId =
+        await _resolveLocalId('cultivos', row['cultivo_id'] as int);
+    if (cultivoLocalId == null) return;
+
+    var localId = await _resolveLocalId('cultivo_patologias', remoteId);
+    final updatedRemote = _parseDate(row['updated_at']);
+    final nombre = (row['patologia_nombre'] as String?)?.trim() ?? '';
+
+    // Resolver / crear entrada en catálogo local por nombre.
+    int? patologiaId;
+    if (nombre.isNotEmpty) {
+      final existing = await (db.select(db.patologias)
+            ..where((p) => p.nombreComun.equals(nombre))
+            ..where((p) => p.deletedAt.isNull())
+            ..limit(1))
+          .getSingleOrNull();
+      if (existing != null) {
+        patologiaId = existing.id;
+      } else {
+        patologiaId = await db.into(db.patologias).insert(
+              PatologiasCompanion.insert(
+                nombreComun: nombre,
+                nombreCientifico:
+                    Value(row['patologia_cientifico'] as String?),
+                tipo: Value(row['patologia_tipo'] as String?),
+              ),
+            );
+      }
+    }
+
+    final ivRaw = row['intervenciones_json'];
+    final ivStr = ivRaw is String
+        ? ivRaw
+        : jsonEncode(ivRaw ?? []);
+
+    final c = CultivoPatologiasCompanion(
+      cultivoId: Value(cultivoLocalId),
+      patologiaId: Value(patologiaId),
+      patologiaNombre: Value(nombre.isEmpty ? null : nombre),
+      fechaDeteccion: Value(_parseDate(row['fecha_deteccion'])),
+      severidad: Value(row['severidad'] as String?),
+      fuenteDiagnostico: Value(row['fuente_diagnostico'] as String?),
+      confianza: Value((row['confianza'] as num?)?.toDouble()),
+      resueltaAt: Value(_parseDateOrNull(row['resuelta_at'])),
+      curaFecha: Value(_parseDateOrNull(row['cura_fecha'])),
+      intervencionesJson: Value(ivStr),
+      notas: Value(row['notas'] as String?),
+      lat: Value((row['lat'] as num?)?.toDouble()),
+      lng: Value((row['lng'] as num?)?.toDouble()),
+      altM: Value((row['alt_m'] as num?)?.toDouble()),
+      compartida: Value(row['compartida'] as bool? ?? false),
+      updatedAt: Value(updatedRemote),
+      deletedAt: Value(_parseDateOrNull(row['deleted_at'])),
+    );
+
+    final resolved = localId;
+    if (resolved != null) {
+      final local = await (db.select(db.cultivoPatologias)
+            ..where((x) => x.id.equals(resolved)))
+          .getSingleOrNull();
+      if (local != null) {
+        final remoteDeleted = _parseDateOrNull(row['deleted_at']);
+        final tombstoneGana =
+            remoteDeleted != null && local.deletedAt == null;
+        if (!tombstoneGana && local.updatedAt.isAfter(updatedRemote)) {
+          return;
+        }
+      }
+      await (db.update(db.cultivoPatologias)
+            ..where((x) => x.id.equals(resolved)))
+          .write(c);
+      await _saveMapping('cultivo_patologias', resolved, remoteId,
+          bumpLastPushed: false);
+    } else {
+      final newId = await db.into(db.cultivoPatologias).insert(c);
+      await _saveMapping('cultivo_patologias', newId, remoteId,
+          bumpLastPushed: false);
     }
   }
 

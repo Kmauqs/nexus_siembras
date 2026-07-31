@@ -449,6 +449,9 @@ class CultivoPatologias extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get cultivoId => integer().references(Cultivos, #id, onDelete: KeyAction.cascade)();
   IntColumn get patologiaId => integer().nullable().references(Patologias, #id)();
+  /// Nombre denormalizado para sync entre colaboradores (el catálogo local
+  /// no se sincroniza; el peer resuelve o crea la patología por nombre).
+  TextColumn get patologiaNombre => text().nullable()();
   DateTimeColumn get fechaDeteccion => dateTime()();
   TextColumn get severidad => text().nullable()(); // inicial|avanzada
   TextColumn get fotoPath => text().nullable()();
@@ -468,6 +471,7 @@ class CultivoPatologias extends Table {
   BoolColumn get compartida =>
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 }
 
@@ -736,7 +740,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -852,6 +856,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 19) {
             // v19: autor de cada compra (trazabilidad entre co-propietarios).
             await m.addColumn(compras, compras.createdByUserId);
+          }
+          if (from < 20) {
+            // v20: sync de patologías por cultivo entre colaboradores.
+            await m.addColumn(
+                cultivoPatologias, cultivoPatologias.patologiaNombre);
+            await m.addColumn(cultivoPatologias, cultivoPatologias.updatedAt);
           }
         },
       );

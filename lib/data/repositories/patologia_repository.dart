@@ -89,16 +89,22 @@ class PatologiaRepository {
       ivs = jsonDecode(row.intervencionesJson) as List<dynamic>;
     } catch (_) {}
     ivs.add({'fecha': fecha.toIso8601String(), 'nota': nota});
+    final now = DateTime.now();
     await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
         .write(CultivoPatologiasCompanion(
       intervencionesJson: Value(jsonEncode(ivs)),
       severidad: const Value('inicial'),
+      updatedAt: Value(now),
     ));
   }
 
   Future<void> marcarCurada(int cpId) async {
+    final now = DateTime.now();
     await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
-        .write(CultivoPatologiasCompanion(curaFecha: Value(DateTime.now())));
+        .write(CultivoPatologiasCompanion(
+      curaFecha: Value(now),
+      updatedAt: Value(now),
+    ));
   }
 
   // ============================================================
@@ -136,6 +142,7 @@ class PatologiaRepository {
             CultivoPatologiasCompanion.insert(
               cultivoId: cultivoId,
               patologiaId: Value(patologiaId),
+              patologiaNombre: Value(patologiaNombre),
               fechaDeteccion: fechaDeteccion,
               severidad: Value(severidad),
               fotoPath: Value(fotoPath),
@@ -174,7 +181,11 @@ class PatologiaRepository {
   /// Elimina un reporte (soft-delete). No borra la copia comunitaria
   /// asociada; esa mantiene el valor epidemiológico ya publicado.
   Future<void> softDeleteReporte(int cpId) async {
+    final now = DateTime.now();
     await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
-        .write(CultivoPatologiasCompanion(deletedAt: Value(DateTime.now())));
+        .write(CultivoPatologiasCompanion(
+      deletedAt: Value(now),
+      updatedAt: Value(now),
+    ));
   }
 }

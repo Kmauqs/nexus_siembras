@@ -230,9 +230,9 @@ nexus_siembras/
 
 ## Modelo de datos
 
-**Local (Drift sobre SQLCipher, schema v19).** Tablas principales: `predios`, `lotes`, `cultivos`, `plantas`, `plantaFotos`, `inventarios`, `compras` (con `soportePath` y `createdByUserId`), `proveedores`, `analisisSuelo` (con `soportePath`/`soporteTipo`), `condicionesPredio`, `eventosCultivo`, `tareasCompletadas`, `patologias`, `cultivoPatologias`, `patologiasEspecies`, `tratamientosPatologias`, `predioColaboradores`, `patologiasReportadas`, `variedadesComunitariasCache`, `configs`, `syncMappings`, `syncTables`, `syncOps`.
+**Local (Drift sobre SQLCipher, schema v20).** Tablas principales: `predios`, `lotes`, `cultivos`, `plantas`, `plantaFotos`, `inventarios`, `compras` (con `soportePath` y `createdByUserId`), `proveedores`, `analisisSuelo` (con `soportePath`/`soporteTipo`), `condicionesPredio`, `eventosCultivo`, `tareasCompletadas`, `patologias`, `cultivoPatologias` (con `patologiaNombre`/`updatedAt` para sync), `patologiasEspecies`, `tratamientosPatologias`, `predioColaboradores`, `patologiasReportadas`, `variedadesComunitariasCache`, `configs`, `syncMappings`, `syncTables`, `syncOps`.
 
-Campos relevantes añadidos en **v15–v19**:
+Campos relevantes añadidos en **v15–v20**:
 
 | Versión | Tabla / cambio                        | Uso                                         |
 |---------|---------------------------------------|---------------------------------------------|
@@ -241,6 +241,7 @@ Campos relevantes añadidos en **v15–v19**:
 | v17     | `patologias.tipoManual`               | Reclasificación manual de patologías        |
 | v18     | `variedades_comunitarias_cache`       | Espejo local del banco comunitario Supabase |
 | v19     | `compras.createdByUserId`             | Autor de cada compra (co-propietarios)      |
+| v20     | `cultivoPatologias.patologiaNombre` / `updatedAt` | Sync de patologías entre colaboradores |
 
 **Remoto (Postgres + RLS).** Espejo de las tablas anteriores más `predio_shares`, `variedades_comunitarias`, `schema_meta` (versión de esquema verificada por el cliente) y funciones `SECURITY DEFINER`. Migraciones en `supabase/migrations/`: `0010_cultivos_tipo_ciclo.sql`, `0011_compras_created_by.sql`, `0008_banco_variedades.sql`, etc. (orden completo en `supabase/migrations/README.md`).
 
@@ -317,6 +318,7 @@ La columna «Propietario» cubre tanto al **dueño del predio** como a los **col
 -   [x] **3s (2026-07-30)** — Autor en compras: columna `created_by_user_id` (**Drift v19**, migración Postgres `0011_compras_created_by.sql`); se estampa al crear (sesión Supabase) y se muestra en el listado de Compras como «Registrada por: …» (email vía `emailPorUserIdProvider`).
 -   [x] **3t (2026-07-30)** — Paquete ZIP en Compras: botón **ZIP completo** genera `compras_completo.pdf` (landscape, columnas extendidas con factura, código, autor y ruta del comprobante), `compras_completo.csv` y carpeta `comprobantes/` con los PDF/imagen adjuntos; compartible vía `share_plus`. PDF resumido de compras: columnas **Cant.** / **Und.**, sin columna Comprobante, anchos optimizados para Fecha/Valor/Factura.
 -   [x] **3u (2026-07-30)** — Sync co-propietario: cultivos, eventos, tareas e inventario creados por un colaborador con rol **propietario** se suben al remoto (antes solo pasaba el filtro de push para `trabajador`). **Proveedores compartidos**: migración `0012_proveedores_compartidos.sql` (RLS) + hidratación del directorio del equipo (dueño + co-propietarios/trabajadores) en predios compartidos.
+-   [x] **3v (2026-07-30)** — Sync A→B fiable: soft-delete de cultivos verifica escritura remota (RLS) y aplica tombstone en el pull; mergers de cultivos no bumpean `lastPushedAt`. **Patologías por cultivo** sincronizadas entre colaboradores (Drift v20 + migración Postgres `0013_cultivo_patologias.sql`).
 -   [ ] **Futura** — Web de consulta y reportes (drift_wasm + adaptaciones para navegador).
 
 ## Notas de desarrollo
@@ -324,7 +326,7 @@ La columna «Propietario» cubre tanto al **dueño del predio** como a los **col
 -   **Offline-first.** Todas las mutaciones escriben primero a Drift local. El `SyncService` reconcilia con Supabase respetando `updated_at` (last-write-wins, con timestamps acotados por el servidor vía trigger `cap_updated_at`). Push por lotes de 200 filas con fallback fila-a-fila; pull paginado (500) con cursor basado en el `updated_at` remoto — nunca el reloj del dispositivo.
 -   **Seguridad.** BD local cifrada (SQLCipher; la clave vive en el almacén seguro del SO y se genera en el primer arranque). En Android el override de librería debe aplicarse también en el isolate de Drift (`isolateSetup`). TLS a EPPO validado por pinning (hoja + intermedio). `.env` está fuera de git; usar publishable keys.
 -   **Modo local.** Sin `.env` la app funciona 100% local; el usuario ve el aviso en la pantalla de Cuenta. El backup JSON de Configuración cubre el respaldo para usuarios sin cuenta.
--   **Migraciones locales.** Cada bump de `schemaVersion` en `database.dart` requiere una rama `onUpgrade`; correr `dart run build_runner build` antes de compilar. Versiones recientes: **v15–v19** (cultivos, plantas, patologías, caché comunitaria, autor en compras). El seed es idempotente (puede re-ejecutarse sobre una BD poblada sin duplicar).
+-   **Migraciones locales.** Cada bump de `schemaVersion` en `database.dart` requiere una rama `onUpgrade`; correr `dart run build_runner build` antes de compilar. Versiones recientes: **v15–v20** (cultivos, plantas, patologías, caché comunitaria, autor en compras, sync de patologías por cultivo). El seed es idempotente (puede re-ejecutarse sobre una BD poblada sin duplicar).
 -   **Migraciones remotas.** Nuevo esquema = nuevo archivo en `supabase/migrations/` (p. ej. `0011_compras_created_by.sql`) que incremente `schema_meta.version`, y subir `SyncService.schemaRemotoRequerido` en el cliente cuando aplique.
 -   **Windows.** Compilar requiere OpenSSL (SQLCipher): instalar el paquete completo de slproweb y definir `OPENSSL_ROOT_DIR`.
 -   **Reset total.** El botón en Cuenta borra la BD local en transacción **antes** de `signOut()` — si se invierte, `signOut` desmonta el widget y corta la ejecución.

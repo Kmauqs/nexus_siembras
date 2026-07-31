@@ -23,6 +23,7 @@ Ejecutar en el SQL Editor, en este orden exacto:
 | 11 | `migrations/0010_cultivos_tipo_ciclo.sql` | Tipo de ciclo y periodos en `cultivos` (ciclo único / perenne) |
 | 12 | `migrations/0011_compras_created_by.sql` | Autor (`created_by_user_id`) en compras para co-propietarios |
 | 13 | `migrations/0012_proveedores_compartidos.sql` | **Proveedores compartidos**: lectura para colaboradores propietario/trabajador del predio |
+| 14 | `migrations/0013_cultivo_patologias.sql` | **Patologías por cultivo** sync entre colaboradores (`schema_meta` → 10) |
 
 Los archivos `fix_*.sql` restantes y `cleanup_duplicados.sql` son remedios
 puntuales históricos: solo ejecutar si se reproduce el problema que

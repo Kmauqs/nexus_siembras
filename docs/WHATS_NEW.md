@@ -6,6 +6,12 @@ Texto listo para Play Store / comunicación de release.
 
 ---
 
+## Novedades (What's new) — v0.2.6
+
+**Sync entre colaboradores:** si el dueño borra un cultivo o registra una patología, el cambio llega al co-propietario/trabajador tras sincronizar. Las patologías del predio compartido viajan por la nube (requiere migración `0013` en Supabase).
+
+---
+
 ## Novedades (What's new) — v0.2.5
 
 **Tiempos más legibles:** en variedades, cultivos y tareas puedes ingresar duraciones en días, semanas, meses o años; la app convierte y guarda todo en días.

@@ -12350,6 +12350,12 @@ class $CultivoPatologiasTable extends CultivoPatologias
   late final GeneratedColumn<int> patologiaId = GeneratedColumn<int>(
       'patologia_id', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _patologiaNombreMeta =
+      const VerificationMeta('patologiaNombre');
+  @override
+  late final GeneratedColumn<String> patologiaNombre = GeneratedColumn<String>(
+      'patologia_nombre', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _fechaDeteccionMeta =
       const VerificationMeta('fechaDeteccion');
   @override
@@ -12438,6 +12444,14 @@ class $CultivoPatologiasTable extends CultivoPatologias
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
   static const VerificationMeta _deletedAtMeta =
       const VerificationMeta('deletedAt');
   @override
@@ -12449,6 +12463,7 @@ class $CultivoPatologiasTable extends CultivoPatologias
         id,
         cultivoId,
         patologiaId,
+        patologiaNombre,
         fechaDeteccion,
         severidad,
         fotoPath,
@@ -12463,6 +12478,7 @@ class $CultivoPatologiasTable extends CultivoPatologias
         altM,
         compartida,
         createdAt,
+        updatedAt,
         deletedAt
       ];
   @override
@@ -12489,6 +12505,12 @@ class $CultivoPatologiasTable extends CultivoPatologias
           _patologiaIdMeta,
           patologiaId.isAcceptableOrUnknown(
               data['patologia_id']!, _patologiaIdMeta));
+    }
+    if (data.containsKey('patologia_nombre')) {
+      context.handle(
+          _patologiaNombreMeta,
+          patologiaNombre.isAcceptableOrUnknown(
+              data['patologia_nombre']!, _patologiaNombreMeta));
     }
     if (data.containsKey('fecha_deteccion')) {
       context.handle(
@@ -12558,6 +12580,10 @@ class $CultivoPatologiasTable extends CultivoPatologias
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
     if (data.containsKey('deleted_at')) {
       context.handle(_deletedAtMeta,
           deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
@@ -12577,6 +12603,8 @@ class $CultivoPatologiasTable extends CultivoPatologias
           .read(DriftSqlType.int, data['${effectivePrefix}cultivo_id'])!,
       patologiaId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}patologia_id']),
+      patologiaNombre: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}patologia_nombre']),
       fechaDeteccion: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}fecha_deteccion'])!,
       severidad: attachedDatabase.typeMapping
@@ -12605,6 +12633,8 @@ class $CultivoPatologiasTable extends CultivoPatologias
           .read(DriftSqlType.bool, data['${effectivePrefix}compartida'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
       deletedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
     );
@@ -12621,6 +12651,10 @@ class CultivoPatologia extends DataClass
   final int id;
   final int cultivoId;
   final int? patologiaId;
+
+  /// Nombre denormalizado para sync entre colaboradores (el catálogo local
+  /// no se sincroniza; el peer resuelve o crea la patología por nombre).
+  final String? patologiaNombre;
   final DateTime fechaDeteccion;
   final String? severidad;
   final String? fotoPath;
@@ -12637,11 +12671,13 @@ class CultivoPatologia extends DataClass
   /// True si el reporte se envió a la tabla comunitaria PatologiasReportadas.
   final bool compartida;
   final DateTime createdAt;
+  final DateTime updatedAt;
   final DateTime? deletedAt;
   const CultivoPatologia(
       {required this.id,
       required this.cultivoId,
       this.patologiaId,
+      this.patologiaNombre,
       required this.fechaDeteccion,
       this.severidad,
       this.fotoPath,
@@ -12656,6 +12692,7 @@ class CultivoPatologia extends DataClass
       this.altM,
       required this.compartida,
       required this.createdAt,
+      required this.updatedAt,
       this.deletedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -12664,6 +12701,9 @@ class CultivoPatologia extends DataClass
     map['cultivo_id'] = Variable<int>(cultivoId);
     if (!nullToAbsent || patologiaId != null) {
       map['patologia_id'] = Variable<int>(patologiaId);
+    }
+    if (!nullToAbsent || patologiaNombre != null) {
+      map['patologia_nombre'] = Variable<String>(patologiaNombre);
     }
     map['fecha_deteccion'] = Variable<DateTime>(fechaDeteccion);
     if (!nullToAbsent || severidad != null) {
@@ -12699,6 +12739,7 @@ class CultivoPatologia extends DataClass
     }
     map['compartida'] = Variable<bool>(compartida);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
@@ -12712,6 +12753,9 @@ class CultivoPatologia extends DataClass
       patologiaId: patologiaId == null && nullToAbsent
           ? const Value.absent()
           : Value(patologiaId),
+      patologiaNombre: patologiaNombre == null && nullToAbsent
+          ? const Value.absent()
+          : Value(patologiaNombre),
       fechaDeteccion: Value(fechaDeteccion),
       severidad: severidad == null && nullToAbsent
           ? const Value.absent()
@@ -12739,6 +12783,7 @@ class CultivoPatologia extends DataClass
       altM: altM == null && nullToAbsent ? const Value.absent() : Value(altM),
       compartida: Value(compartida),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
@@ -12752,6 +12797,7 @@ class CultivoPatologia extends DataClass
       id: serializer.fromJson<int>(json['id']),
       cultivoId: serializer.fromJson<int>(json['cultivoId']),
       patologiaId: serializer.fromJson<int?>(json['patologiaId']),
+      patologiaNombre: serializer.fromJson<String?>(json['patologiaNombre']),
       fechaDeteccion: serializer.fromJson<DateTime>(json['fechaDeteccion']),
       severidad: serializer.fromJson<String?>(json['severidad']),
       fotoPath: serializer.fromJson<String?>(json['fotoPath']),
@@ -12768,6 +12814,7 @@ class CultivoPatologia extends DataClass
       altM: serializer.fromJson<double?>(json['altM']),
       compartida: serializer.fromJson<bool>(json['compartida']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
@@ -12778,6 +12825,7 @@ class CultivoPatologia extends DataClass
       'id': serializer.toJson<int>(id),
       'cultivoId': serializer.toJson<int>(cultivoId),
       'patologiaId': serializer.toJson<int?>(patologiaId),
+      'patologiaNombre': serializer.toJson<String?>(patologiaNombre),
       'fechaDeteccion': serializer.toJson<DateTime>(fechaDeteccion),
       'severidad': serializer.toJson<String?>(severidad),
       'fotoPath': serializer.toJson<String?>(fotoPath),
@@ -12792,6 +12840,7 @@ class CultivoPatologia extends DataClass
       'altM': serializer.toJson<double?>(altM),
       'compartida': serializer.toJson<bool>(compartida),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
@@ -12800,6 +12849,7 @@ class CultivoPatologia extends DataClass
           {int? id,
           int? cultivoId,
           Value<int?> patologiaId = const Value.absent(),
+          Value<String?> patologiaNombre = const Value.absent(),
           DateTime? fechaDeteccion,
           Value<String?> severidad = const Value.absent(),
           Value<String?> fotoPath = const Value.absent(),
@@ -12814,11 +12864,15 @@ class CultivoPatologia extends DataClass
           Value<double?> altM = const Value.absent(),
           bool? compartida,
           DateTime? createdAt,
+          DateTime? updatedAt,
           Value<DateTime?> deletedAt = const Value.absent()}) =>
       CultivoPatologia(
         id: id ?? this.id,
         cultivoId: cultivoId ?? this.cultivoId,
         patologiaId: patologiaId.present ? patologiaId.value : this.patologiaId,
+        patologiaNombre: patologiaNombre.present
+            ? patologiaNombre.value
+            : this.patologiaNombre,
         fechaDeteccion: fechaDeteccion ?? this.fechaDeteccion,
         severidad: severidad.present ? severidad.value : this.severidad,
         fotoPath: fotoPath.present ? fotoPath.value : this.fotoPath,
@@ -12835,6 +12889,7 @@ class CultivoPatologia extends DataClass
         altM: altM.present ? altM.value : this.altM,
         compartida: compartida ?? this.compartida,
         createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
       );
   CultivoPatologia copyWithCompanion(CultivoPatologiasCompanion data) {
@@ -12843,6 +12898,9 @@ class CultivoPatologia extends DataClass
       cultivoId: data.cultivoId.present ? data.cultivoId.value : this.cultivoId,
       patologiaId:
           data.patologiaId.present ? data.patologiaId.value : this.patologiaId,
+      patologiaNombre: data.patologiaNombre.present
+          ? data.patologiaNombre.value
+          : this.patologiaNombre,
       fechaDeteccion: data.fechaDeteccion.present
           ? data.fechaDeteccion.value
           : this.fechaDeteccion,
@@ -12865,6 +12923,7 @@ class CultivoPatologia extends DataClass
       compartida:
           data.compartida.present ? data.compartida.value : this.compartida,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
@@ -12875,6 +12934,7 @@ class CultivoPatologia extends DataClass
           ..write('id: $id, ')
           ..write('cultivoId: $cultivoId, ')
           ..write('patologiaId: $patologiaId, ')
+          ..write('patologiaNombre: $patologiaNombre, ')
           ..write('fechaDeteccion: $fechaDeteccion, ')
           ..write('severidad: $severidad, ')
           ..write('fotoPath: $fotoPath, ')
@@ -12889,6 +12949,7 @@ class CultivoPatologia extends DataClass
           ..write('altM: $altM, ')
           ..write('compartida: $compartida, ')
           ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -12899,6 +12960,7 @@ class CultivoPatologia extends DataClass
       id,
       cultivoId,
       patologiaId,
+      patologiaNombre,
       fechaDeteccion,
       severidad,
       fotoPath,
@@ -12913,6 +12975,7 @@ class CultivoPatologia extends DataClass
       altM,
       compartida,
       createdAt,
+      updatedAt,
       deletedAt);
   @override
   bool operator ==(Object other) =>
@@ -12921,6 +12984,7 @@ class CultivoPatologia extends DataClass
           other.id == this.id &&
           other.cultivoId == this.cultivoId &&
           other.patologiaId == this.patologiaId &&
+          other.patologiaNombre == this.patologiaNombre &&
           other.fechaDeteccion == this.fechaDeteccion &&
           other.severidad == this.severidad &&
           other.fotoPath == this.fotoPath &&
@@ -12935,6 +12999,7 @@ class CultivoPatologia extends DataClass
           other.altM == this.altM &&
           other.compartida == this.compartida &&
           other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
 }
 
@@ -12942,6 +13007,7 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
   final Value<int> id;
   final Value<int> cultivoId;
   final Value<int?> patologiaId;
+  final Value<String?> patologiaNombre;
   final Value<DateTime> fechaDeteccion;
   final Value<String?> severidad;
   final Value<String?> fotoPath;
@@ -12956,11 +13022,13 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
   final Value<double?> altM;
   final Value<bool> compartida;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   const CultivoPatologiasCompanion({
     this.id = const Value.absent(),
     this.cultivoId = const Value.absent(),
     this.patologiaId = const Value.absent(),
+    this.patologiaNombre = const Value.absent(),
     this.fechaDeteccion = const Value.absent(),
     this.severidad = const Value.absent(),
     this.fotoPath = const Value.absent(),
@@ -12975,12 +13043,14 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
     this.altM = const Value.absent(),
     this.compartida = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
   });
   CultivoPatologiasCompanion.insert({
     this.id = const Value.absent(),
     required int cultivoId,
     this.patologiaId = const Value.absent(),
+    this.patologiaNombre = const Value.absent(),
     required DateTime fechaDeteccion,
     this.severidad = const Value.absent(),
     this.fotoPath = const Value.absent(),
@@ -12995,6 +13065,7 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
     this.altM = const Value.absent(),
     this.compartida = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
   })  : cultivoId = Value(cultivoId),
         fechaDeteccion = Value(fechaDeteccion);
@@ -13002,6 +13073,7 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
     Expression<int>? id,
     Expression<int>? cultivoId,
     Expression<int>? patologiaId,
+    Expression<String>? patologiaNombre,
     Expression<DateTime>? fechaDeteccion,
     Expression<String>? severidad,
     Expression<String>? fotoPath,
@@ -13016,12 +13088,14 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
     Expression<double>? altM,
     Expression<bool>? compartida,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (cultivoId != null) 'cultivo_id': cultivoId,
       if (patologiaId != null) 'patologia_id': patologiaId,
+      if (patologiaNombre != null) 'patologia_nombre': patologiaNombre,
       if (fechaDeteccion != null) 'fecha_deteccion': fechaDeteccion,
       if (severidad != null) 'severidad': severidad,
       if (fotoPath != null) 'foto_path': fotoPath,
@@ -13036,6 +13110,7 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
       if (altM != null) 'alt_m': altM,
       if (compartida != null) 'compartida': compartida,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
@@ -13044,6 +13119,7 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
       {Value<int>? id,
       Value<int>? cultivoId,
       Value<int?>? patologiaId,
+      Value<String?>? patologiaNombre,
       Value<DateTime>? fechaDeteccion,
       Value<String?>? severidad,
       Value<String?>? fotoPath,
@@ -13058,11 +13134,13 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
       Value<double?>? altM,
       Value<bool>? compartida,
       Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
       Value<DateTime?>? deletedAt}) {
     return CultivoPatologiasCompanion(
       id: id ?? this.id,
       cultivoId: cultivoId ?? this.cultivoId,
       patologiaId: patologiaId ?? this.patologiaId,
+      patologiaNombre: patologiaNombre ?? this.patologiaNombre,
       fechaDeteccion: fechaDeteccion ?? this.fechaDeteccion,
       severidad: severidad ?? this.severidad,
       fotoPath: fotoPath ?? this.fotoPath,
@@ -13077,6 +13155,7 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
       altM: altM ?? this.altM,
       compartida: compartida ?? this.compartida,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
@@ -13092,6 +13171,9 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
     }
     if (patologiaId.present) {
       map['patologia_id'] = Variable<int>(patologiaId.value);
+    }
+    if (patologiaNombre.present) {
+      map['patologia_nombre'] = Variable<String>(patologiaNombre.value);
     }
     if (fechaDeteccion.present) {
       map['fecha_deteccion'] = Variable<DateTime>(fechaDeteccion.value);
@@ -13135,6 +13217,9 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     if (deletedAt.present) {
       map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
@@ -13147,6 +13232,7 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
           ..write('id: $id, ')
           ..write('cultivoId: $cultivoId, ')
           ..write('patologiaId: $patologiaId, ')
+          ..write('patologiaNombre: $patologiaNombre, ')
           ..write('fechaDeteccion: $fechaDeteccion, ')
           ..write('severidad: $severidad, ')
           ..write('fotoPath: $fotoPath, ')
@@ -13161,6 +13247,7 @@ class CultivoPatologiasCompanion extends UpdateCompanion<CultivoPatologia> {
           ..write('altM: $altM, ')
           ..write('compartida: $compartida, ')
           ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -24866,6 +24953,7 @@ typedef $$CultivoPatologiasTableCreateCompanionBuilder
   Value<int> id,
   required int cultivoId,
   Value<int?> patologiaId,
+  Value<String?> patologiaNombre,
   required DateTime fechaDeteccion,
   Value<String?> severidad,
   Value<String?> fotoPath,
@@ -24880,6 +24968,7 @@ typedef $$CultivoPatologiasTableCreateCompanionBuilder
   Value<double?> altM,
   Value<bool> compartida,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
 });
 typedef $$CultivoPatologiasTableUpdateCompanionBuilder
@@ -24887,6 +24976,7 @@ typedef $$CultivoPatologiasTableUpdateCompanionBuilder
   Value<int> id,
   Value<int> cultivoId,
   Value<int?> patologiaId,
+  Value<String?> patologiaNombre,
   Value<DateTime> fechaDeteccion,
   Value<String?> severidad,
   Value<String?> fotoPath,
@@ -24901,6 +24991,7 @@ typedef $$CultivoPatologiasTableUpdateCompanionBuilder
   Value<double?> altM,
   Value<bool> compartida,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
 });
 
@@ -24921,6 +25012,10 @@ class $$CultivoPatologiasTableFilterComposer
 
   ColumnFilters<int> get patologiaId => $composableBuilder(
       column: $table.patologiaId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get patologiaNombre => $composableBuilder(
+      column: $table.patologiaNombre,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get fechaDeteccion => $composableBuilder(
       column: $table.fechaDeteccion,
@@ -24967,6 +25062,9 @@ class $$CultivoPatologiasTableFilterComposer
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<DateTime> get deletedAt => $composableBuilder(
       column: $table.deletedAt, builder: (column) => ColumnFilters(column));
 }
@@ -24988,6 +25086,10 @@ class $$CultivoPatologiasTableOrderingComposer
 
   ColumnOrderings<int> get patologiaId => $composableBuilder(
       column: $table.patologiaId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get patologiaNombre => $composableBuilder(
+      column: $table.patologiaNombre,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get fechaDeteccion => $composableBuilder(
       column: $table.fechaDeteccion,
@@ -25034,6 +25136,9 @@ class $$CultivoPatologiasTableOrderingComposer
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
       column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
 }
@@ -25055,6 +25160,9 @@ class $$CultivoPatologiasTableAnnotationComposer
 
   GeneratedColumn<int> get patologiaId => $composableBuilder(
       column: $table.patologiaId, builder: (column) => column);
+
+  GeneratedColumn<String> get patologiaNombre => $composableBuilder(
+      column: $table.patologiaNombre, builder: (column) => column);
 
   GeneratedColumn<DateTime> get fechaDeteccion => $composableBuilder(
       column: $table.fechaDeteccion, builder: (column) => column);
@@ -25098,6 +25206,9 @@ class $$CultivoPatologiasTableAnnotationComposer
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
   GeneratedColumn<DateTime> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
@@ -25133,6 +25244,7 @@ class $$CultivoPatologiasTableTableManager extends RootTableManager<
             Value<int> id = const Value.absent(),
             Value<int> cultivoId = const Value.absent(),
             Value<int?> patologiaId = const Value.absent(),
+            Value<String?> patologiaNombre = const Value.absent(),
             Value<DateTime> fechaDeteccion = const Value.absent(),
             Value<String?> severidad = const Value.absent(),
             Value<String?> fotoPath = const Value.absent(),
@@ -25147,12 +25259,14 @@ class $$CultivoPatologiasTableTableManager extends RootTableManager<
             Value<double?> altM = const Value.absent(),
             Value<bool> compartida = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
           }) =>
               CultivoPatologiasCompanion(
             id: id,
             cultivoId: cultivoId,
             patologiaId: patologiaId,
+            patologiaNombre: patologiaNombre,
             fechaDeteccion: fechaDeteccion,
             severidad: severidad,
             fotoPath: fotoPath,
@@ -25167,12 +25281,14 @@ class $$CultivoPatologiasTableTableManager extends RootTableManager<
             altM: altM,
             compartida: compartida,
             createdAt: createdAt,
+            updatedAt: updatedAt,
             deletedAt: deletedAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required int cultivoId,
             Value<int?> patologiaId = const Value.absent(),
+            Value<String?> patologiaNombre = const Value.absent(),
             required DateTime fechaDeteccion,
             Value<String?> severidad = const Value.absent(),
             Value<String?> fotoPath = const Value.absent(),
@@ -25187,12 +25303,14 @@ class $$CultivoPatologiasTableTableManager extends RootTableManager<
             Value<double?> altM = const Value.absent(),
             Value<bool> compartida = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
           }) =>
               CultivoPatologiasCompanion.insert(
             id: id,
             cultivoId: cultivoId,
             patologiaId: patologiaId,
+            patologiaNombre: patologiaNombre,
             fechaDeteccion: fechaDeteccion,
             severidad: severidad,
             fotoPath: fotoPath,
@@ -25207,6 +25325,7 @@ class $$CultivoPatologiasTableTableManager extends RootTableManager<
             altM: altM,
             compartida: compartida,
             createdAt: createdAt,
+            updatedAt: updatedAt,
             deletedAt: deletedAt,
           ),
           withReferenceMapper: (p0) => p0
