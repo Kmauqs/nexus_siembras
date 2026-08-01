@@ -1156,6 +1156,13 @@ class SyncService {
     total += await _pullTable('lotes', _mergeLote);
     total += await _pullTable('condiciones_predio', _mergeCondiciones);
     total += await _pullTable('cultivos', _mergeCultivo);
+    // Repara plantaId corruptos por el bug de `planta_id_local` ajeno
+    // (incluso si el pull incremental no re-trajo la fila del cultivo).
+    final reparadosPlanta = await _repararPlantaIdsDesdeNombreRemoto();
+    if (reparadosPlanta > 0) {
+      Log.i('[sync] reparados $reparadosPlanta cultivo(s) con plantaId '
+          'incorrecto (nombre_planta remoto)');
+    }
     try {
       total += await _pullTable('cultivo_patologias', _mergeCultivoPatologia);
     } catch (e) {
@@ -2132,35 +2139,44 @@ class SyncService {
       }
     }
 
-    // Resolver plantaId: primero intentar el ID local que subimos, si no
-    // existe, buscar por nombre denormalizado. Si tampoco existe, crear
-    // un stub local con solo `nombreComun` — así los cultivos con
-    // variedades creadas por otro dispositivo (que no sincroniza el
-    // catálogo de plantas) sí llegan al colaborador. El usuario luego
-    // puede completar los datos agronómicos desde el catálogo.
-    int plantaId = (row['planta_id_local'] as int?) ?? 0;
-    if (plantaId == 0 ||
-        (await (db.select(db.plantas)..where((p) => p.id.equals(plantaId)))
-                .getSingleOrNull()) ==
-            null) {
-      final nombre = row['nombre_planta'] as String?;
-      if (nombre != null) {
-        final p = await (db.select(db.plantas)
-              ..where((x) => x.nombreComun.equals(nombre)))
-            .getSingleOrNull();
-        if (p != null) {
-          plantaId = p.id;
-        } else {
-          // Stub: crear la planta localmente con el nombre remoto.
-          plantaId = await db.into(db.plantas).insert(PlantasCompanion.insert(
-                nombreComun: nombre,
-                fuente: const Value('sync_auto'),
-                notas: const Value(
-                    'Auto-creada por sync desde otro dispositivo; '
-                    'completa datos agronómicos manualmente si es necesario.'),
-              ));
+    // Resolver planta SOLO por `nombre_planta` denormalizado.
+    // NUNCA confiar en `planta_id_local` del remoto: ese ID es local al
+    // dispositivo que subió la fila. En el peer el mismo entero puede
+    // apuntar a OTRA variedad (bug 2026-08-01: tras sync de "Curada",
+    // Cuenta B mostró "Yuca enana" en lugar de "Tomate chonto").
+    final resolved = localId;
+    Cultivo? localExistente;
+    if (resolved != null) {
+      localExistente = await (db.select(db.cultivos)
+            ..where((x) => x.id.equals(resolved)))
+          .getSingleOrNull();
+      if (localExistente != null) {
+        final remoteDeleted = _parseDateOrNull(row['deleted_at']);
+        // Tombstone remota gana: si el remoto está borrado y lo local no,
+        // aplicar el borrado aunque el reloj local diga "más nuevo"
+        // (evita que B ignore el soft-delete de A por skew de reloj).
+        final tombstoneGana =
+            remoteDeleted != null && localExistente.deletedAt == null;
+        if (!tombstoneGana &&
+            localExistente.updatedAt.isAfter(updatedRemote)) {
+          // LWW omite el resto, pero aún corrige planta si el nombre
+          // remoto no coincide (recuperación del bug planta_id_local).
+          await _aplicarPlantaPorNombreSiDifiere(
+            localExistente,
+            row['nombre_planta'] as String?,
+          );
+          return;
         }
       }
+    }
+
+    var plantaId = await _resolvePlantaIdPorNombreRemoto(
+      row['nombre_planta'] as String?,
+    );
+    // Si el remoto no trae nombre (filas legacy) y ya tenemos el cultivo
+    // local, conservar su plantaId actual en vez de adivinar por ID ajeno.
+    if (plantaId == 0 && localExistente != null) {
+      plantaId = localExistente.plantaId;
     }
     if (plantaId == 0) return; // sin planta no podemos crear cultivo
 
@@ -2195,22 +2211,7 @@ class SyncService {
       deletedAt: Value(_parseDateOrNull(row['deleted_at'])),
     );
 
-    final resolved = localId; // captura para promoción de tipo
     if (resolved != null) {
-      final local = await (db.select(db.cultivos)
-            ..where((x) => x.id.equals(resolved)))
-          .getSingleOrNull();
-      if (local != null) {
-        final remoteDeleted = _parseDateOrNull(row['deleted_at']);
-        // Tombstone remota gana: si el remoto está borrado y lo local no,
-        // aplicar el borrado aunque el reloj local diga "más nuevo"
-        // (evita que B ignore el soft-delete de A por skew de reloj).
-        final tombstoneGana =
-            remoteDeleted != null && local.deletedAt == null;
-        if (!tombstoneGana && local.updatedAt.isAfter(updatedRemote)) {
-          return;
-        }
-      }
       await (db.update(db.cultivos)..where((x) => x.id.equals(resolved)))
           .write(c);
       // Pull: no bumpear lastPushedAt (si no, un soft-delete local
@@ -2221,6 +2222,89 @@ class SyncService {
       final newId = await db.into(db.cultivos).insert(c);
       await _saveMapping('cultivos', newId, remoteId, bumpLastPushed: false);
     }
+  }
+
+  /// Resuelve el `plantas.id` local a partir del nombre denormalizado del
+  /// remoto. Crea un stub si la variedad aún no existe en este dispositivo.
+  Future<int> _resolvePlantaIdPorNombreRemoto(String? nombrePlanta) async {
+    final nombre = nombrePlanta?.trim();
+    if (nombre == null || nombre.isEmpty) return 0;
+    final existente = await (db.select(db.plantas)
+          ..where((x) => x.nombreComun.equals(nombre))
+          ..where((x) => x.deletedAt.isNull())
+          ..limit(1))
+        .getSingleOrNull();
+    if (existente != null) return existente.id;
+    return db.into(db.plantas).insert(PlantasCompanion.insert(
+          nombreComun: nombre,
+          fuente: const Value('sync_auto'),
+          notas: const Value(
+              'Auto-creada por sync desde otro dispositivo; '
+              'completa datos agronómicos manualmente si es necesario.'),
+        ));
+  }
+
+  /// Si el cultivo local apunta a una planta cuyo nombre no coincide con
+  /// el `nombre_planta` remoto, corrige solo `plantaId` (sin tocar
+  /// `updatedAt`, para no disparar un re-push artificial).
+  Future<bool> _aplicarPlantaPorNombreSiDifiere(
+    Cultivo local,
+    String? nombrePlantaRemoto,
+  ) async {
+    final nombre = nombrePlantaRemoto?.trim();
+    if (nombre == null || nombre.isEmpty) return false;
+    final actual = await (db.select(db.plantas)
+          ..where((p) => p.id.equals(local.plantaId))
+          ..limit(1))
+        .getSingleOrNull();
+    if (actual?.nombreComun == nombre) return false;
+    final correcto = await _resolvePlantaIdPorNombreRemoto(nombre);
+    if (correcto == 0 || correcto == local.plantaId) return false;
+    await (db.update(db.cultivos)..where((c) => c.id.equals(local.id)))
+        .write(CultivosCompanion(plantaId: Value(correcto)));
+    Log.w('[sync] reparado plantaId cultivo=${local.id}: '
+        '${actual?.nombreComun ?? "?"} → $nombre');
+    return true;
+  }
+
+  /// Pasa por todos los cultivos con mapping remoto y alinea `plantaId`
+  /// con `nombre_planta` de Supabase. Recupera dispositivos ya afectados
+  /// por el bug de IDs locales de planta entre cuentas.
+  Future<int> _repararPlantaIdsDesdeNombreRemoto() async {
+    final mappings = await _mappingsDe('cultivos');
+    if (mappings.isEmpty) return 0;
+    final byRemote = <int, int>{
+      for (final e in mappings.entries) e.value.remoteId: e.key,
+    };
+    final remoteIds = byRemote.keys.toList();
+    var reparados = 0;
+    try {
+      for (var i = 0; i < remoteIds.length; i += _pageSize) {
+        final chunk = remoteIds.sublist(
+            i, min(i + _pageSize, remoteIds.length));
+        final rows = await _sb
+            .from('cultivos')
+            .select('id, nombre_planta')
+            .inFilter('id', chunk);
+        for (final row in rows) {
+          final remoteId = (row['id'] as num).toInt();
+          final localId = byRemote[remoteId];
+          if (localId == null) continue;
+          final local = await (db.select(db.cultivos)
+                ..where((c) => c.id.equals(localId))
+                ..limit(1))
+              .getSingleOrNull();
+          if (local == null) continue;
+          if (await _aplicarPlantaPorNombreSiDifiere(
+              local, row['nombre_planta'] as String?)) {
+            reparados++;
+          }
+        }
+      }
+    } catch (e) {
+      Log.w('[sync] _repararPlantaIdsDesdeNombreRemoto fallo: $e');
+    }
+    return reparados;
   }
 
   Future<void> _mergeCultivoPatologia(Map<String, dynamic> row) async {
