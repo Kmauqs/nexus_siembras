@@ -677,10 +677,19 @@ class _ActividadesView extends ConsumerWidget {
     }
     final items = <_ActividadItem>[
       ...tareas.map((t) => _ItemTarea(t)),
-      // Solo eventos ejecutados de siembra y semillero, sin duplicar con tareas
+      // Eventos ejecutados del historial: siembra/semillero (sin duplicar
+      // con tareas) + detecciones/intervenciones/curas de patologías.
       ...eventos.where((e) {
         if (!e.ejecutada) return false;
         final tipo = e.tipo.toLowerCase();
+        final desc = e.descripcion.toLowerCase();
+        final esPatologia = desc.startsWith('patología detectada:') ||
+            desc.startsWith('patologia detectada:') ||
+            desc.startsWith('intervención:') ||
+            desc.startsWith('intervencion:') ||
+            desc.startsWith('patología curada:') ||
+            desc.startsWith('patologia curada:');
+        if (esPatologia) return true;
         if (tipo != 'siembra' && tipo != 'semillero') return false;
         // Si el usuario ya registró una Tarea con esa actividad → no duplicar
         final regs = tareasPorCultivo[e.cultivoId] ?? const <String>{};
@@ -742,7 +751,31 @@ class _EventoAutoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tipoLabel = evento.tipo[0].toUpperCase() + evento.tipo.substring(1);
+    final tipo = evento.tipo.toLowerCase();
+    final desc = evento.descripcion.toLowerCase();
+    final esPatologia = desc.startsWith('patología detectada:') ||
+        desc.startsWith('patologia detectada:') ||
+        desc.startsWith('intervención:') ||
+        desc.startsWith('intervencion:') ||
+        desc.startsWith('patología curada:') ||
+        desc.startsWith('patologia curada:');
+    final tipoLabel = switch (tipo) {
+      'siembra' => 'Siembra',
+      'semillero' => 'Semillero',
+      'control_fito' => 'Control fitosanitario',
+      'observacion' => 'Observación',
+      _ => evento.tipo.isEmpty
+          ? 'Actividad'
+          : '${evento.tipo[0].toUpperCase()}${evento.tipo.substring(1)}',
+    };
+    final icon = esPatologia
+        ? (desc.startsWith('intervención:') || desc.startsWith('intervencion:')
+            ? Icons.healing
+            : (desc.startsWith('patología curada:') ||
+                    desc.startsWith('patologia curada:')
+                ? Icons.verified
+                : Icons.bug_report))
+        : (tipo == 'semillero' ? Icons.grass : Icons.eco);
     final fecha = evento.fechaEjecutada ?? evento.fechaProgramada;
     return Card(
       child: Padding(
@@ -755,9 +788,7 @@ class _EventoAutoCard extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              evento.tipo.toLowerCase() == 'semillero'
-                  ? Icons.grass
-                  : Icons.eco,
+              icon,
               color: AppThemes.colorOk,
               size: 20,
             ),
@@ -788,7 +819,7 @@ class _EventoAutoCard extends StatelessWidget {
               color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Text('auto',
+            child: Text(esPatologia ? 'patología' : 'auto',
                 style: TextStyle(
                     fontSize: 10,
                     color: Colors.grey,

@@ -6,6 +6,17 @@ class PatologiaRepository {
   PatologiaRepository(this.db);
   final AppDatabase db;
 
+  /// Prefijo de `eventos_cultivo.notas` para marcar eventos generados por
+  /// patologías. `resincronizarEventos` los conserva al regenerar el
+  /// cronograma proyectado (siembra/abonos/cosechas).
+  static const notasOrigenPatologia = 'origen=patologia';
+
+  static String notasEventoPatologia(int cpId) =>
+      '$notasOrigenPatologia;cp=$cpId';
+
+  static bool esEventoPatologia(String? notas) =>
+      (notas ?? '').startsWith(notasOrigenPatologia);
+
   Stream<List<Patologia>> watchCatalogo() =>
       (db.select(db.patologias)
             ..where((p) => p.deletedAt.isNull())
@@ -74,7 +85,8 @@ class PatologiaRepository {
     ));
   }
 
-  /// Registra intervención: agrega nota + baja severidad a inicial (estado naranja).
+  /// Registra intervención: agrega nota + baja severidad a inicial (estado naranja)
+  /// y crea un evento `control_fito` ejecutado en el cronograma del cultivo.
   Future<void> registrarIntervencion({
     required int cpId,
     required DateTime fecha,
@@ -90,21 +102,46 @@ class PatologiaRepository {
     } catch (_) {}
     ivs.add({'fecha': fecha.toIso8601String(), 'nota': nota});
     final now = DateTime.now();
-    await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
-        .write(CultivoPatologiasCompanion(
-      intervencionesJson: Value(jsonEncode(ivs)),
-      severidad: const Value('inicial'),
-      updatedAt: Value(now),
-    ));
+    final nombre = await _nombrePatologiaDe(row);
+    await db.transaction(() async {
+      await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
+          .write(CultivoPatologiasCompanion(
+        intervencionesJson: Value(jsonEncode(ivs)),
+        severidad: const Value('inicial'),
+        updatedAt: Value(now),
+      ));
+      await _insertEventoPatologia(
+        cultivoId: row.cultivoId,
+        cpId: cpId,
+        tipo: 'control_fito',
+        fecha: fecha,
+        descripcion: 'Intervención: $nombre · ${nota.trim()}',
+      );
+    });
   }
 
+  /// Marca la detección como curada y registra un evento en el cronograma.
   Future<void> marcarCurada(int cpId) async {
+    final row = await (db.select(db.cultivoPatologias)
+          ..where((c) => c.id.equals(cpId)))
+        .getSingleOrNull();
+    if (row == null) return;
     final now = DateTime.now();
-    await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
-        .write(CultivoPatologiasCompanion(
-      curaFecha: Value(now),
-      updatedAt: Value(now),
-    ));
+    final nombre = await _nombrePatologiaDe(row);
+    await db.transaction(() async {
+      await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
+          .write(CultivoPatologiasCompanion(
+        curaFecha: Value(now),
+        updatedAt: Value(now),
+      ));
+      await _insertEventoPatologia(
+        cultivoId: row.cultivoId,
+        cpId: cpId,
+        tipo: 'observacion',
+        fecha: now,
+        descripcion: 'Patología curada: $nombre',
+      );
+    });
   }
 
   // ============================================================
@@ -174,18 +211,76 @@ class PatologiaRepository {
               ),
             );
       }
+      final nombre = (patologiaNombre?.trim().isNotEmpty == true)
+          ? patologiaNombre!.trim()
+          : 'Patología #$patologiaId';
+      final sevLabel = severidad == 'avanzada' ? 'avanzada' : 'inicial';
+      final desc = notas != null && notas.trim().isNotEmpty
+          ? 'Patología detectada: $nombre · $sevLabel · ${notas.trim()}'
+          : 'Patología detectada: $nombre · $sevLabel';
+      await _insertEventoPatologia(
+        cultivoId: cultivoId,
+        cpId: cpId,
+        tipo: 'observacion',
+        fecha: fechaDeteccion,
+        descripcion: desc,
+      );
       return cpId;
     });
   }
 
-  /// Elimina un reporte (soft-delete). No borra la copia comunitaria
-  /// asociada; esa mantiene el valor epidemiológico ya publicado.
+  /// Elimina un reporte (soft-delete) y sus eventos de cronograma asociados.
+  /// No borra la copia comunitaria; esa mantiene el valor epidemiológico.
   Future<void> softDeleteReporte(int cpId) async {
     final now = DateTime.now();
-    await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
-        .write(CultivoPatologiasCompanion(
-      deletedAt: Value(now),
-      updatedAt: Value(now),
-    ));
+    await db.transaction(() async {
+      await (db.update(db.cultivoPatologias)..where((c) => c.id.equals(cpId)))
+          .write(CultivoPatologiasCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ));
+      final prefijo = '${notasEventoPatologia(cpId)}%';
+      await (db.update(db.eventosCultivo)
+            ..where((e) => e.notas.like(prefijo))
+            ..where((e) => e.deletedAt.isNull()))
+          .write(EventosCultivoCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ));
+    });
+  }
+
+  Future<String> _nombrePatologiaDe(CultivoPatologia row) async {
+    final denorm = row.patologiaNombre?.trim();
+    if (denorm != null && denorm.isNotEmpty) return denorm;
+    final id = row.patologiaId;
+    if (id != null) {
+      final p = await (db.select(db.patologias)
+            ..where((x) => x.id.equals(id))
+            ..limit(1))
+          .getSingleOrNull();
+      if (p != null) return p.nombreComun;
+    }
+    return 'Patología';
+  }
+
+  /// Evento ya ejecutado ligado a una detección (aparece en Gantt, calendario
+  /// y cronograma del cultivo; se sincroniza con `_pushEventos`).
+  Future<void> _insertEventoPatologia({
+    required int cultivoId,
+    required int cpId,
+    required String tipo,
+    required DateTime fecha,
+    required String descripcion,
+  }) async {
+    final day = DateTime(fecha.year, fecha.month, fecha.day);
+    await db.into(db.eventosCultivo).insert(EventosCultivoCompanion.insert(
+          cultivoId: cultivoId,
+          tipo: tipo,
+          fechaProgramada: Value(day),
+          fechaEjecutada: Value(day),
+          descripcion: Value(descripcion),
+          notas: Value(notasEventoPatologia(cpId)),
+        ));
   }
 }

@@ -69,6 +69,22 @@ class CronogramaCultivoList extends StatelessWidget {
   static bool _mismaFecha(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
+  static String _etiquetaTipo(String tipo) => switch (tipo.toLowerCase()) {
+        'siembra' => 'Siembra',
+        'semillero' => 'Semillero',
+        'trasplante' => 'Trasplante',
+        'abono' => 'Abono',
+        'control_fito' => 'Control fitosanitario',
+        'observacion' => 'Observación',
+        'cosecha' => 'Cosecha',
+        'renovacion' => 'Renovación',
+        'riego' => 'Riego',
+        'poda' => 'Poda',
+        _ => tipo.isEmpty
+            ? 'Actividad'
+            : '${tipo[0].toUpperCase()}${tipo.substring(1)}',
+      };
+
   @override
   Widget build(BuildContext context) {
     if (eventos.isEmpty) {
@@ -108,8 +124,8 @@ class CronogramaCultivoList extends StatelessWidget {
                             fontSize: 13, fontWeight: FontWeight.w500)),
                     Text(
                       reprogramado
-                          ? 'Ejecutado: ${_iso(efectiva)} · prog. ${_iso(e.fechaProgramada)}'
-                          : 'Fecha: ${_iso(efectiva)}',
+                          ? '${_etiquetaTipo(e.tipo)} · Ejecutado: ${_iso(efectiva)} · prog. ${_iso(e.fechaProgramada)}'
+                          : '${_etiquetaTipo(e.tipo)} · Fecha: ${_iso(efectiva)}',
                       style: TextStyle(fontSize: 11, color: color),
                     ),
                   ],

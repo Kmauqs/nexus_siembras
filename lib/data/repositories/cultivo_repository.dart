@@ -7,6 +7,7 @@ import 'package:drift/drift.dart';
 import '../../core/models/ciclo_abono.dart';
 import '../../core/units/units_catalog.dart';
 import '../database/database.dart';
+import 'patologia_repository.dart';
 
 enum EstadoCultivo { verde, naranja, rojo }
 
@@ -766,10 +767,21 @@ class CultivoRepository {
           .getSingleOrNull();
       if (planta == null) return 0;
 
-      // Regenera fechas programadas originales y reaplica tareas con ajuste.
-      await (db.delete(db.eventosCultivo)
+      // Regenera el cronograma proyectado (siembra/abonos/cosechas) sin
+      // borrar eventos de patologías (detección / intervención / cura),
+      // marcados con notas `origen=patologia;cp=…`.
+      final todos = await (db.select(db.eventosCultivo)
             ..where((e) => e.cultivoId.equals(cultivoId)))
-          .go();
+          .get();
+      final idsProyectados = [
+        for (final e in todos)
+          if (!PatologiaRepository.esEventoPatologia(e.notas)) e.id,
+      ];
+      if (idsProyectados.isNotEmpty) {
+        await (db.delete(db.eventosCultivo)
+              ..where((e) => e.id.isIn(idsProyectados)))
+            .go();
+      }
       await _generarEventosProyectados(
         cultivoId: cultivoId,
         planta: planta,

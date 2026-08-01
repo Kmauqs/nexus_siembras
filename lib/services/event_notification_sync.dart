@@ -118,6 +118,8 @@ class EventNotificationSync {
         return 'Riego';
       case 'poda':
         return 'Poda';
+      case 'observacion':
+        return 'Observación';
       default:
         return 'Actividad programada';
     }
