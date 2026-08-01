@@ -20,7 +20,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
     -   Los valores se **precargan desde la variedad** seleccionada y pueden ajustarse al crear el cultivo.
 -   Modelo de etapas fenológicas: siembra directa vs. germinador → trasplante → fenología; eventos de abono generados desde los ciclos definidos en la variedad.
 
-![](media/a0b8914da902e528b44f93304ae4f150.png)![](media/831752bf2915b9ca13ee7bb3c669118e.png)
+![](media/a0b8914da902e528b44f93304ae4f150.png) ![](media/831752bf2915b9ca13ee7bb3c669118e.png)
 
 -   Cronograma en tres vistas: Gantt, calendario y actividades registradas. **Ajuste dinámico:** al registrar una tarea con fecha distinta a la programada, los eventos pendientes posteriores se desplazan automáticamente; el detalle del cultivo muestra tipo, periodos configurados y cronograma completo.
 
