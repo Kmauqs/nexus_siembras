@@ -178,74 +178,89 @@ class PatologiaActivaCard extends ConsumerWidget {
   }
 
   void _showInterventionModal(BuildContext ctx, WidgetRef ref) {
-    final fechaCtrl = TextEditingController(text: _iso(DateTime.now()));
+    var fecha = DateTime.now();
     final notaCtrl = TextEditingController();
     showModalBottomSheet<void>(
       context: ctx,
       isScrollControlled: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Registrar intervención',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: fechaCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Fecha (YYYY-MM-DD)',
-                  border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: notaCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                  labelText: 'Anotaciones',
-                  hintText: 'Producto aplicado, dosis, condiciones...',
-                  border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-                '⚠ Estado permanece Naranja hasta confirmar cura con 🌿 Curada.',
-                style: TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                onPressed: () async {
-                  final fecha =
-                      DateTime.tryParse(fechaCtrl.text) ?? DateTime.now();
-                  if (notaCtrl.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                        content: Text('Indica las anotaciones')));
-                    return;
-                  }
-                  await ref
-                      .read(dataMutationsProvider)
-                      .registrarIntervencionPatologia(
-                        cpId: cp.id,
-                        fecha: fecha,
-                        nota: notaCtrl.text.trim(),
-                      );
-                  if (ctx.mounted) {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                        content: Text(
-                            'Intervención registrada · estado Naranja')));
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (sheetCtx, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Registrar intervención',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: sheetCtx,
+                    initialDate: fecha,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    setModalState(() => fecha = picked);
                   }
                 },
-                child: const Text('Guardar'),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Fecha',
+                    suffixIcon: Icon(Icons.calendar_today),
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Text(_iso(fecha)),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              TextField(
+                controller: notaCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                    labelText: 'Anotaciones',
+                    hintText: 'Producto aplicado, dosis, condiciones...',
+                    border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                  '⚠ Estado permanece Naranja hasta confirmar cura con 🌿 Curada.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(
+                  onPressed: () async {
+                    if (notaCtrl.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                          content: Text('Indica las anotaciones')));
+                      return;
+                    }
+                    await ref
+                        .read(dataMutationsProvider)
+                        .registrarIntervencionPatologia(
+                          cpId: cp.id,
+                          fecha: fecha,
+                          nota: notaCtrl.text.trim(),
+                        );
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                          content: Text(
+                              'Intervención registrada · estado Naranja')));
+                    }
+                  },
+                  child: const Text('Guardar'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
