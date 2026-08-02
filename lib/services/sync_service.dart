@@ -87,10 +87,14 @@ class SyncService {
   /// un ítem — debe propagarse al server para no reaparecer en el próximo
   /// pull.
   ///
-  /// Fase B5 (2026-07-20): si no hay conexión/sesión o el DELETE remoto
+  /// Fase B5 (2026-07-20): si no hay conexión/sesión o el borrado remoto
   /// falla, la operación se ENCOLA en `sync_ops` y se reintenta al inicio
-  /// de cada sincronización. Antes se perdía y la fila "revivía" en el
-  /// siguiente pull, obligando a vaciar la papelera de nuevo.
+  /// de cada sincronización.
+  ///
+  /// Importante (2026-08-02): se hace **soft-delete** remoto (`deleted_at`),
+  /// no DELETE físico. El DELETE físico impedía que otros dispositivos
+  /// recibieran el tombstone en el pull incremental (la fila ya no existe
+  /// → B seguía mostrando el cultivo y fallaba al subir eventos por FK).
   Future<void> eliminarRemoto(String tablaRemota, int localId) async {
     // Cliente seguro: en modo 100% local (sin .env) Supabase nunca se
     // inicializó y `Supabase.instance` lanzaría.
@@ -102,20 +106,38 @@ class SyncService {
         await _encolarOp('delete_remoto', tablaRemota, remoteId);
       } else {
         try {
-          await sb.from(tablaRemota).delete().eq('id', remoteId);
+          await _softDeleteRemoto(sb, tablaRemota, remoteId);
         } catch (e) {
-          Log.w('[sync] delete remoto $tablaRemota#$remoteId falló, '
+          Log.w('[sync] soft-delete remoto $tablaRemota#$remoteId falló, '
               'encolado para reintento: $e');
           await _encolarOp('delete_remoto', tablaRemota, remoteId);
         }
       }
     }
-    // Elimina el mapping para que en el próximo sync la fila no se re-suba
-    // desde local (aunque ya no exista local).
+    // Elimina el mapping: la fila local se hard-deletea después; el peer
+    // aún tiene su mapping y recibirá el tombstone por pull.
     await (db.delete(db.syncMappings)
           ..where((s) => s.tabla.equals(tablaRemota))
           ..where((s) => s.localId.equals(localId)))
         .go();
+  }
+
+  /// Marca `deleted_at` en el remoto (tombstone). Si la fila ya no existe
+  /// se considera éxito (idempotente).
+  Future<void> _softDeleteRemoto(
+      SupabaseClient sb, String tabla, int remoteId) async {
+    final ahora = DateTime.now().toUtc().toIso8601String();
+    final res = await sb
+        .from(tabla)
+        .update({
+          'deleted_at': ahora,
+          'updated_at': ahora,
+        })
+        .eq('id', remoteId)
+        .select('id');
+    if ((res as List).isEmpty) {
+      Log.i('[sync] soft-delete $tabla#$remoteId: sin filas (¿ya borrada?)');
+    }
   }
 
   // ==================================================
@@ -156,7 +178,8 @@ class SyncService {
         switch (op.tipo) {
           case 'delete_remoto':
             if (op.remoteId != null) {
-              await _sb.from(op.tabla).delete().eq('id', op.remoteId!);
+              // Soft-delete (tombstone) — no DELETE físico.
+              await _softDeleteRemoto(_sb, op.tabla, op.remoteId!);
             }
           default:
             Log.w('[sync] op desconocida en cola: ${op.tipo} — descartada');
@@ -347,6 +370,11 @@ class SyncService {
       // pull pueda traer de vuelta la fila.
       await procesarColaPendiente();
       final pulled = await _pullAll();
+      // Tras el pull: cultivos (y similares) que desaparecieron del remoto
+      // por DELETE físico legado, o cuyo tombstone no llegó por el cursor
+      // incremental, se marcan borrados en local ANTES del push — evita
+      // resucitarlos y el error FK al subir eventos_cultivo.
+      await _aplicarTombstonesCultivosAusentesOBorrados();
       final pushed = await _pushAll();
       // Reconciliación local de eventos: a partir de las tareas locales
       // reconstruye qué eventos deben marcarse como completados. Esto
@@ -874,6 +902,7 @@ class SyncService {
       if (cultivoRemote == null) continue;
       final cultivo = cultivosById[r.cultivoId];
       if (cultivo == null) continue;
+      if (cultivo.deletedAt != null) continue;
       if (!await _puedoEditarPredioCached(cultivo.predioId)) continue;
       final cat = r.patologiaId == null ? null : patologiasById[r.patologiaId!];
       final nombre = (r.patologiaNombre?.trim().isNotEmpty == true)
@@ -1088,6 +1117,9 @@ class SyncService {
       // Se resuelve el predio a través del cultivo.
       final cultivo = cultivosById[r.cultivoId];
       if (cultivo == null) continue;
+      // No subir hijos de cultivos ya borrados (evita FK 23503 si el
+      // remoto ya no tiene el cultivo / tiene tombstone).
+      if (cultivo.deletedAt != null) continue;
       if (!await _puedoEditarPredioCached(cultivo.predioId)) continue;
       filas.add(_FilaPush(
         localId: r.id,
@@ -1124,6 +1156,7 @@ class SyncService {
       // Skip proactivo: tareas R/W propietario+trabajador.
       final cultivo = cultivosById[r.cultivoId];
       if (cultivo == null) continue;
+      if (cultivo.deletedAt != null) continue;
       if (!await _puedoEditarPredioCached(cultivo.predioId)) continue;
       filas.add(_FilaPush(
         localId: r.id,
@@ -1840,6 +1873,88 @@ class SyncService {
   /// respuestas sin `range` a su límite por defecto (1000 filas) de forma
   /// SILENCIOSA — sin paginación, las filas excedentes se perdían.
   static const int _pageSize = 500;
+
+  /// Detecta cultivos locales vivos cuyo remoto ya no existe (DELETE físico
+  /// legado al vaciar papelera) o tiene `deleted_at`, y aplica tombstone
+  /// local + a eventos/patologías hijas. Así Cuenta B deja de mostrar el
+  /// cultivo y no intenta subir eventos (FK 23503).
+  Future<int> _aplicarTombstonesCultivosAusentesOBorrados() async {
+    final mappings = await _mappingsDe('cultivos');
+    if (mappings.isEmpty) return 0;
+
+    final vivos = <SyncMapping>[];
+    for (final m in mappings.values) {
+      final local = await (db.select(db.cultivos)
+            ..where((c) => c.id.equals(m.localId)))
+          .getSingleOrNull();
+      if (local != null && local.deletedAt == null) {
+        vivos.add(m);
+      }
+    }
+    if (vivos.isEmpty) return 0;
+
+    final remoteIds = vivos.map((m) => m.remoteId).toList();
+    final remotoPorId = <int, Map<String, dynamic>>{};
+    const chunkSize = 100;
+    for (var i = 0; i < remoteIds.length; i += chunkSize) {
+      final chunk = remoteIds.sublist(i, min(i + chunkSize, remoteIds.length));
+      try {
+        final rows = await _sb
+            .from('cultivos')
+            .select('id, deleted_at')
+            .inFilter('id', chunk);
+        for (final raw in (rows as List<dynamic>)) {
+          final row = raw as Map<String, dynamic>;
+          final id = (row['id'] as num).toInt();
+          remotoPorId[id] = row;
+        }
+      } catch (e) {
+        Log.w('[sync] verificación remota de cultivos falló: $e');
+        return 0;
+      }
+    }
+
+    var n = 0;
+    for (final m in vivos) {
+      final remote = remotoPorId[m.remoteId];
+      if (remote == null) {
+        await _tombstoneCultivoLocal(m.localId,
+            motivo: 'ausente en remoto (delete físico)');
+        n++;
+      } else if (remote['deleted_at'] != null) {
+        await _tombstoneCultivoLocal(m.localId,
+            motivo: 'tombstone remoto deleted_at');
+        n++;
+      }
+    }
+    if (n > 0) {
+      Log.i('[sync] aplicados $n tombstone(s) de cultivo tras verificar remoto');
+    }
+    return n;
+  }
+
+  Future<void> _tombstoneCultivoLocal(int localId,
+      {required String motivo}) async {
+    final now = DateTime.now();
+    await (db.update(db.cultivos)..where((c) => c.id.equals(localId))).write(
+      CultivosCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+    );
+    await (db.update(db.eventosCultivo)
+          ..where((e) => e.cultivoId.equals(localId))
+          ..where((e) => e.deletedAt.isNull()))
+        .write(EventosCultivoCompanion(
+      deletedAt: Value(now),
+      updatedAt: Value(now),
+    ));
+    await (db.update(db.cultivoPatologias)
+          ..where((p) => p.cultivoId.equals(localId))
+          ..where((p) => p.deletedAt.isNull()))
+        .write(CultivoPatologiasCompanion(
+      deletedAt: Value(now),
+      updatedAt: Value(now),
+    ));
+    Log.i('[sync] tombstone cultivo local=$localId ($motivo)');
+  }
 
   Future<int> _pullTable(
     String tabla,
