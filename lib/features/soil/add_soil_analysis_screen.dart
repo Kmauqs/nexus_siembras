@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import 'package:path/path.dart' as p;
 import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
@@ -227,7 +227,7 @@ class _AddSoilAnalysisScreenState extends ConsumerState<AddSoilAnalysisScreen> {
           const SizedBox(height: 20),
           Row(mainAxisAlignment: MainAxisAlignment.end, children: [
             OutlinedButton(
-                onPressed: () => context.go('/soil-analysis'),
+                onPressed: () => AppNav.popOrGo(context, '/soil-analysis'),
                 child: const Text('Cancelar')),
             const SizedBox(width: 8),
             FilledButton(onPressed: _save, child: const Text('Guardar')),
@@ -317,7 +317,7 @@ class _AddSoilAnalysisScreenState extends ConsumerState<AddSoilAnalysisScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Análisis guardado')));
-      context.go('/soil-analysis');
+      AppNav.popOrGo(context, '/soil-analysis');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

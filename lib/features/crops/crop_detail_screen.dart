@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/theme/themes.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/status_dot.dart';
@@ -35,7 +35,7 @@ class CropDetailScreen extends ConsumerWidget {
                 style: TextStyle(fontSize: 18, color: Colors.grey)),
             const SizedBox(height: 12),
             FilledButton(
-                onPressed: () => context.go('/crops'),
+                onPressed: () => AppNav.popOrGo(context, '/crops'),
                 child: const Text('Volver')),
           ]),
         ),

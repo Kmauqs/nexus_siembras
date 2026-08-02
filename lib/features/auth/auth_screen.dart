@@ -10,7 +10,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../services/sync_service.dart';
@@ -71,7 +71,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           password: _password.text,
         );
         // La redirección la maneja el listener de authSessionProvider.
-        if (mounted) context.go('/');
+        if (mounted) AppNav.home(context);
       }
     } on AuthException catch (e) {
       setState(() {
@@ -323,7 +323,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
-                  onPressed: () => context.go('/'),
+                  onPressed: () => AppNav.home(context),
                   icon: const Icon(Icons.offline_bolt),
                   label: const Text('Continuar sin cuenta (modo local)'),
                 ),

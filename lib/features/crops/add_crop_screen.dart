@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/duracion_field.dart';
@@ -96,7 +96,7 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
                 ),
                 const SizedBox(height: 16),
                 FilledButton.icon(
-                  onPressed: () => context.push('/plants'),
+                  onPressed: () => AppNav.open(context, '/plants'),
                   icon: const Icon(Icons.grass),
                   label: const Text('Ir a Plantas'),
                 ),
@@ -476,7 +476,7 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
           const SizedBox(height: 20),
           Row(mainAxisAlignment: MainAxisAlignment.end, children: [
             OutlinedButton(
-              onPressed: () => context.go('/crops'),
+              onPressed: () => AppNav.popOrGo(context, '/crops'),
               child: const Text('Cancelar'),
             ),
             const SizedBox(width: 8),
@@ -614,7 +614,7 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
             ? 'Cultivo guardado · $semilla $_semillaUnit descontado(s) del inventario$sufijoComunidad'
             : 'Cultivo guardado$sufijoComunidad'),
       ));
-      context.go('/crops');
+      AppNav.popOrGo(context, '/crops');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

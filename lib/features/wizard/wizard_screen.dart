@@ -20,6 +20,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/app_localizations.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/theme/themes.dart';
 import '../../state/app_state.dart';
 import '../../state/data_state.dart';
@@ -34,19 +36,33 @@ class WizardScreen extends ConsumerWidget {
     final paso = ref.watch(wizardStepProvider).clamp(0, _totalPasos - 1);
     final def = _pasoDef(context, ref, paso);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          tooltip: 'Salir (el avance se conserva)',
-          onPressed: () => context.go('/'),
+    return PopScope(
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        AppNav.home(context);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leadingWidth: 96,
+          leading: Row(children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              tooltip: context.t('menuBack'),
+              onPressed: () => AppNav.back(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.home),
+              tooltip: context.t('menuHome'),
+              onPressed: () => AppNav.home(context),
+            ),
+          ]),
+          title: Text('Asistente — Paso ${paso + 1} de $_totalPasos'),
+          centerTitle: true,
         ),
-        title: Text('Asistente — Paso ${paso + 1} de $_totalPasos'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
+        body: SafeArea(
+          child: Column(
+            children: [
             LinearProgressIndicator(
               value: (paso + 1) / _totalPasos,
               minHeight: 6,
@@ -121,7 +137,7 @@ class WizardScreen extends ConsumerWidget {
                       onPressed: () {
                         // Finaliza: resetea el paso y abre el mapa.
                         ref.read(wizardStepProvider.notifier).state = 0;
-                        context.go('/map');
+                        AppNav.open(context, '/map');
                       },
                       icon: const Icon(Icons.map, size: 18),
                       label: const Text('Finalizar en el mapa'),
@@ -131,6 +147,7 @@ class WizardScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -199,7 +216,7 @@ class WizardScreen extends ConsumerWidget {
         _AccionBtn(
           icono: Icons.add_home_work_outlined,
           texto: 'Crear / administrar predios',
-          onTap: () => context.push('/predios'),
+          onTap: () => AppNav.open(context, '/predios'),
         ),
       ],
     );
@@ -230,7 +247,7 @@ class WizardScreen extends ConsumerWidget {
         _AccionBtn(
           icono: Icons.add,
           texto: 'Crear lote',
-          onTap: () => context.push('/predios/$predioId/lotes/new'),
+          onTap: () => AppNav.open(context, '/predios/$predioId/lotes/new'),
         ),
       ],
     );
@@ -258,7 +275,7 @@ class WizardScreen extends ConsumerWidget {
           texto: cond == null
               ? 'Registrar condiciones'
               : 'Ver / editar condiciones',
-          onTap: () => context.push('/plot-conditions'),
+          onTap: () => AppNav.open(context, '/plot-conditions'),
         ),
       ],
     );
@@ -284,12 +301,12 @@ class WizardScreen extends ConsumerWidget {
         _AccionBtn(
           icono: Icons.science_outlined,
           texto: 'Agregar análisis de suelo',
-          onTap: () => context.push('/soil-analysis/add'),
+          onTap: () => AppNav.open(context, '/soil-analysis/add'),
         ),
         _AccionBtn(
           icono: Icons.list_alt,
           texto: 'Ver análisis existentes',
-          onTap: () => context.push('/soil-analysis'),
+          onTap: () => AppNav.open(context, '/soil-analysis'),
         ),
       ],
     );
@@ -321,7 +338,7 @@ class WizardScreen extends ConsumerWidget {
         _AccionBtn(
           icono: Icons.add_business_outlined,
           texto: 'Agregar / ver proveedores',
-          onTap: () => context.push('/suppliers'),
+          onTap: () => AppNav.open(context, '/suppliers'),
         ),
       ],
     );
@@ -349,7 +366,7 @@ class WizardScreen extends ConsumerWidget {
         _AccionBtn(
           icono: Icons.grass,
           texto: 'Ver catálogo / nueva variedad',
-          onTap: () => context.push('/plants'),
+          onTap: () => AppNav.open(context, '/plants'),
         ),
       ],
     );
@@ -392,7 +409,7 @@ class WizardScreen extends ConsumerWidget {
         _AccionBtn(
           icono: Icons.receipt_long,
           texto: 'Registrar / ver compras',
-          onTap: () => context.push('/purchases'),
+          onTap: () => AppNav.open(context, '/purchases'),
         ),
       ],
     );
@@ -425,7 +442,7 @@ class WizardScreen extends ConsumerWidget {
         _AccionBtn(
           icono: Icons.inventory_2,
           texto: 'Agregar / ver inventario',
-          onTap: () => context.push('/inventory'),
+          onTap: () => AppNav.open(context, '/inventory'),
         ),
       ],
     );
@@ -457,12 +474,12 @@ class WizardScreen extends ConsumerWidget {
         _AccionBtn(
           icono: Icons.add_circle_outline,
           texto: 'Agregar cultivo',
-          onTap: () => context.push('/add'),
+          onTap: () => AppNav.open(context, '/add'),
         ),
         _AccionBtn(
           icono: Icons.eco,
           texto: 'Ver cultivos',
-          onTap: () => context.push('/crops'),
+          onTap: () => AppNav.open(context, '/crops'),
         ),
       ],
     );

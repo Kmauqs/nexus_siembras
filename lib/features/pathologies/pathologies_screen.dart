@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/theme/themes.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../data/database/database.dart' as drift;
@@ -149,7 +149,7 @@ class PathologiesScreen extends ConsumerWidget {
     if (cultivos.isEmpty) {
       ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
           content: Text('No hay cultivos activos. Crea uno primero.')));
-      ctx.go('/crops');
+      AppNav.open(ctx, '/crops');
       return;
     }
     if (cultivos.length == 1) {

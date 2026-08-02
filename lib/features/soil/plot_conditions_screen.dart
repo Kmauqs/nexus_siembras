@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../state/data_state.dart';
@@ -175,7 +175,7 @@ class _PlotConditionsScreenState extends ConsumerState<PlotConditionsScreen> {
               Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                 OutlinedButton(
                     onPressed:
-                        _saving ? null : () => context.go('/settings'),
+                        _saving ? null : () => AppNav.popOrGo(context, '/settings'),
                     child: const Text('Cancelar')),
                 const SizedBox(width: 8),
                 FilledButton(
@@ -231,7 +231,7 @@ class _PlotConditionsScreenState extends ConsumerState<PlotConditionsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Condiciones guardadas')));
-      context.go('/settings');
+      AppNav.popOrGo(context, '/settings');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../state/auth_state.dart';
 import '../../state/data_state.dart';
@@ -34,7 +34,7 @@ class PredioDetailScreen extends ConsumerWidget {
                 const Text('Predio no encontrado'),
                 const SizedBox(height: 12),
                 FilledButton(
-                    onPressed: () => context.go('/predios'),
+                    onPressed: () => AppNav.popOrGo(context, '/predios'),
                     child: const Text('Volver')),
               ]),
             ),
@@ -83,7 +83,7 @@ class PredioDetailScreen extends ConsumerWidget {
                 if (ref.watch(soyPropietarioPredioProvider(predioId)))
                   FilledButton.icon(
                     onPressed: () =>
-                        context.go('/predios/$predioId/lotes/new'),
+                        AppNav.open(context, '/predios/$predioId/lotes/new'),
                     icon: const Icon(Icons.add),
                     label: const Text('Nuevo lote'),
                   ),
@@ -107,8 +107,8 @@ class PredioDetailScreen extends ConsumerWidget {
                           predioId: predioId,
                           soyPropietario: ref.watch(
                               soyPropietarioPredioProvider(predioId)),
-                          onEdit: () => context
-                              .go('/predios/$predioId/lotes/${l.id}'),
+                          onEdit: () => AppNav.open(
+                              context, '/predios/$predioId/lotes/${l.id}'),
                           onDelete: () async {
                             final ok = await showDialog<bool>(
                               context: context,

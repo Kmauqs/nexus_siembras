@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/theme/themes.dart';
 import '../../core/widgets/app_shell.dart';
@@ -155,7 +155,7 @@ class SettingsScreen extends ConsumerWidget {
                       style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   FilledButton.icon(
-                    onPressed: () => context.go('/plot-conditions'),
+                    onPressed: () => AppNav.open(context, '/plot-conditions'),
                     icon: const Icon(Icons.thermostat),
                     label: const Text('Editar condiciones edafoclim.'),
                   ),

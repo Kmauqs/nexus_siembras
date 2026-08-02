@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import 'package:path/path.dart' as p;
 import '../../core/reports/adjunto_viewer.dart';
 import '../../core/widgets/app_shell.dart';
@@ -30,7 +30,7 @@ class SoilAnalysisDetailScreen extends ConsumerWidget {
                 const Text('Análisis no encontrado'),
                 const SizedBox(height: 12),
                 FilledButton(
-                    onPressed: () => context.go('/soil-analysis'),
+                    onPressed: () => AppNav.popOrGo(context, '/soil-analysis'),
                     child: const Text('Volver')),
               ]),
             ),

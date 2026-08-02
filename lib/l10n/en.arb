@@ -22,6 +22,7 @@
   "onbPermLocation": "Location — plot GNSS coordinates",
   "onbStart": "Start",
   "menuHome": "Home",
+  "menuBack": "Back",
   "menuMap": "Map",
   "menuAdd": "Add crop",
   "menuCrops": "View crops",

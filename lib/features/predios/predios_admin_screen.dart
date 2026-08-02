@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../state/data_state.dart';
 
@@ -38,7 +38,7 @@ class PrediosAdminScreen extends ConsumerWidget {
                         isActive: list[i].id == activeId,
                         soyPropietario: ref.watch(
                             soyPropietarioPredioProvider(list[i].id)),
-                        onOpen: () => context.go('/predios/${list[i].id}'),
+                        onOpen: () => AppNav.open(context, '/predios/${list[i].id}'),
                         onEdit: () => _openEditor(context, ref, list[i]),
                         onDelete: () =>
                             _confirmDelete(context, ref, list[i]),

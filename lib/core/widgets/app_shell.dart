@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../i18n/app_localizations.dart';
+import '../navigation/app_nav.dart';
 import '../../state/auth_state.dart';
 import '../../state/data_state.dart';
 
-/// Scaffold reutilizable con AppBar (home button + menú), body y drawer.
+/// Scaffold reutilizable con AppBar (Volver + Inicio + menú), body y drawer.
 class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
@@ -26,42 +27,71 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // Dos accesos a la izquierda: Inicio + Asistente paso a paso
-        // (2026-07-20).
-        leadingWidth: 96,
-        leading: Row(children: [
-          IconButton(
-            icon: const Icon(Icons.home),
-            tooltip: context.t('menuHome'),
-            onPressed: () => context.go('/'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.assistant_outlined),
-            tooltip: context.t('menuWizard'),
-            onPressed: () => context.go('/wizard'),
-          ),
-        ]),
-        title: Text(title),
-        centerTitle: true,
-        actions: [
-          ...?actions,
-          const _SyncBadge(),
-          // Ícono ☰ manual — Flutter no lo agrega solo para endDrawer.
-          Builder(
-            builder: (ctx) => IconButton(
-              icon: const Icon(Icons.menu),
-              tooltip: context.t('menuTitle'),
-              onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+    final canPop = context.canPop();
+    final atHome = AppNav.isHome(context);
+    // Volver visible si hay historial o si llegamos por `go` a una ruta
+    // distinta de Inicio (antes el atrás del sistema salía de la app).
+    final showBack = canPop || !atHome;
+    // En Inicio sin historial: Inicio + Asistente. Con Volver: Volver + Inicio
+    // (el asistente sigue en el menú lateral).
+    final showWizardShortcut = atHome && !canPop;
+
+    return PopScope(
+      canPop: canPop || atHome,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        // Sin historial y fuera de Inicio → ir al Dashboard (no salir).
+        AppNav.home(context);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leadingWidth: 96,
+          leading: Row(children: [
+            if (showBack)
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: context.t('menuBack'),
+                onPressed: () => AppNav.back(context),
+              )
+            else
+              IconButton(
+                icon: const Icon(Icons.home),
+                tooltip: context.t('menuHome'),
+                onPressed: () => AppNav.home(context),
+              ),
+            if (showBack)
+              IconButton(
+                icon: const Icon(Icons.home),
+                tooltip: context.t('menuHome'),
+                onPressed: () => AppNav.home(context),
+              )
+            else if (showWizardShortcut)
+              IconButton(
+                icon: const Icon(Icons.assistant_outlined),
+                tooltip: context.t('menuWizard'),
+                onPressed: () => AppNav.open(context, '/wizard'),
+              ),
+          ]),
+          title: Text(title),
+          centerTitle: true,
+          actions: [
+            ...?actions,
+            const _SyncBadge(),
+            // Ícono ☰ manual — Flutter no lo agrega solo para endDrawer.
+            Builder(
+              builder: (ctx) => IconButton(
+                icon: const Icon(Icons.menu),
+                tooltip: context.t('menuTitle'),
+                onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        endDrawer: const _MainDrawer(),
+        body: child,
+        bottomNavigationBar: bottomBar,
+        floatingActionButton: floatingActionButton,
       ),
-      endDrawer: const _MainDrawer(),  // Menú desde la derecha (spec 2.8)
-      body: child,
-      bottomNavigationBar: bottomBar,
-      floatingActionButton: floatingActionButton,
     );
   }
 }
@@ -129,8 +159,12 @@ class _MainDrawer extends ConsumerWidget {
                   leading: Icon(icon),
                   title: Text(context.t(claveArb)),
                   onTap: () {
-                    Navigator.of(context).pop();
-                    context.go(path);
+                    Navigator.of(context).pop(); // cierra el drawer
+                    if (path == '/') {
+                      AppNav.home(context);
+                    } else {
+                      AppNav.open(context, path);
+                    }
                   },
                 );
               }).toList(),
@@ -187,7 +221,7 @@ class _SyncBadge extends ConsumerWidget {
           return IconButton(
             icon: const Icon(Icons.cloud_done, color: Colors.white70),
             tooltip: context.t('syncOk'),
-            onPressed: () => context.go('/auth'),
+            onPressed: () => AppNav.open(context, '/auth'),
           );
         }
         return Stack(
@@ -196,7 +230,7 @@ class _SyncBadge extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.cloud_upload),
               tooltip: context.t('syncPending', {'n': '$n'}),
-              onPressed: () => context.go('/auth'),
+              onPressed: () => AppNav.open(context, '/auth'),
             ),
             Positioned(
               right: 6,

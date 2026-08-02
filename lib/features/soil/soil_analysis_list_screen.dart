@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../state/data_state.dart';
 
@@ -26,7 +26,7 @@ class SoilAnalysisListScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: FilledButton.icon(
-                  onPressed: () => context.go('/soil-analysis/add'),
+                  onPressed: () => AppNav.open(context, '/soil-analysis/add'),
                   icon: const Icon(Icons.add),
                   label: const Text('Nuevo análisis'),
                 ),
@@ -74,7 +74,7 @@ class _AnalisisCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       child: InkWell(
-        onTap: () => context.go('/soil-analysis/${a.id}'),
+        onTap: () => AppNav.open(context, '/soil-analysis/${a.id}'),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(

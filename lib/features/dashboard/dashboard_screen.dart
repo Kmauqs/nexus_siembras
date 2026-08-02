@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import 'dart:math' as math;
 import '../../core/reports/report_data_builder.dart';
 import '../../core/reports/report_service.dart';
@@ -55,7 +55,7 @@ class DashboardScreen extends ConsumerWidget {
               FilledButton(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    context.go('/wizard');
+                    AppNav.open(context, '/wizard');
                   },
                   child: const Text('Iniciar asistente')),
             ],
@@ -74,14 +74,14 @@ class DashboardScreen extends ConsumerWidget {
             heroTag: 'fabMap',
             backgroundColor: theme.colorScheme.surface,
             foregroundColor: theme.colorScheme.primary,
-            onPressed: () => context.go('/map'),
+            onPressed: () => AppNav.open(context, '/map'),
             child: const Icon(Icons.map),
           ),
           if (puedeCrearAlgo) const SizedBox(height: 12),
           if (puedeCrearAlgo)
             FloatingActionButton(
               heroTag: 'fabAdd',
-              onPressed: () => context.go('/add'),
+              onPressed: () => AppNav.open(context, '/add'),
               child: const Icon(Icons.add),
             ),
         ],
@@ -245,7 +245,7 @@ class _KpiTile extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: route == null
           ? content
-          : InkWell(onTap: () => context.go(route!), child: content),
+          : InkWell(onTap: () => AppNav.open(context, route!), child: content),
     );
   }
 }
@@ -304,7 +304,7 @@ class _AlertLine extends StatelessWidget {
   final String note;
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: () => context.go('/crops'),
+        onTap: () => AppNav.open(context, '/crops'),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(children: [
@@ -381,7 +381,7 @@ class _EventLine extends StatelessWidget {
   final String desc, context, date;
   @override
   Widget build(BuildContext ctx) => InkWell(
-        onTap: () => ctx.go('/schedule'),
+        onTap: () => AppNav.open(ctx, '/schedule'),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(children: [
@@ -866,7 +866,7 @@ class _PredioActivoSelector extends ConsumerWidget {
                     onPressed: () async {
                       final logueado = ref.read(isLoggedInProvider);
                       if (!logueado) {
-                        context.go('/auth');
+                        AppNav.open(context, '/auth');
                         return;
                       }
                       final messenger = ScaffoldMessenger.of(context);
@@ -895,7 +895,7 @@ class _PredioActivoSelector extends ConsumerWidget {
                     label: const Text('Sync'),
                   ),
                   TextButton.icon(
-                    onPressed: () => context.go('/predios'),
+                    onPressed: () => AppNav.open(context, '/predios'),
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('Crear'),
                   ),
@@ -943,7 +943,7 @@ class _PredioActivoSelector extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.settings, size: 18),
                     tooltip: 'Administrar predios',
-                    onPressed: () => context.go('/predios'),
+                    onPressed: () => AppNav.open(context, '/predios'),
                     visualDensity: VisualDensity.compact,
                   ),
                 ],

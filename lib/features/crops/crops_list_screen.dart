@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/reports/export_helpers.dart';
 import '../../core/reports/report_data_builder.dart';
 import '../../core/theme/themes.dart';
@@ -125,7 +125,7 @@ class _CultivoTile extends ConsumerWidget {
       child: Card(
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => context.push('/crops/${c.id}'),
+          onTap: () => AppNav.open(context, '/crops/${c.id}'),
           child: Padding(
           padding: const EdgeInsets.all(10),
           child: Row(
