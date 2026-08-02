@@ -24,6 +24,7 @@ import '../data/repositories/recomendacion_agronomica.dart';
 import '../data/repositories/colaborador_repository.dart';
 import '../data/repositories/lote_repository.dart';
 import '../services/auto_sync_service.dart';
+import '../services/account_service.dart';
 import '../services/backup_service.dart';
 import '../services/event_notification_sync.dart';
 import '../services/maintenance_service.dart';
@@ -443,6 +444,10 @@ final maintenanceServiceProvider = Provider<MaintenanceService>((ref) {
     ref.watch(syncServiceProvider),
   );
 });
+
+/// Eliminación de cuenta (RPC remoto + wipe/limpieza local).
+final accountServiceProvider = Provider<AccountService>(
+    (ref) => AccountService(ref.watch(databaseProvider)));
 
 /// Servicio de auto-retry de sync al recuperar conexión.
 /// Debe `iniciar()`se en un widget listener (app.dart) tras auth OK.

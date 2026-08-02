@@ -18,6 +18,8 @@ Texto listo para Play Store / comunicación de release.
 
 **Sync de variedades:** corrige el caso en que un cultivo sincronizado mostraba otra planta (p. ej. Tomate → Yuca) entre dispositivos.
 
+**Eliminar cuenta:** en Cuenta / Sincronización puedes borrar tu cuenta y tus datos privados en la nube. Se conservan en la comunidad las variedades aportadas y los reportes de patologías (anonimizados). Después eliges si eliminar o conservar los datos locales del dispositivo.
+
 ---
 
 ## Novedades (What's new) — v0.2.6
@@ -82,9 +84,10 @@ Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.2.7:
 | **Cultivos** | Variedades stub al bajar; resolución de planta por nombre (no por ID local); eventos al registrar tareas; patologías → eventos de cronograma. |
 | **Cola offline** | Borrados en la papelera se encolan y suben cuando vuelve la conexión. |
 | **Seguridad** | BD local cifrada (SQLCipher); fotos comunitarias sin EXIF/GPS; reportes comunitarios solo vía vista anonimizada. |
+| **Cuenta (0.2.7)** | Eliminar cuenta: RPC `eliminar_mi_cuenta`; borra datos privados y Auth; conserva variedades comunitarias y anonimiza patologías compartidas; opción de borrar o conservar datos locales. |
 | **Exportaciones** | Reporte integral, CSV/PDF, adjuntos y ZIP de compras. |
 | **Asistente** | Guía de 10 pasos; mismo AppShell/navegación inferior. |
-| **Migraciones Supabase** | `0011` autor en compras; `0012` proveedores compartidos; `0013` patologías por cultivo. |
+| **Migraciones Supabase** | `0011` autor en compras; `0012` proveedores compartidos; `0013` patologías por cultivo; `0014` eliminar cuenta. |
 
 ---
 

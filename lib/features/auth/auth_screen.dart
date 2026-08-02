@@ -13,8 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/navigation/app_nav.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/widgets/app_shell.dart';
+import '../../services/account_service.dart';
 import '../../services/sync_service.dart';
-import '../../state/app_state.dart';
 import '../../state/auth_state.dart';
 import '../../state/data_state.dart';
 import 'package:intl/intl.dart';
@@ -463,7 +463,7 @@ class _ProfileViewState extends ConsumerState<_ProfileView> {
         ],
       ),
     );
-    if (ok1 != true) return;
+    if (ok1 != true || !mounted) return;
     final ok2 = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -483,37 +483,13 @@ class _ProfileViewState extends ConsumerState<_ProfileView> {
         ],
       ),
     );
-    if (ok2 != true) return;
+    if (ok2 != true || !mounted) return;
 
     setState(() => _cerrando = true);
-    // Capturar el db ref ANTES de signOut — si el widget se desmonta por
-    // el cambio de sesión, este ref sigue vivo para completar el delete.
-    final db = ref.read(databaseProvider);
+    final cuenta = ref.read(accountServiceProvider);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      // 1. Borrar TODO en la BD Drift PRIMERO (antes de signOut porque
-      //    signOut() desmonta este widget y corta la ejecución asincrónica).
-      await db.transaction(() async {
-        await db.delete(db.tareasCompletadas).go();
-        await db.delete(db.eventosCultivo).go();
-        await db.delete(db.cosechasRegistradas).go();
-        await db.delete(db.actividadesCustom).go();
-        await db.delete(db.cultivoPatologias).go();
-        await db.delete(db.cultivos).go();
-        await db.delete(db.compras).go();
-        await db.delete(db.inventarios).go();
-        await db.delete(db.analisisSuelo).go();
-        await db.delete(db.condicionesPredio).go();
-        await db.delete(db.lotes).go();
-        await db.delete(db.predioColaboradores).go();
-        await db.delete(db.patologiasReportadas).go();
-        await db.delete(db.predios).go();
-        await db.delete(db.proveedores).go();
-        await db.delete(db.syncMappings).go();
-        await db.delete(db.syncTables).go();
-        await db.delete(db.configs).go();
-      });
-      // 2. Mostrar snackbar ANTES del signOut (por si el widget se desmonta)
+      await cuenta.borrarDatosLocales();
       messenger.showSnackBar(const SnackBar(
         content: Text(
             '✓ Datos locales borrados. Cerrando sesión…\n'
@@ -521,12 +497,141 @@ class _ProfileViewState extends ConsumerState<_ProfileView> {
         backgroundColor: Colors.orange,
         duration: Duration(seconds: 10),
       ));
-      // 3. Sign out — este paso puede desmontar el widget, por eso va al final.
-      try {
-        await Supabase.instance.client.auth.signOut();
-      } catch (_) {}
+      await cuenta.cerrarSesionSilencioso();
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _cerrando = false);
+    }
+  }
+
+  /// Elimina la cuenta en Supabase (datos privados) y pregunta qué hacer
+  /// con la copia local. Conserva variedades/patologías comunitarias.
+  Future<void> _eliminarCuenta() async {
+    final ok1 = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar cuenta'),
+        content: const Text(
+            'Se eliminará tu cuenta y todos tus datos privados en la nube '
+            '(predios, cultivos, inventario, compras, colaboradores, etc.).\n\n'
+            'Se CONSERVAN en la comunidad:\n'
+            '• Variedades que aportaste al banco comunitario\n'
+            '• Reportes de patologías compartidos (anonimizados)\n\n'
+            'Si eres dueño de predios compartidos, tus colaboradores '
+            'perderán acceso a esos predios.\n\n'
+            'Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          FilledButton.tonal(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Continuar')),
+        ],
+      ),
+    );
+    if (ok1 != true || !mounted) return;
+
+    final ok2 = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmación final'),
+        content: Text(
+            'Se borrará la cuenta de:\n\n${widget.user.email ?? widget.user.id}\n\n'
+            '¿Eliminar la cuenta en la nube?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('ELIMINAR CUENTA')),
+        ],
+      ),
+    );
+    if (ok2 != true || !mounted) return;
+
+    setState(() => _cerrando = true);
+    final cuenta = ref.read(accountServiceProvider);
+    final messenger = ScaffoldMessenger.of(context);
+
+    EliminarCuentaResultado remoto;
+    try {
+      remoto = await cuenta.eliminarCuentaRemota();
+    } catch (e) {
+      if (mounted) setState(() => _cerrando = false);
+      messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
+      return;
+    }
+
+    if (!remoto.ok) {
+      if (mounted) setState(() => _cerrando = false);
+      messenger.showSnackBar(SnackBar(
+        content: Text(remoto.error ?? 'No se pudo eliminar la cuenta'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _cerrando = false);
+
+    final borrarLocal = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Datos en este dispositivo'),
+        content: const Text(
+            'Tu cuenta en la nube ya fue eliminada.\n\n'
+            '¿Qué deseas hacer con los datos guardados en este '
+            'dispositivo?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Conservar datos locales'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Eliminar datos locales'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+    setState(() => _cerrando = true);
+    try {
+      if (borrarLocal == true) {
+        await cuenta.borrarDatosLocales();
+        messenger.showSnackBar(const SnackBar(
+          content: Text(
+              '✓ Cuenta y datos locales eliminados.\n'
+              'Reinicia la app para volver al onboarding.'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 10),
+        ));
+      } else {
+        await cuenta.limpiarEstadoSyncLocal();
+        messenger.showSnackBar(SnackBar(
+          content: Text(
+              '✓ Cuenta eliminada. Datos locales conservados '
+              '(modo offline).\n'
+              'Comunidad: ${remoto.variedadesConservadas} variedad(es), '
+              '${remoto.reportesAnonimizados} reporte(s) anonimizado(s).'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 8),
+        ));
+      }
+      await cuenta.cerrarSesionSilencioso();
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Error local: $e')));
+      try {
+        await cuenta.cerrarSesionSilencioso();
+      } catch (_) {}
     } finally {
       if (mounted) setState(() => _cerrando = false);
     }
@@ -729,6 +834,24 @@ class _ProfileViewState extends ConsumerState<_ProfileView> {
                     onPressed: _cerrando ? null : _resetTotal,
                     icon: const Icon(Icons.restart_alt, size: 18),
                     label: const Text('Cerrar sesión y borrar datos locales'),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                      'Eliminar cuenta: borra tus datos privados en la '
+                      'nube y la cuenta de acceso. Conserva variedades y '
+                      'patologías aportadas a la comunidad. Después podrás '
+                      'elegir si borrar o conservar los datos de este '
+                      'dispositivo.',
+                      style: TextStyle(fontSize: 12)),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade900,
+                      side: BorderSide(color: Colors.red.shade700),
+                    ),
+                    onPressed: _cerrando ? null : _eliminarCuenta,
+                    icon: const Icon(Icons.person_off_outlined, size: 18),
+                    label: const Text('Eliminar cuenta de usuario'),
                   ),
                 ],
               ),

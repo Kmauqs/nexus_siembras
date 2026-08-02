@@ -69,7 +69,7 @@ class SyncService {
   /// Versión mínima de esquema remoto requerida por este cliente
   /// (auditoría S6). Se compara contra `public.schema_meta.version`.
   /// Ver supabase/migrations/README.md.
-  static const int schemaRemotoRequerido = 7;
+  static const int schemaRemotoRequerido = 11;
 
   /// Guard de reentrada: botón manual + auto-sync pueden coincidir
   /// (auditoría P6).
