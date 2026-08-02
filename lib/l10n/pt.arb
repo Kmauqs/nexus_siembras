@@ -23,6 +23,7 @@
   "onbStart": "Começar",
   "menuHome": "Início",
   "menuBack": "Voltar",
+  "menuSync": "Sincronizar",
   "menuMap": "Mapa",
   "menuAdd": "Adicionar cultivo",
   "menuCrops": "Ver cultivos",

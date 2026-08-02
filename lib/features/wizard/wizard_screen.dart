@@ -19,10 +19,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../../core/i18n/app_localizations.dart';
 import '../../core/navigation/app_nav.dart';
 import '../../core/theme/themes.dart';
+import '../../core/widgets/app_shell.dart';
 import '../../state/app_state.dart';
 import '../../state/data_state.dart';
 
@@ -36,118 +35,92 @@ class WizardScreen extends ConsumerWidget {
     final paso = ref.watch(wizardStepProvider).clamp(0, _totalPasos - 1);
     final def = _pasoDef(context, ref, paso);
 
-    return PopScope(
-      canPop: context.canPop(),
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        AppNav.home(context);
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          leadingWidth: 96,
-          leading: Row(children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              tooltip: context.t('menuBack'),
-              onPressed: () => AppNav.back(context),
+    return AppShell(
+      title: 'Asistente — Paso ${paso + 1} de $_totalPasos',
+      child: Column(
+        children: [
+          LinearProgressIndicator(
+            value: (paso + 1) / _totalPasos,
+            minHeight: 6,
+            color: AppThemes.colorOk,
+            backgroundColor: Colors.grey.shade300,
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                Row(children: [
+                  Expanded(
+                    child: Text(def.titulo,
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
+                  ),
+                  _Badge(
+                    texto: def.obligatorio ? 'Obligatorio' : 'Opcional',
+                    color: def.obligatorio
+                        ? Colors.orange.shade700
+                        : Colors.blueGrey,
+                  ),
+                ]),
+                const SizedBox(height: 6),
+                Text(def.descripcion,
+                    style: TextStyle(
+                        fontSize: 13, color: Theme.of(context).hintColor)),
+                const SizedBox(height: 16),
+                ...def.contenido,
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.home),
-              tooltip: context.t('menuHome'),
-              onPressed: () => AppNav.home(context),
+          ),
+          // Barra de navegación del asistente (pasos Anterior/Siguiente)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                if (paso > 0)
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        ref.read(wizardStepProvider.notifier).state =
+                            paso - 1,
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text('Anterior'),
+                  )
+                else
+                  const SizedBox(width: 110),
+                const Spacer(),
+                if (!def.cumplido && def.obligatorio)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Text('Completa este paso\npara continuar',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.orange.shade800)),
+                  ),
+                if (paso < _totalPasos - 1)
+                  FilledButton.icon(
+                    onPressed: (def.cumplido || !def.obligatorio)
+                        ? () => ref
+                            .read(wizardStepProvider.notifier)
+                            .state = paso + 1
+                        : null,
+                    icon: const Icon(Icons.arrow_forward, size: 18),
+                    label: Text(def.cumplido || def.obligatorio
+                        ? 'Siguiente'
+                        : 'Omitir'),
+                  )
+                else
+                  FilledButton.icon(
+                    onPressed: () {
+                      ref.read(wizardStepProvider.notifier).state = 0;
+                      AppNav.open(context, '/map');
+                    },
+                    icon: const Icon(Icons.map, size: 18),
+                    label: const Text('Finalizar en el mapa'),
+                  ),
+              ],
             ),
-          ]),
-          title: Text('Asistente — Paso ${paso + 1} de $_totalPasos'),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: Column(
-            children: [
-            LinearProgressIndicator(
-              value: (paso + 1) / _totalPasos,
-              minHeight: 6,
-              color: AppThemes.colorOk,
-              backgroundColor: Colors.grey.shade300,
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  Row(children: [
-                    Expanded(
-                      child: Text(def.titulo,
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                    ),
-                    _Badge(
-                      texto: def.obligatorio ? 'Obligatorio' : 'Opcional',
-                      color: def.obligatorio
-                          ? Colors.orange.shade700
-                          : Colors.blueGrey,
-                    ),
-                  ]),
-                  const SizedBox(height: 6),
-                  Text(def.descripcion,
-                      style: TextStyle(
-                          fontSize: 13, color: Theme.of(context).hintColor)),
-                  const SizedBox(height: 16),
-                  ...def.contenido,
-                ],
-              ),
-            ),
-            // Barra de navegación del asistente
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  if (paso > 0)
-                    OutlinedButton.icon(
-                      onPressed: () =>
-                          ref.read(wizardStepProvider.notifier).state =
-                              paso - 1,
-                      icon: const Icon(Icons.arrow_back, size: 18),
-                      label: const Text('Anterior'),
-                    )
-                  else
-                    const SizedBox(width: 110),
-                  const Spacer(),
-                  if (!def.cumplido && def.obligatorio)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: Text('Completa este paso\npara continuar',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.orange.shade800)),
-                    ),
-                  if (paso < _totalPasos - 1)
-                    FilledButton.icon(
-                      onPressed: (def.cumplido || !def.obligatorio)
-                          ? () => ref
-                              .read(wizardStepProvider.notifier)
-                              .state = paso + 1
-                          : null,
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: Text(def.cumplido || def.obligatorio
-                          ? 'Siguiente'
-                          : 'Omitir'),
-                    )
-                  else
-                    FilledButton.icon(
-                      onPressed: () {
-                        // Finaliza: resetea el paso y abre el mapa.
-                        ref.read(wizardStepProvider.notifier).state = 0;
-                        AppNav.open(context, '/map');
-                      },
-                      icon: const Icon(Icons.map, size: 18),
-                      label: const Text('Finalizar en el mapa'),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        ],
       ),
     );
   }

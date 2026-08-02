@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
+import '../../core/location/gps_capture.dart';
 import '../../core/navigation/app_nav.dart';
 import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
@@ -451,41 +451,26 @@ class _LoteEditorScreenState extends ConsumerState<LoteEditorScreen> {
   Future<void> _capturarGps() async {
     setState(() => _obteniendoGnss = true);
     try {
-      final ok = await Geolocator.isLocationServiceEnabled();
-      if (!ok) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Activa el servicio de ubicación del sistema')));
-        return;
-      }
-      var perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        perm = await Geolocator.requestPermission();
-      }
-      if (perm == LocationPermission.denied ||
-          perm == LocationPermission.deniedForever) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Permiso de ubicación denegado')));
-        return;
-      }
-      final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 15),
-      );
+      final fix = await capturarGps();
       if (!mounted) return;
       setState(() {
-        _puntos.add((pos.latitude, pos.longitude));
-        // Si la altitud del lote está vacía, la rellena con el primer punto
-        // capturado por GPS (representa la altura general del lote).
-        if (_altitud.text.isEmpty && !pos.altitude.isNaN) {
-          _altitud.text = pos.altitude.toStringAsFixed(0);
+        _puntos.add((fix.latitude, fix.longitude));
+        // Uniforme con el resto de pantallas: al capturar GPS también
+        // se rellena/actualiza la altitud del lote.
+        if (fix.altitudeMsnm != null) {
+          _altitud.text = fix.altitudeMsnm!.toStringAsFixed(0);
         }
         _refrescarAreaSiAuto();
       });
+      final extra = fix.altitudeMsnm != null
+          ? ' ${fix.detalle}'
+          : ' ${fix.detalle} (sin altitud; puedes editarla arriba)';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              'Punto ${_puntos.length} capturado (precisión ±${pos.accuracy.toStringAsFixed(0)} m)')));
+          content: Text('Punto ${_puntos.length} capturado$extra')));
+    } on GpsCaptureException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

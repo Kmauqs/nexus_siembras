@@ -20,16 +20,19 @@ class SuppliersScreen extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(children: [
-                FilledButton.icon(
-                  onPressed: () => _openEditor(context, ref, null),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Nuevo proveedor'),
-                ),
-                const SizedBox(width: 8),
-                ExportButtons(
-                    onExport: (fmt) => _exportar(context, ref, fmt)),
-              ]),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(children: [
+                  FilledButton.icon(
+                    onPressed: () => _openEditor(context, ref, null),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Nuevo proveedor'),
+                  ),
+                  const SizedBox(width: 8),
+                  ExportButtons(
+                      onExport: (fmt) => _exportar(context, ref, fmt)),
+                ]),
+              ),
             ),
             Expanded(
               child: provs.isEmpty

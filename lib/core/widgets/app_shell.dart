@@ -7,7 +7,8 @@ import '../navigation/app_nav.dart';
 import '../../state/auth_state.dart';
 import '../../state/data_state.dart';
 
-/// Scaffold reutilizable con AppBar (Volver + Inicio + menú), body y drawer.
+/// Scaffold reutilizable: AppBar con título a la izquierda + menú;
+/// Volver / Inicio / Sync como botones flotantes al alcance del pulgar.
 class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
@@ -22,62 +23,34 @@ class AppShell extends StatelessWidget {
   final Widget child;
   final List<Widget>? actions;
   final Widget? floatingActionButton;
-  /// Widget opcional anclado al pie de la pantalla (por debajo del scroll).
+  /// Widget opcional anclado al pie (debajo de la barra de navegación).
   final Widget? bottomBar;
 
   @override
   Widget build(BuildContext context) {
     final canPop = context.canPop();
     final atHome = AppNav.isHome(context);
-    // Volver visible si hay historial o si llegamos por `go` a una ruta
-    // distinta de Inicio (antes el atrás del sistema salía de la app).
     final showBack = canPop || !atHome;
-    // En Inicio sin historial: Inicio + Asistente. Con Volver: Volver + Inicio
-    // (el asistente sigue en el menú lateral).
-    final showWizardShortcut = atHome && !canPop;
 
     return PopScope(
       canPop: canPop || atHome,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        // Sin historial y fuera de Inicio → ir al Dashboard (no salir).
         AppNav.home(context);
       },
       child: Scaffold(
         appBar: AppBar(
-          leadingWidth: 96,
-          leading: Row(children: [
-            if (showBack)
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                tooltip: context.t('menuBack'),
-                onPressed: () => AppNav.back(context),
-              )
-            else
-              IconButton(
-                icon: const Icon(Icons.home),
-                tooltip: context.t('menuHome'),
-                onPressed: () => AppNav.home(context),
-              ),
-            if (showBack)
-              IconButton(
-                icon: const Icon(Icons.home),
-                tooltip: context.t('menuHome'),
-                onPressed: () => AppNav.home(context),
-              )
-            else if (showWizardShortcut)
-              IconButton(
-                icon: const Icon(Icons.assistant_outlined),
-                tooltip: context.t('menuWizard'),
-                onPressed: () => AppNav.open(context, '/wizard'),
-              ),
-          ]),
-          title: Text(title),
-          centerTitle: true,
+          automaticallyImplyLeading: false,
+          titleSpacing: 16,
+          centerTitle: false,
+          title: Text(
+            title,
+            maxLines: 2,
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
+          ),
           actions: [
             ...?actions,
-            const _SyncBadge(),
-            // Ícono ☰ manual — Flutter no lo agrega solo para endDrawer.
             Builder(
               builder: (ctx) => IconButton(
                 icon: const Icon(Icons.menu),
@@ -89,9 +62,202 @@ class AppShell extends StatelessWidget {
         ),
         endDrawer: const _MainDrawer(),
         body: child,
-        bottomNavigationBar: bottomBar,
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Selector u otros bars van arriba; la nav del pulgar queda al borde.
+            if (bottomBar != null) bottomBar!,
+            AppThumbNav(showBack: showBack),
+          ],
+        ),
         floatingActionButton: floatingActionButton,
       ),
+    );
+  }
+}
+
+/// Barra inferior con Volver, Inicio y Sincronizar (zona del pulgar).
+class AppThumbNav extends StatelessWidget {
+  const AppThumbNav({super.key, required this.showBack});
+
+  final bool showBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 8,
+      color: scheme.surface,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _ThumbNavButton(
+                icon: Icons.arrow_back,
+                label: context.t('menuBack'),
+                enabled: showBack,
+                onPressed: showBack ? () => AppNav.back(context) : null,
+              ),
+              _ThumbNavButton(
+                icon: Icons.home,
+                label: context.t('menuHome'),
+                onPressed: () => AppNav.home(context),
+              ),
+              const _SyncThumbButton(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThumbNavButton extends StatelessWidget {
+  const _ThumbNavButton({
+    required this.icon,
+    required this.label,
+    this.onPressed,
+    this.enabled = true,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final active = enabled && onPressed != null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton.small(
+          heroTag: 'thumb_$label',
+          tooltip: label,
+          backgroundColor:
+              active ? scheme.primary : scheme.surfaceContainerHighest,
+          foregroundColor:
+              active ? scheme.onPrimary : scheme.onSurface.withValues(alpha: 0.38),
+          elevation: active ? 3 : 0,
+          onPressed: onPressed,
+          child: Icon(icon),
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: 76,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              color: active
+                  ? scheme.onSurface
+                  : scheme.onSurface.withValues(alpha: 0.38),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Sync como botón de la barra inferior (misma lógica que el antiguo badge).
+class _SyncThumbButton extends ConsumerWidget {
+  const _SyncThumbButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final logged = ref.watch(isLoggedInProvider);
+    if (!logged) {
+      return _ThumbNavButton(
+        icon: Icons.cloud_outlined,
+        label: context.t('menuSync'),
+        onPressed: () => AppNav.open(context, '/auth'),
+      );
+    }
+
+    final async = ref.watch(pendingSyncCountProvider);
+    return async.when(
+      loading: () => _ThumbNavButton(
+        icon: Icons.cloud_queue,
+        label: context.t('menuSync'),
+        onPressed: () => AppNav.open(context, '/auth'),
+      ),
+      error: (_, __) => _ThumbNavButton(
+        icon: Icons.cloud_off,
+        label: context.t('menuSync'),
+        onPressed: () => AppNav.open(context, '/auth'),
+      ),
+      data: (n) {
+        final pending = n > 0;
+        final label = pending
+            ? context.t('syncPending', {'n': '$n'})
+            : context.t('syncOk');
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'thumb_sync',
+                  tooltip: label,
+                  backgroundColor:
+                      pending ? scheme.tertiary : scheme.primary,
+                  foregroundColor: scheme.onPrimary,
+                  elevation: 3,
+                  onPressed: () => AppNav.open(context, '/auth'),
+                  child: Icon(
+                    pending ? Icons.cloud_upload : Icons.cloud_done,
+                  ),
+                ),
+                if (pending)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade700,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints:
+                          const BoxConstraints(minWidth: 18, minHeight: 16),
+                      child: Text(
+                        n > 99 ? '99+' : '$n',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: 76,
+              child: Text(
+                context.t('menuSync'),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, color: scheme.onSurface),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -100,7 +266,6 @@ class _MainDrawer extends ConsumerWidget {
   const _MainDrawer();
 
   // Fase B4 (i18n): el 3.º elemento es la CLAVE ARB, no el literal.
-  // El texto se resuelve en build con `context.t(...)`.
   static const _items = [
     ('/',            Icons.home,          'menuHome'),
     ('/wizard',      Icons.assistant,     'menuWizard'),
@@ -159,7 +324,7 @@ class _MainDrawer extends ConsumerWidget {
                   leading: Icon(icon),
                   title: Text(context.t(claveArb)),
                   onTap: () {
-                    Navigator.of(context).pop(); // cierra el drawer
+                    Navigator.of(context).pop();
                     if (path == '/') {
                       AppNav.home(context);
                     } else {
@@ -183,8 +348,6 @@ class _MainDrawer extends ConsumerWidget {
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
                 const SizedBox(height: 4),
-                // Versión leída del pubspec.yaml en runtime (2026-07-20):
-                // se actualiza sola con cada release.
                 FutureBuilder<PackageInfo>(
                   future: PackageInfo.fromPlatform(),
                   builder: (_, snap) => Text(
@@ -198,64 +361,6 @@ class _MainDrawer extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Badge en el AppBar que muestra los cambios locales pendientes de subir
-/// a la nube. Solo se muestra si hay sesión activa. Tap → va a /auth para
-/// sincronizar.
-class _SyncBadge extends ConsumerWidget {
-  const _SyncBadge();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final logged = ref.watch(isLoggedInProvider);
-    if (!logged) return const SizedBox.shrink();
-    final async = ref.watch(pendingSyncCountProvider);
-    return async.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (n) {
-        if (n == 0) {
-          return IconButton(
-            icon: const Icon(Icons.cloud_done, color: Colors.white70),
-            tooltip: context.t('syncOk'),
-            onPressed: () => AppNav.open(context, '/auth'),
-          );
-        }
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.cloud_upload),
-              tooltip: context.t('syncPending', {'n': '$n'}),
-              onPressed: () => AppNav.open(context, '/auth'),
-            ),
-            Positioned(
-              right: 6,
-              top: 6,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 4, vertical: 1),
-                decoration: BoxDecoration(
-                  color: Colors.orange,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 14),
-                child: Text(
-                  n > 99 ? '99+' : '$n',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }

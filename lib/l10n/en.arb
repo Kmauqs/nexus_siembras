@@ -23,6 +23,7 @@
   "onbStart": "Start",
   "menuHome": "Home",
   "menuBack": "Back",
+  "menuSync": "Sync",
   "menuMap": "Map",
   "menuAdd": "Add crop",
   "menuCrops": "View crops",

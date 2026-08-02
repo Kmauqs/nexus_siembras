@@ -35,7 +35,13 @@ class InventoryScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
             ],
-            ExportButtons(onExport: (fmt) => _exportar(context, ref, fmt)),
+            Flexible(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ExportButtons(
+                    onExport: (fmt) => _exportar(context, ref, fmt)),
+              ),
+            ),
           ]),
           const SizedBox(height: 12),
           if (activos.isEmpty && agotados.isEmpty)

@@ -568,23 +568,56 @@ class _DayCell extends StatelessWidget {
                           ? Theme.of(context).colorScheme.primary
                           : Colors.grey)),
             ),
-            const SizedBox(height: 2),
-            for (var i = 0; i < events.length && i < 2; i++)
-              Container(
-                margin: const EdgeInsets.only(bottom: 1),
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                decoration: BoxDecoration(
-                  color: events[i].ejecutada ? AppThemes.colorOk : AppThemes.colorWarn,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: Text(events[i].descripcion,
-                    style: const TextStyle(fontSize: 8, color: Colors.white),
-                    overflow: TextOverflow.ellipsis),
+            // Recorta chips al alto disponible: evita BOTTOM OVERFLOWED
+            // cuando hay más actividades de las que caben en la celda.
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  const chipH = 13.0;
+                  const moreH = 11.0;
+                  var maxChips =
+                      (constraints.maxHeight / chipH).floor().clamp(0, 2);
+                  if (events.length > maxChips) {
+                    maxChips = ((constraints.maxHeight - moreH) / chipH)
+                        .floor()
+                        .clamp(0, 2);
+                  }
+                  final show = maxChips.clamp(0, events.length);
+                  final hidden = events.length - show;
+                  return ClipRect(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = 0; i < show; i++)
+                          Container(
+                            height: chipH - 1,
+                            margin: const EdgeInsets.only(bottom: 1),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 2),
+                            alignment: Alignment.centerLeft,
+                            decoration: BoxDecoration(
+                              color: events[i].ejecutada
+                                  ? AppThemes.colorOk
+                                  : AppThemes.colorWarn,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: Text(events[i].descripcion,
+                                style: const TextStyle(
+                                    fontSize: 8, color: Colors.white),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                        if (hidden > 0)
+                          Text('+$hidden',
+                              style: const TextStyle(
+                                  fontSize: 8, color: Colors.grey),
+                              textAlign: TextAlign.center),
+                      ],
+                    ),
+                  );
+                },
               ),
-            if (events.length > 2)
-              Text('+${events.length - 2}',
-                  style: const TextStyle(fontSize: 8, color: Colors.grey),
-                  textAlign: TextAlign.center),
+            ),
           ],
         ),
       ),

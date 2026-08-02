@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
+import '../../core/location/gps_capture.dart';
 import '../../core/navigation/app_nav.dart';
 import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
@@ -490,46 +490,28 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
   Future<void> _obtainerGnss() async {
     setState(() => _obtainingGnss = true);
     try {
-      // Verifica que el servicio esté activo
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Activa el servicio de ubicación del sistema')));
-        return;
-      }
-      // Permisos
-      var perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        perm = await Geolocator.requestPermission();
-      }
-      if (perm == LocationPermission.denied ||
-          perm == LocationPermission.deniedForever) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Permiso de ubicación denegado')));
-        return;
-      }
-      final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 15),
-      );
+      final fix = await capturarGps();
       if (!mounted) return;
       setState(() {
-        _latCtrl.text = pos.latitude.toStringAsFixed(6);
-        _lngCtrl.text = pos.longitude.toStringAsFixed(6);
-        if (!pos.altitude.isNaN) {
-          _altCtrl.text = pos.altitude.toStringAsFixed(0);
+        _latCtrl.text = fix.latitude.toStringAsFixed(6);
+        _lngCtrl.text = fix.longitude.toStringAsFixed(6);
+        if (fix.altitudeMsnm != null) {
+          _altCtrl.text = fix.altitudeMsnm!.toStringAsFixed(0);
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Coordenadas capturadas '
-              '(precisión ±${pos.accuracy.toStringAsFixed(0)} m'
-              '${!pos.altitude.isNaN ? " · alt ${pos.altitude.toStringAsFixed(0)} msnm" : ""})')));
+      final msg = fix.altitudeMsnm != null
+          ? 'Coordenadas capturadas ${fix.detalle}'
+          : 'Coordenadas capturadas ${fix.detalle}. '
+              'No se obtuvo altitud; introdúcela manualmente.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } on GpsCaptureException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('No se pudo obtener GNSS: $e — puedes ingresar manualmente')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudo obtener GPS: $e')));
     } finally {
       if (mounted) setState(() => _obtainingGnss = false);
     }

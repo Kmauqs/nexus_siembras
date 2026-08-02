@@ -572,28 +572,31 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Row(children: [
-              OutlinedButton.icon(
-                onPressed: lineas.isEmpty ? null : _verLogsCompletos,
-                icon: const Icon(Icons.open_in_full, size: 16),
-                label: const Text('Ver todo'),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: _compartirLogs,
-                icon: const Icon(Icons.share, size: 16),
-                label: const Text('Compartir'),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: _limpiarCacheYLogs,
-                style:
-                    TextButton.styleFrom(foregroundColor: Colors.red),
-                icon: const Icon(Icons.cleaning_services_outlined,
-                    size: 16),
-                label: const Text('Limpiar caché y logs'),
-              ),
-            ]),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: lineas.isEmpty ? null : _verLogsCompletos,
+                  icon: const Icon(Icons.open_in_full, size: 16),
+                  label: const Text('Ver todo'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _compartirLogs,
+                  icon: const Icon(Icons.share, size: 16),
+                  label: const Text('Compartir'),
+                ),
+                TextButton.icon(
+                  onPressed: _limpiarCacheYLogs,
+                  style:
+                      TextButton.styleFrom(foregroundColor: Colors.red),
+                  icon: const Icon(Icons.cleaning_services_outlined,
+                      size: 16),
+                  label: const Text('Limpiar caché y logs'),
+                ),
+              ],
+            ),
           ],
         ),
       ),

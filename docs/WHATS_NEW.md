@@ -1,8 +1,22 @@
 # NEXUS Siembras — Notas de versión (What's new)
 
 Texto listo para Play Store / comunicación de release.  
-**Última generación:** 2026-07-31 · **Versión:** 0.2.6  
-**Versión anterior documentada:** 0.2.2 (2026-07-25)
+**Última generación:** 2026-08-01 · **Versión:** 0.2.7  
+**Versión anterior documentada:** 0.2.6 (2026-07-31)
+
+---
+
+## Novedades (What's new) — v0.2.7
+
+**Navegación a una mano:** botón **Volver** además de Inicio; el atrás del sistema ya no sale de la app por error. Volver, Inicio y Sincronizar viven abajo (zona del pulgar); el título queda completo a la izquierda y el menú ☰ a la derecha.
+
+**GPS con altitud:** al pulsar obtener coordenadas se rellenan latitud, longitud y altitud en predios, lotes, cultivos, onboarding y patologías (con aviso si el sensor no entrega altitud).
+
+**Cronograma y pantallas:** el calendario ya no se desborda cuando un día tiene muchas actividades; se corrigen desbordes en Proveedores, Reportes e Inventario.
+
+**Patologías en el cronograma:** reportar, intervenir o marcar curada crea eventos visibles en Gantt, Calendario y Actividades.
+
+**Sync de variedades:** corrige el caso en que un cultivo sincronizado mostraba otra planta (p. ej. Tomate → Yuca) entre dispositivos.
 
 ---
 
@@ -56,18 +70,21 @@ Sigue funcionando **offline** con base de datos cifrada; sincroniza con la nube 
 
 ## Cambios y correcciones acumulados (post v0.2.2)
 
-Resumen técnico-usuario de mejoras incluidas en las versiones 0.2.5 y 0.2.6 (y parches de sync previos):
+Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.2.7:
 
 | Área | Qué se corrigió o mejoró |
 |------|--------------------------|
-| **Sync multi-usuario** | Propagación de cambios de rol de colaborador; políticas remotas que bloqueaban updates silenciosos; reconciliación tras «Reemplazar nube con local»; rescate «Resincronizar todo» en Cuenta; Gantt del colaborador alineado con tareas completadas; permisos de UI según rol (consultor solo lectura en cultivos/compras). |
-| **Predios compartidos** | Backfill e hidratación idempotente por rol; marcadores persistentes y reintento automático si falla la red; co-propietarios ya no generan shares invertidos en el listado de colaboradores. |
-| **Cultivos** | Variedades creadas por otra cuenta se reconocen al bajar (stub local); eventos del cronograma se actualizan al registrar tareas en otra fecha. |
+| **Navegación (0.2.7)** | Pila con `push` (`AppNav`); Volver + Inicio + Sync en barra inferior; título AppBar a la izquierda; PopScope evita salir al escritorio fuera de Inicio. |
+| **GPS (0.2.7)** | Helper `capturarGps()` unificado; rellena lat/lng/altitud y refina altitud vía stream si el primer fix no la trae. |
+| **UI (0.2.7)** | Overflows en Proveedores/Reportes/Inventario; celdas del calendario con recorte dinámico de chips. |
+| **Sync multi-usuario** | Propagación de cambios de rol; políticas remotas; reconciliación; «Resincronizar todo»; Gantt del colaborador; permisos de UI; soft-delete y patologías por cultivo. |
+| **Predios compartidos** | Backfill e hidratación; proveedores del equipo; co-propietarios sin shares invertidos. |
+| **Cultivos** | Variedades stub al bajar; resolución de planta por nombre (no por ID local); eventos al registrar tareas; patologías → eventos de cronograma. |
 | **Cola offline** | Borrados en la papelera se encolan y suben cuando vuelve la conexión. |
-| **Seguridad** | BD local cifrada (SQLCipher); fotos comunitarias sin EXIF/GPS; reportes de patología comunitarios solo vía vista anonimizada. |
-| **Exportaciones** | Reporte integral del Dashboard, CSV/PDF en cultivos/inventario/compras/proveedores, adjuntos de suelo y comprobantes de compra. |
-| **Asistente** | Guía paso a paso (10 pasos) accesible desde onboarding, menú y barra superior. |
-| **Migraciones Supabase** | `0011` autor en compras; `0012` proveedores compartidos; `0013` patologías por cultivo entre colaboradores. |
+| **Seguridad** | BD local cifrada (SQLCipher); fotos comunitarias sin EXIF/GPS; reportes comunitarios solo vía vista anonimizada. |
+| **Exportaciones** | Reporte integral, CSV/PDF, adjuntos y ZIP de compras. |
+| **Asistente** | Guía de 10 pasos; mismo AppShell/navegación inferior. |
+| **Migraciones Supabase** | `0011` autor en compras; `0012` proveedores compartidos; `0013` patologías por cultivo. |
 
 ---
 

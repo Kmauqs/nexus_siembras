@@ -6,8 +6,8 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 -   **Desarrollador:** NEXUS CREATIO
 -   **Package Android:** `com.nexuscreatio.nexus_siembras`
--   **Versión:** 0.2.6 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
--   **Fase actual:** Fase 3 completa + banco comunitario de variedades, colaboración multi-propietario reforzada, trazabilidad de compras y paquete ZIP de comprobantes (2026-07-30). Próximo: web de consulta (drift_wasm).
+-   **Versión:** 0.2.7 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
+-   **Fase actual:** Fase 3 completa + banco comunitario, colaboración multi-propietario, navegación a una mano y captura GPS unificada (2026-08-01). Próximo: web de consulta (drift_wasm).
 
 ## Alcance funcional
 
@@ -38,14 +38,15 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 ![](media/341f20182c9d9289c07c6ce031fc27ad.png)
 
--   **Onboarding con geolocalización:** "Obtener GPS" llena coordenadas/altitud y detecta país/región/municipio por geocodificación inversa (Nominatim). Paso **Ubicación omitible**; fix Android de BD cifrada tras reinstalar (SQLCipher + exclusión del `.sqlite` del backup en la nube).
+-   **Onboarding con geolocalización:** "Obtener GPS" llena **latitud, longitud y altitud** (helper unificado `capturarGps`) y detecta país/región/municipio por geocodificación inversa (Nominatim). Paso **Ubicación omitible**; fix Android de BD cifrada tras reinstalar (SQLCipher + exclusión del `.sqlite` del backup en la nube).
 
 ![](media/8596e117baad488c2af955a32dcf4a4d.png) ![](media/b2800dae7eb534d8b7258d7d349a6a69.png)
 
--   **Asistente paso a paso** (10 pasos): guía la configuración inicial — predio → lote → condiciones → análisis de suelo → proveedores → variedades → compra → inventario → cultivos → mapa. Con avance/retroceso sin perder progreso (el estado se deriva de la BD) y pasos obligatorios validados. Se ofrece tras el onboarding y queda accesible desde el menú y la barra superior.
+-   **Asistente paso a paso** (10 pasos): guía la configuración inicial — predio → lote → condiciones → análisis de suelo → proveedores → variedades → compra → inventario → cultivos → mapa. Con avance/retroceso sin perder progreso (el estado se deriva de la BD) y pasos obligatorios validados. Se ofrece tras el onboarding y queda accesible desde el menú; usa el mismo `AppShell` (título, menú y barra inferior Volver/Inicio/Sync).
 
 ![](media/97ffea595561fc4b72290e5a4cb49aae.png)
 
+-   **Navegación a una mano (0.2.7):** `AppNav` mantiene pila (`push`) para **Volver**; **Inicio** limpia el historial. AppBar con título a la izquierda y menú ☰ a la derecha; Volver / Inicio / Sincronizar en barra inferior al alcance del pulgar. El atrás del sistema fuera de Inicio vuelve al Dashboard en lugar de salir al escritorio.
 -   **Multi-usuario:** un mismo predio puede tener propietario + colaboradores con roles `trabajador` o `consultor`, con permisos diferenciados por RLS de Postgres. **Hidratación garantizada** de recursos compartidos en cada sync (condiciones, suelo, lotes, cultivos, inventario, compras para co-propietarios, eventos, tareas y **proveedores del equipo**). Los co-propietarios pueden crear cultivos y demás recursos editables; todo se sincroniza con el dueño del predio.
 
 ![](media/626c6089d5f3183a669a07ba7497070a.png)
@@ -83,11 +84,11 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 -   **Framework:** Flutter 3.22+ / Dart 3.4+
 -   **Estado:** Riverpod (`flutter_riverpod ^2`)
 -   **Router:** `go_router`
--   **BD local:** Drift 2.x sobre **SQLCipher** (schema **v19**, cifrada) — offline-first. Clave en `flutter_secure_storage` (Keystore/Keychain/DPAPI). Requiere OpenSSL para compilar en Windows.
+-   **BD local:** Drift 2.x sobre **SQLCipher** (schema **v20**, cifrada) — offline-first. Clave en `flutter_secure_storage` (Keystore/Keychain/DPAPI). Requiere OpenSSL para compilar en Windows.
 -   **Sync remoto:** Supabase (Postgres + Auth + Storage + RLS) — pull paginado, push por lotes, cursor con tiempo del servidor, verificación de `schema_meta`.
 -   **Auth:** email/password vía `supabase_flutter ^2.16` (publishable key)
 -   **Permisos:** `permission_handler ^11.3`
--   **GNSS:** `geolocator` (captura puntual en formularios + stream en tiempo real en Mapa) · **Geocodificación inversa:** Nominatim (OSM)
+-   **GNSS:** `geolocator` vía `core/location/gps_capture.dart` (lat/lng/altitud en formularios + stream en tiempo real en Mapa) · **Geocodificación inversa:** Nominatim (OSM)
 -   **Mapa:** `flutter_map` + `latlong2` (capas, rotación, brújula, seguimiento GPS)
 -   **Notificaciones:** `flutter_local_notifications`
 -   **Reportes:** `pdf` + `printing` + `csv` + `archive` (ZIP de compras)
@@ -188,12 +189,14 @@ nexus_siembras/
 │   ├── core/
 │   │   ├── log.dart        # Logger central (reemplaza print)
 │   │   ├── models/         # CicloAbono (ciclos de fertilización JSON)
+│   │   ├── location/       # capturarGps() — lat/lng/altitud unificado
+│   │   ├── navigation/     # AppNav (push/back/home)
 │   │   ├── theme/          # Material y accesible
 │   │   ├── units/          # Catálogo y conversiones de unidades
-│   │   ├── widgets/        # AppShell, SyncBadge, UnitDropdown, DuracionField, AutorLabel…
+│   │   ├── widgets/        # AppShell, AppThumbNav, UnitDropdown, DuracionField, AutorLabel…
 │   │   └── reports/        # exportCsv/exportPdf, ZIP compras, reporte integral, export_helpers
 │   ├── data/
-│   │   ├── database/       # Schema Drift (v19), migraciones, conexión SQLCipher
+│   │   ├── database/       # Schema Drift (v20), migraciones, conexión SQLCipher
 │   │   ├── repositories/   # CultivoRepository, PlantaRepository…
 │   │   └── seed/           # Catálogo inicial (idempotente)
 │   ├── features/
@@ -320,6 +323,7 @@ La columna «Propietario» cubre tanto al **dueño del predio** como a los **col
 -   [x] **3u (2026-07-30)** — Sync co-propietario: cultivos, eventos, tareas e inventario creados por un colaborador con rol **propietario** se suben al remoto (antes solo pasaba el filtro de push para `trabajador`). **Proveedores compartidos**: migración `0012_proveedores_compartidos.sql` (RLS) + hidratación del directorio del equipo (dueño + co-propietarios/trabajadores) en predios compartidos.
 -   [x] **3v (2026-07-30)** — Sync A→B fiable: soft-delete de cultivos verifica escritura remota (RLS) y aplica tombstone en el pull; mergers de cultivos no bumpean `lastPushedAt`. **Patologías por cultivo** sincronizadas entre colaboradores (Drift v20 + migración Postgres `0013_cultivo_patologias.sql`).
 -   [x] **3v-fix (2026-07-31)** — Migración v20 corregida: `ALTER TABLE` no acepta defaults no constantes en SQLite («Cannot add a column with non-constant default» al arrancar); `updated_at` se agrega con `DEFAULT 0` + backfill desde `created_at`, con guard por `PRAGMA table_info` para migraciones a medias. `_upsert` (ruta fila a fila) también verifica con `.select('id')` que el UPDATE remoto escribió — cierra el último hueco de "push silenciosamente bloqueado por RLS".
+-   [x] **3w (2026-08-01)** — Navegación a una mano y UX: `AppNav` (`push`/`back`/`home`); AppBar con título a la izquierda + menú; barra inferior Volver / Inicio / Sync (`AppThumbNav`); PopScope evita salir al escritorio fuera de Inicio. Overflows corregidos en Proveedores, Reportes, Inventario y celdas del calendario con muchas actividades. GPS unificado (`core/location/gps_capture.dart`) rellena lat/lng/altitud en predios, lotes, cultivos, onboarding y patologías. Patologías (reporte/intervención/cura) generan eventos de cronograma. Fix sync de planta por nombre (evita Tomate→Yuca entre dispositivos).
 -   [ ] **Futura** — Web de consulta y reportes (drift_wasm + adaptaciones para navegador).
 
 ## Notas de desarrollo

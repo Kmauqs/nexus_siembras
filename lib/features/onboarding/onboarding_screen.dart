@@ -3,14 +3,14 @@
 // Al completar: crea el predio inicial, guarda las preferencias, marca
 // `primera_ejecucion = false` y activa la app.
 
-import 'dart:async' show TimeoutException, unawaited;
+import 'dart:async' show unawaited;
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/location/gps_capture.dart';
 import '../../core/log.dart';
 import '../../core/theme/themes.dart';
 import '../../services/eppo_client.dart';
@@ -523,89 +523,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   /// Captura lat/lng/altitud vía GNSS del dispositivo y llena los campos.
-  ///
-  /// Estrategia en cascada para evitar timeouts en cold-start del GPS:
-  ///   1. Si hay `getLastKnownPosition` reciente (<10 min), la usamos
-  ///      inmediatamente y disparamos un refinamiento en background.
-  ///   2. Si no, pedimos posición con precisión `medium` (más rápida) con
-  ///      timeout de 30 s.
-  ///   3. Si eso también agota tiempo, caemos a `getLastKnownPosition` sin
-  ///      restricción de antigüedad y advertimos al usuario.
   Future<void> _obtenerCoordenadasGps() async {
     setState(() => _obtainingGnss = true);
     try {
-      final servicioActivo = await Geolocator.isLocationServiceEnabled();
-      if (!servicioActivo) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'Activa el GPS del dispositivo e inténtalo de nuevo')));
-        return;
-      }
-      var perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        perm = await Geolocator.requestPermission();
-      }
-      if (perm == LocationPermission.denied ||
-          perm == LocationPermission.deniedForever) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Permiso de ubicación denegado')));
-        return;
-      }
-      Position? pos;
-      String? aviso;
-      try {
-        pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-          timeLimit: const Duration(seconds: 30),
-        );
-      } catch (e) {
-        // Timeout u otro error del sensor: intentar fallback a la última
-        // posición conocida (puede estar cacheada por otras apps o por un
-        // fix anterior). No garantiza precisión ni recencia.
-        try {
-          pos = await Geolocator.getLastKnownPosition();
-        } catch (_) {}
-        if (pos != null) {
-          aviso = 'Usando última posición conocida — verifica precisión.';
-        } else {
-          rethrow;
-        }
-      }
-      // Nota: el análisis de flujo garantiza pos != null aquí (la rama de
-      // fallback hace rethrow si getLastKnownPosition tampoco devolvió).
+      final fix = await capturarGps(timeLimit: const Duration(seconds: 30));
       if (!mounted) return;
       setState(() {
-        _lat.text = pos!.latitude.toStringAsFixed(6);
-        _lng.text = pos.longitude.toStringAsFixed(6);
-        if (!pos.altitude.isNaN && pos.altitude != 0) {
-          _alt.text = pos.altitude.toStringAsFixed(0);
+        _lat.text = fix.latitude.toStringAsFixed(6);
+        _lng.text = fix.longitude.toStringAsFixed(6);
+        if (fix.altitudeMsnm != null) {
+          _alt.text = fix.altitudeMsnm!.toStringAsFixed(0);
         }
       });
-      // Mejora 2026-07-19: autollenar país/región/municipio desde las
-      // coordenadas (fire-and-forget; muestra su propio estado inline).
       unawaited(
-          _detectarGeografiaDesdeGps(pos.latitude, pos.longitude));
-      final precisionTxt = pos.accuracy.isNaN
-          ? ''
-          : ' (±${pos.accuracy.toStringAsFixed(0)} m)';
-      final altTxt = (!pos.altitude.isNaN && pos.altitude != 0)
-          ? ' · alt ${pos.altitude.toStringAsFixed(0)} msnm'
-          : '';
+          _detectarGeografiaDesdeGps(fix.latitude, fix.longitude));
+      final base = fix.fromCache
+          ? 'Usando última posición conocida — verifica precisión'
+          : 'Coordenadas capturadas';
+      final msg = fix.altitudeMsnm != null
+          ? '$base ${fix.detalle}'
+          : '$base ${fix.detalle}. No se obtuvo altitud; introdúcela manualmente.';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            (aviso ?? 'Coordenadas capturadas') + precisionTxt + altTxt),
-        backgroundColor: aviso == null ? Colors.green : Colors.orange,
+        content: Text(msg),
+        backgroundColor: fix.fromCache ? Colors.orange : Colors.green,
+      ));
+    } on GpsCaptureException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.message),
+        duration: const Duration(seconds: 5),
       ));
     } catch (e) {
       if (!mounted) return;
-      final mensaje = e is TimeoutException
-          ? 'El GPS tardó demasiado. Muévete al exterior, verifica que el '
-              'GPS del sistema esté encendido y vuelve a intentar.'
-          : 'No se pudo obtener la ubicación: $e';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(mensaje),
+        content: Text('No se pudo obtener la ubicación: $e'),
         duration: const Duration(seconds: 5),
       ));
     } finally {
