@@ -1,5 +1,5 @@
 # Backlog de tareas pendientes — NEXUS Siembras
-**Actualizado:** 2026-07-20
+**Actualizado:** 2026-08-02
 
 ## A. Operativos inmediatos (no requieren código)
 
@@ -8,7 +8,7 @@
 | A1 | Supabase → Authentication → Settings: longitud mínima de contraseña **8** y activar *Leaked password protection* | Auditoría S7 (paso manual 5, sin confirmar) |
 | ~~A2~~ | ~~Borrar el respaldo sin cifrar `nexus_siembras.sqlite.pre-cifrado.bak` (Documentos de la app) tras verificar que los datos están intactos~~ | Auditoría S4 (paso manual 7, sin confirmar) |
 | ~~A3~~ | ~~Probar en Windows **y** Android lo entregado en 3j/3k: comprobante de compra (PDF/foto y carpeta `soportes/{año}/`), exports CSV/PDF de las 5 pantallas, reporte integral del Dashboard (verificar gráfico circular en el PDF), PDF de laboratorio en análisis de suelo, y el Asistente paso a paso completo (incluida la oferta tras un onboarding nuevo)~~ | Fases 3j/3k recién implementadas |
-| A4 | Re-ejecutar el plan E2E multi-usuario (`docs/PRUEBAS_MULTI_USUario_E2E.md`) — el sync cambió a lotes/paginado y conviene revalidar colaboradores con `schema_meta` v7 aplicado | Auditoría P1-P5 |
+| A4 | Re-ejecutar el plan E2E multi-usuario (`docs/PRUEBAS_MULTI_USUARIO_E2E.md`) — incluye §3.4 soft-delete/tombstone cultivo y schema_meta ≥ 11 | Auditoría P1-P5 + regresión 2026-08-02 |
 
 ## B. Desarrollo — funcionalidad pendiente
 
@@ -29,7 +29,7 @@
 |---|-------|-------|
 | C1 | Limpieza de `flutter analyze`: ~90 infos + 12 warnings preexistentes (`withOpacity`→`withValues`, `value`→`initialValue`, `prefer_const`, unused) | Cosmético, ~30 archivos |
 | C2 | Segunda revisión de código formal (code-review) de lo implementado en Fase 3 finalizada | Proyectada |
-| C3 | Ampliar tests: hoy solo 3 unitarios; faltan tests de widgets y del SyncService (mergers, LWW, batch) | — |
+| ~~C3~~ | ~~Ampliar tests: SyncService (mergers/LWW/batch) + widgets~~ — **COMPLETADO 2026-08-02**: `sync_policy.dart` + `test/sync_policy_test.dart`, `test/sync_service_test.dart` (merge/tombstone/cola), `test/widgets/core_widgets_test.dart`; `AppDatabase.forTesting` | ✔ |
 | ~~C4~~ | ~~Renovación del pin TLS de EPPO cuando rote el certificado (síntoma: Android falla, Windows no; correr `dart run tool/eppo_fingerprint.dart`)~~ **COMPLETADO 2026-07-20** | Recurrente, documentado |
 | C5 | Nueva migración remota ⇒ nuevo archivo en `supabase/migrations/` + subir `schema_meta.version` y `schemaRemotoRequerido` | Regla permanente S6 |
 
@@ -37,14 +37,13 @@
 
 | # | Tarea | Notas |
 |---|-------|-------|
-| ~~D1~~ | ~~Instalador Windows con Inno Setup + subir `version:` en pubspec por release~~ **COMPLETADO 2026-07-25** | Guía según instrucciones del 2026-07-20 |
+| ~~D1~~ | ~~Instalador Windows con Inno Setup + subir `version:` en pubspec por release~~ **COMPLETADO 2026-07-25** (fix runtime `InitializeSetup` 2026-08-02: validar Release solo en compilación) | Guía según instrucciones del 2026-07-20 |
 | D2 | Android release: keystore de firma propio, `flutter build appbundle`, y eventualmente Play Store (política de datos, privacidad) | Hoy se usa firma debug |
 | D3 | Branding definitivo: fuentes NexusSans (comentadas en pubspec), íconos por plataforma, borrar `flutter_01.png` (0 bytes) y `schema_3e_v*.sql` obsoletos al consolidar | — |
 
 ## Sugerencia de orden
 
-1. **A1-A3** (minutos, cierran la auditoría y validan lo nuevo).
-2. **A4** (media jornada, asegura el multi-usuario).
-3. **B1** (banco comunitario — siguiente fase de producto).
-4. **D1-D2** cuando haya usuarios reales esperando instalar.
-5. B3 (freemium) cuando el producto esté estable — define el modelo de negocio.
+1. **A1** y **A4** (auth settings + E2E actualizado con §3.4 tombstones).
+2. **D2** cuando haya usuarios reales esperando instalar.
+3. B3 (freemium) cuando el producto esté estable — define el modelo de negocio.
+4. B4 / B6 de forma incremental.

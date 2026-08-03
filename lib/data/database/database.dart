@@ -737,7 +737,16 @@ class VariedadesComunitariasCache extends Table {
   Configs,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(openConnection());
+  AppDatabase()
+      : _skipSeed = false,
+        super(openConnection());
+
+  /// BD en memoria (o executor inyectado) sin catálogo seed — solo tests.
+  AppDatabase.forTesting(QueryExecutor executor)
+      : _skipSeed = true,
+        super(executor);
+
+  final bool _skipSeed;
 
   @override
   int get schemaVersion => 20;
@@ -746,7 +755,9 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
-          await SeedService(this).run();
+          if (!_skipSeed) {
+            await SeedService(this).run();
+          }
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
