@@ -18,11 +18,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' show min;
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/log.dart';
 import '../data/database/database.dart';
 import '../data/repositories/cultivo_repository.dart';
 import 'supabase_service.dart';
+import 'sync_policy.dart';
 
 class SyncResult {
   final int pushed;
@@ -64,7 +66,8 @@ class SyncService {
   SupabaseClient get _sb => Supabase.instance.client;
 
   /// Tamaño de lote para upserts remotos (auditoría P2).
-  static const int _batchSize = 200;
+  /// Ver [kSyncBatchSize] en `sync_policy.dart`.
+  static const int _batchSize = kSyncBatchSize;
 
   /// Versión mínima de esquema remoto requerida por este cliente
   /// (auditoría S6). Se compara contra `public.schema_meta.version`.
@@ -81,6 +84,16 @@ class SyncService {
   /// Cache de permisos de edición por predio durante un sync (auditoría P1).
   final Map<int, bool> _permisoCache = {};
   final Map<int, bool> _propietarioCache = {};
+
+  /// Expuesto solo para tests: merge LWW/tombstone de un cultivo remoto.
+  @visibleForTesting
+  Future<void> mergeCultivoForTest(Map<String, dynamic> row) =>
+      _mergeCultivo(row);
+
+  /// Expuesto solo para tests: soft-delete local de cultivo + hijos.
+  @visibleForTesting
+  Future<void> tombstoneCultivoLocalForTest(int localId) =>
+      _tombstoneCultivoLocal(localId, motivo: 'test');
 
   /// Borra permanentemente una fila remota dado su ID local + tabla.
   /// Se usa cuando el usuario vacía la papelera o borra definitivamente
@@ -284,9 +297,10 @@ class SyncService {
   /// Igual que `_debeSubir` pero contra un mapa precargado (auditoría P1).
   bool _debeSubirEnMapa(
       Map<int, SyncMapping> mappings, int localId, DateTime updatedAt) {
-    final m = mappings[localId];
-    if (m == null) return true; // nunca subido
-    return updatedAt.isAfter(m.lastPushedAt);
+    return debeSubirFila(
+      lastPushedAt: mappings[localId]?.lastPushedAt,
+      updatedAt: updatedAt,
+    );
   }
 
   /// Reinicia el estado de pull/push y ejecuta un sync completo.
@@ -477,12 +491,12 @@ class SyncService {
   Future<int> _pushBatch(String tabla, List<_FilaPush> filas) async {
     if (filas.isEmpty) return 0;
     var count = 0;
-    final nuevos = filas.where((f) => f.remoteId == null).toList();
-    final existentes = filas.where((f) => f.remoteId != null).toList();
+    final partes = particionarNuevosYExistentes(filas, (f) => f.remoteId);
+    final nuevos = partes.nuevos;
+    final existentes = partes.existentes;
 
     // 1) NUEVOS — insert idempotente por (owner_id, cliente_id).
-    for (var i = 0; i < nuevos.length; i += _batchSize) {
-      final chunk = nuevos.sublist(i, min(i + _batchSize, nuevos.length));
+    for (final chunk in particionarEnLotes(nuevos, _batchSize)) {
       try {
         final res = await _sb
             .from(tabla)
@@ -516,9 +530,7 @@ class SyncService {
     // Sin eso, un upsert bloqueado por RLS "tiene éxito" en HTTP y
     // bumpeábamos lastPushedAt → el soft-delete nunca se reintentaba
     // (cultivo borrado por co-propietario no llegaba al remoto).
-    for (var i = 0; i < existentes.length; i += _batchSize) {
-      final chunk =
-          existentes.sublist(i, min(i + _batchSize, existentes.length));
+    for (final chunk in particionarEnLotes(existentes, _batchSize)) {
       try {
         final payloads = [
           for (final f in chunk)
@@ -2270,10 +2282,13 @@ class SyncService {
         // Tombstone remota gana: si el remoto está borrado y lo local no,
         // aplicar el borrado aunque el reloj local diga "más nuevo"
         // (evita que B ignore el soft-delete de A por skew de reloj).
-        final tombstoneGana =
-            remoteDeleted != null && localExistente.deletedAt == null;
-        if (!tombstoneGana &&
-            localExistente.updatedAt.isAfter(updatedRemote)) {
+        if (!debeAplicarMergeRemoto(
+          localUpdatedAt: localExistente.updatedAt,
+          remoteUpdatedAt: updatedRemote,
+          remoteDeletedAt: remoteDeleted,
+          localDeletedAt: localExistente.deletedAt,
+          tombstoneRemotoGana: true,
+        )) {
           // LWW omite el resto, pero aún corrige planta si el nombre
           // remoto no coincide (recuperación del bug planta_id_local).
           await _aplicarPlantaPorNombreSiDifiere(
@@ -2486,9 +2501,13 @@ class SyncService {
           .getSingleOrNull();
       if (local != null) {
         final remoteDeleted = _parseDateOrNull(row['deleted_at']);
-        final tombstoneGana =
-            remoteDeleted != null && local.deletedAt == null;
-        if (!tombstoneGana && local.updatedAt.isAfter(updatedRemote)) {
+        if (!debeAplicarMergeRemoto(
+          localUpdatedAt: local.updatedAt,
+          remoteUpdatedAt: updatedRemote,
+          remoteDeletedAt: remoteDeleted,
+          localDeletedAt: local.deletedAt,
+          tombstoneRemotoGana: true,
+        )) {
           return;
         }
       }

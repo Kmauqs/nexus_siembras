@@ -1,28 +1,44 @@
-# NEXUS Siembras — Pruebas end-to-end multi-usuario (Fase 3e-9)
+# NEXUS Siembras — Pruebas end-to-end multi-usuario (Fase 3e-9+)
 
 Plan de verificación completa del ciclo multi-usuario introducido en las
-fases 3e-1 hasta 3e-8. Ejecutar en orden con **dos cuentas Supabase**:
+fases 3e-1 hasta 3e-8, ampliado con sync por lotes/paginado, soft-delete
+de cultivos (tombstones), eliminar cuenta y build **0.2.7+**.
+
+Ejecutar en orden con **dos cuentas Supabase**:
 
 - **Cuenta A** — propietario del predio (rol autoritativo).
 - **Cuenta B** — colaborador (rol trabajador por defecto).
 
-Se recomienda usar dos dispositivos (o dispositivo + navegador) para
-observar la propagación en tiempo real.
+Se recomienda usar dos dispositivos (o dispositivo + emulador) para
+observar la propagación. Tras cada cambio relevante, sincronizar en el
+dispositivo origen y luego en el peer.
+
+**Versión mínima de app:** 0.2.7 (incluye soft-delete remoto al vaciar
+papelera y verificación de tombstones de cultivo tras el pull).
+
+**Esquema remoto:** `schema_meta.version` ≥ **11** (alineado con
+`SyncService.schemaRemotoRequerido`). Aplicar todas las migraciones en
+`supabase/migrations/` en orden.
 
 ---
 
 ## Precondiciones
 
-- [ ] Ambas cuentas están creadas en Supabase Auth y tienen sus emails
+- [ ] Ambas cuentas fueron creadas en Supabase Auth y tienen sus emails
       verificados.
-- [ ] La app está compilada con la última versión (`flutter build apk`
-      + `dart run build_runner build --delete-conflicting-outputs`).
-- [ ] En Supabase ejecutados en orden todos los `schema*.sql`:
-      base → 3e → 3e_v2 → 3e_v3 → 3e_v4 → 3g.
+- [ ] La app está compilada con la última versión (`flutter build apk` /
+      `flutter build windows --release` +
+      `dart run build_runner build --delete-conflicting-outputs` si hubo
+      cambios Drift).
+- [ ] En Supabase están aplicadas las migraciones hasta la que sube
+      `schema_meta` a **11** (incl. eliminar cuenta si se va a probar
+      Bloque 10).
 - [ ] Ambas cuentas tienen `consentimientoPatologias = true` (Settings
       → Comunidad NEXUS) para poder probar la contribución opt-in.
 - [ ] Al menos una cuenta tiene el token EPPO configurado (Settings →
       EPPO Global Database) para probar el enriquecimiento remoto.
+- [ ] (Opcional) Tests automatizados verdes:
+      `flutter test test/sync_policy_test.dart test/sync_service_test.dart`.
 
 ---
 
@@ -43,6 +59,8 @@ En un dispositivo limpio (reset total previo):
 - [ ] Consentimiento activado → **Comenzar**.
 - [ ] Dashboard aparece con ☁️✓ activa (sesión persistida). Card "Cuenta"
       muestra tu email en verde, sin pedir re-login.
+- [ ] (0.2.7) Nav inferior: Volver / Inicio / Sync accesibles; el título
+      de pantalla no queda tapado.
 
 ### 1.2 Onboarding con "sin predio propio" (cuenta B)
 
@@ -121,9 +139,11 @@ Devuelve rol de trabajador a B para continuar.
 
 ### 3.1 Cultivos
 
-- [ ] A crea cultivo "Frijol Cargamanto" con GNSS capturado.
+- [ ] A crea cultivo "Frijol Cargamanto" con GNSS capturado (lat/lng/alt).
 - [ ] A sincroniza → B sincroniza.
 - [ ] B ve el cultivo con el mismo GNSS y ubicación en el mapa.
+- [ ] La **variedad** en B coincide con A (no se intercambia por otro
+      `planta_id` local).
 - [ ] B registra una tarea de "Abono 1" con HH=2, insumos.
 - [ ] B sincroniza → A sincroniza.
 - [ ] A ve la tarea en el Cronograma → Actividades con:
@@ -146,6 +166,45 @@ Devuelve rol de trabajador a B para continuar.
 - [ ] En A, ejecuta el mantenimiento "Reemplazar nube con local".
 - [ ] B sincroniza.
 - [ ] B ve los mismos datos, sin duplicados.
+
+### 3.4 Soft-delete / tombstone de cultivo (regresión 2026-08-02)
+
+Escenario que fallaba cuando vaciar papelera hacía DELETE físico remoto
+(B no recibía tombstone y fallaba al subir `eventos_cultivo` con FK 23503).
+
+En **cuenta A**:
+
+- [ ] Crea cultivo "Tomate chonto" (o usa uno existente visible en B).
+- [ ] A sincroniza → B sincroniza → ambos ven el cultivo.
+- [ ] A elimina el cultivo (papelera / soft-delete) y **sincroniza**.
+- [ ] (Si aplica) A vacía la papelera y sincroniza de nuevo.
+
+En **cuenta B**:
+
+- [ ] Sincroniza **sin** errores de fila (no FK `cultivo_id` / 23503).
+- [ ] El cultivo **desaparece** de la lista activa (o queda solo en
+      papelera local si aún no se vació; no debe "revivir" como vivo).
+- [ ] Si B tenía eventos locales pendientes de ese cultivo, **no** se
+      re-suben contra un remoto inexistente.
+
+Verificación remota opcional (SQL Editor):
+
+```sql
+SELECT id, nombre_planta, deleted_at, updated_at
+FROM public.cultivos
+WHERE nombre_planta ILIKE '%tomate chonto%'
+ORDER BY updated_at DESC
+LIMIT 5;
+```
+
+Esperado: fila con `deleted_at IS NOT NULL` (no borrada físicamente).
+
+### 3.5 Sync por lotes bajo volumen
+
+- [ ] Con varios cultivos/eventos pendientes, un sync completo termina
+      sin abortar por timeout; snackbar muestra pushed/pulled coherentes.
+- [ ] Si hay filas con error RLS, el sync **no** aborta entero
+      (`errores` > 0 en log) y el resto sí sube.
 
 ---
 
@@ -176,7 +235,7 @@ En **cuenta B**:
 - [ ] Selecciona patología del catálogo (verifica que aparecen las
       asociadas a la variedad primero).
 - [ ] Toma foto con cámara.
-- [ ] Pulsa "Usar GNSS" → coordenadas capturadas.
+- [ ] Pulsa "Usar GNSS" → coordenadas capturadas (lat/lng; alt si hay).
 - [ ] Activa "Compartir a comunidad NEXUS".
 - [ ] Guardar → snackbar "compartido con la comunidad".
 
@@ -197,6 +256,7 @@ En **cuenta B**:
 - [ ] A marca la patología como "Curada" desde su detalle.
 - [ ] Sincroniza.
 - [ ] B ve el StatusDot del cultivo en verde de nuevo.
+- [ ] La **variedad del cultivo no cambia** en B tras curar/sync.
 
 ---
 
@@ -283,6 +343,27 @@ Ejecutar el script `supabase/verificacion_e2e.sql` en el SQL Editor de
 Supabase para confirmar el estado esperado. Cada bloque tiene comentarios
 con lo que debería retornar.
 
+Además:
+
+- [ ] `schema_meta.version` ≥ 11.
+- [ ] No hay cultivos "vivos" (`deleted_at IS NULL`) que B siga
+      mostrando tras un soft-delete sincronizado desde A (ver 3.4).
+
+---
+
+## Bloque 10 — Eliminar cuenta (0.2.7)
+
+Usar una **cuenta desechable** (no A/B de producción de pruebas).
+
+- [ ] Cuenta → Eliminar cuenta → confirma.
+- [ ] La sesión se cierra; no se puede volver a iniciar con esa
+      contraseña (usuario Auth eliminado o deshabilitado según RPC).
+- [ ] Datos privados del usuario desaparecen del remoto; variedades
+      comunitarias aportadas y reportes de patología comunitarios se
+      preservan / anonimizan según diseño de `eliminar_mi_cuenta`.
+- [ ] Diálogo de wipe local: si se acepta, BD local queda limpia al
+      reabrir.
+
 ---
 
 ## Criterios de aceptación general
@@ -292,11 +373,13 @@ Al terminar todos los bloques:
 - [ ] Ambas cuentas ven la misma información sincronizada, con
       permisos correctos por rol.
 - [ ] Ninguna acción de una cuenta afecta datos de otra sin permiso.
+- [ ] Soft-delete de cultivo en A se refleja en B sin errores FK.
 - [ ] Los reportes de patologías con GNSS son visibles en el mapa de
       ambas cuentas.
 - [ ] Los tratamientos filtrados por país aparecen correctamente.
 - [ ] No hay duplicados en ninguna tabla local ni remota.
 - [ ] La sesión persiste tras hot restart en ambas cuentas.
+- [ ] La variedad de un cultivo no cambia de identidad solo por sync.
 
 **Firma del tester:** _____________________  **Fecha:** _____________
 
@@ -307,4 +390,14 @@ Al terminar todos los bloques:
 Si alguna prueba falla, adjuntar:
 1. Screenshot del error o del estado inconsistente.
 2. Salida del script `verificacion_e2e.sql` para el bloque relevante.
-3. Log de `flutter run` filtrado por prefijos relevantes.
+3. Log exportado desde la app (`nexus_logs_*.txt`) filtrado por
+   `[sync]` / FK / `23503`.
+4. Commit o build number (`0.2.7` o superior con fix de tombstones).
+
+### Cobertura automatizada relacionada
+
+| Área | Archivo |
+|------|---------|
+| LWW / push / batch | `test/sync_policy_test.dart` |
+| Merge cultivo + cola offline | `test/sync_service_test.dart` |
+| Widgets base | `test/widgets/core_widgets_test.dart`, `test/widget_test.dart` |
