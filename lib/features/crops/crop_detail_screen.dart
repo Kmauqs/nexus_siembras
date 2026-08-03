@@ -11,7 +11,8 @@ import '../../data/repositories/recomendacion_agronomica.dart';
 import '../../state/data_state.dart';
 import '../pathologies/patologia_activa_card.dart';
 import '../pathologies/reportar_patologia_modal.dart';
-import 'crops_list_screen.dart' show showRegistrarTareaModal;
+import 'crops_list_screen.dart'
+    show actividadDesdeEvento, showRegistrarTareaModal;
 import 'cultivo_info_widgets.dart';
 
 class CropDetailScreen extends ConsumerWidget {
@@ -165,13 +166,30 @@ class CropDetailScreen extends ConsumerWidget {
                   ]),
                   const SizedBox(height: 4),
                   Text(
-                    'Las fechas se ajustan al registrar tareas con fecha '
-                    'distinta a la programada.',
+                    puedeEditar
+                        ? 'Toca el círculo de una actividad pendiente para '
+                            'registrarla. Las fechas se ajustan si la fecha '
+                            'real difiere de la programada.'
+                        : 'Las fechas se ajustan al registrar tareas con '
+                            'fecha distinta a la programada.',
                     style: TextStyle(
                         fontSize: 11, color: Theme.of(context).hintColor),
                   ),
                   const Divider(),
-                  CronogramaCultivoList(eventos: eventos),
+                  CronogramaCultivoList(
+                    eventos: eventos,
+                    onTapEventoPendiente: !puedeEditar
+                        ? null
+                        : (e) {
+                            showRegistrarTareaModal(
+                              context: context,
+                              cultivoId: cultivoId,
+                              plantaNombre: pl?.nombre ?? '?',
+                              fechaInicial: e.fechaProgramada,
+                              actividadInicial: actividadDesdeEvento(e),
+                            );
+                          },
+                  ),
                 ],
               ),
             ),

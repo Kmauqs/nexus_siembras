@@ -6,8 +6,8 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 -   **Desarrollador:** NEXUS CREATIO
 -   **Package Android:** `com.nexuscreatio.nexus_siembras`
--   **Versión:** 0.2.7 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
--   **Fase actual:** Fase 3 completa + banco comunitario, colaboración multi-propietario, navegación a una mano y captura GPS unificada (2026-08-01). Próximo: web de consulta (drift_wasm).
+-   **Versión:** 0.2.8 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
+-   **Fase actual:** Fase 3 completa + sync tombstones multi-dispositivo, Dashboard Windows enriquecido y cronograma→tarea (2026-08-03). Próximo: web de consulta (drift_wasm).
 
 ## Alcance funcional
 
@@ -47,6 +47,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 ![](media/97ffea595561fc4b72290e5a4cb49aae.png)
 
 -   **Navegación a una mano (0.2.7):** `AppNav` mantiene pila (`push`) para **Volver**; **Inicio** limpia el historial. AppBar con título a la izquierda y menú ☰ a la derecha; Volver / Inicio / Sincronizar en barra inferior al alcance del pulgar. El atrás del sistema fuera de Inicio vuelve al Dashboard en lugar de salir al escritorio.
+-   **Sync y escritorio (0.2.8):** soft-delete de cultivos propagado entre dispositivos; Dashboard Windows con muestras en KPI; círculo del cronograma abre Registrar tarea precargada; instalador Inno sin chequeo de `build/` en el PC destino.
 -   **Multi-usuario:** un mismo predio puede tener propietario + colaboradores con roles `trabajador` o `consultor`, con permisos diferenciados por RLS de Postgres. **Hidratación garantizada** de recursos compartidos en cada sync (condiciones, suelo, lotes, cultivos, inventario, compras para co-propietarios, eventos, tareas y **proveedores del equipo**). Los co-propietarios pueden crear cultivos y demás recursos editables; todo se sincroniza con el dueño del predio.
 
 ![](media/626c6089d5f3183a669a07ba7497070a.png)

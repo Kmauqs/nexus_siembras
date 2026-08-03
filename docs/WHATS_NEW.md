@@ -1,8 +1,20 @@
 # NEXUS Siembras — Notas de versión (What's new)
 
 Texto listo para Play Store / comunicación de release.  
-**Última generación:** 2026-08-01 · **Versión:** 0.2.7  
-**Versión anterior documentada:** 0.2.6 (2026-07-31)
+**Última generación:** 2026-08-03 · **Versión:** 0.2.8  
+**Versión anterior documentada:** 0.2.7 (2026-08-01)
+
+---
+
+## Novedades (What's new) — v0.2.8
+
+**Sync de cultivos borrados:** si eliminas un cultivo en un dispositivo, al sincronizar desaparece en los demás (sin errores de eventos huérfanos). Vaciar la papelera marca borrado en la nube en lugar de borrar la fila a ciegas.
+
+**Dashboard en Windows:** los recuadros de Cultivos, Alertas, Próximas cosechas e Inventario muestran una muestra de elementos; Alertas próximas abre el cultivo; Compras año fiscal abre Compras.
+
+**Cronograma en detalle de cultivo:** toca el círculo de una actividad pendiente para abrir «Registrar tarea» ya precargada con fecha y actividad.
+
+**Instalador Windows:** el setup ya no exige la carpeta de compilación Flutter en el PC del usuario (validación solo al generar el instalador).
 
 ---
 
@@ -72,10 +84,14 @@ Sigue funcionando **offline** con base de datos cifrada; sincroniza con la nube 
 
 ## Cambios y correcciones acumulados (post v0.2.2)
 
-Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.2.7:
+Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.2.8:
 
 | Área | Qué se corrigió o mejoró |
 |------|--------------------------|
+| **Sync tombstones (0.2.8)** | Soft-delete remoto al vaciar papelera; verificación post-pull de cultivos ausentes/borrados; no push de hijos de cultivo borrado (evita FK 23503). |
+| **Dashboard Windows (0.2.8)** | KPI con muestra de ítems; navegación alerta→cultivo y compras→pantalla Compras. |
+| **Cronograma (0.2.8)** | Círculos pendientes abren Registrar tarea precargada. |
+| **Instalador (0.2.8)** | Validación Release en compilación Inno Setup, no en runtime del setup. |
 | **Navegación (0.2.7)** | Pila con `push` (`AppNav`); Volver + Inicio + Sync en barra inferior; título AppBar a la izquierda; PopScope evita salir al escritorio fuera de Inicio. |
 | **GPS (0.2.7)** | Helper `capturarGps()` unificado; rellena lat/lng/altitud y refina altitud vía stream si el primer fix no la trae. |
 | **UI (0.2.7)** | Overflows en Proveedores/Reportes/Inventario; celdas del calendario con recorte dinámico de chips. |

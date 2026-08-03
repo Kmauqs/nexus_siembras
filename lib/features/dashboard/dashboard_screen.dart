@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/navigation/app_nav.dart';
@@ -5,7 +6,6 @@ import 'dart:math' as math;
 import '../../core/reports/report_data_builder.dart';
 import '../../core/reports/report_service.dart';
 import '../../core/theme/themes.dart';
-import '../../core/units/units_catalog.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../data/repositories/cultivo_repository.dart';
 import '../../state/app_state.dart';
@@ -89,7 +89,7 @@ class DashboardScreen extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _KpiGrid(invItems: inv.length, activos: activos.length),
+          _KpiGrid(inventario: inv, cultivos: activos),
           const SizedBox(height: 12),
           _AlertsCard(),
           const SizedBox(height: 12),
@@ -174,78 +174,281 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
+/// Máximo de líneas de muestra dentro de cada KPI en escritorio.
+const int _kKpiSampleMax = 4;
+
 class _KpiGrid extends ConsumerWidget {
-  const _KpiGrid({required this.invItems, required this.activos});
-  final int invItems, activos;
+  const _KpiGrid({required this.inventario, required this.cultivos});
+  final List<InvItem> inventario;
+  final List<Cultivo> cultivos;
+
+  /// Windows (y pantallas anchas) muestran título + conteo + muestra de
+  /// elementos; en móvil se conserva el KPI compacto.
+  static bool _richLayout(BuildContext context) {
+    if (defaultTargetPlatform == TargetPlatform.windows) return true;
+    return MediaQuery.sizeOf(context).width >= 900;
+  }
+
+  static String _fmtDia(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Alertas: cuenta cultivos con estado != verde (evalúa cada uno)
-    final cultivos = ref.watch(cultivosActivosProvider);
-    int alertas = 0;
+    final rich = _richLayout(context);
+    final plantas = ref.watch(plantasProvider);
+    final plantasById = {for (final p in plantas) p.id: p};
+
+    final alertSamples = <String>[];
     for (final c in cultivos) {
       final asyncEst = ref.watch(estadoCultivoProvider(c.id));
-      if (asyncEst.hasValue && asyncEst.value!.estado != EstadoCultivo.verde) {
-        alertas++;
-      }
+      if (!asyncEst.hasValue) continue;
+      final info = asyncEst.value!;
+      if (info.estado == EstadoCultivo.verde) continue;
+      final pl = plantasById[c.plantaId];
+      final parts = <String>[
+        pl?.nombre ?? '?',
+        if (c.lote.trim().isNotEmpty) c.lote,
+        info.nota,
+      ];
+      alertSamples.add(parts.join(' · '));
     }
-    // Cosechas próximas: aproximación provisional (Fase 2i tendrá cálculo exacto)
-    final proximasCosechas = (cultivos.length * 0.3).ceil();
+
+    final now = DateTime.now();
+    final hoy = DateTime(now.year, now.month, now.day);
+    final cultivosById = {for (final c in cultivos) c.id: c};
+    final cosechaEvents = ref
+        .watch(eventosPredioProvider)
+        .where((e) =>
+            e.tipo == 'cosecha' &&
+            !e.ejecutada &&
+            !e.fechaProgramada.isBefore(hoy) &&
+            cultivosById.containsKey(e.cultivoId))
+        .toList()
+      ..sort((a, b) => a.fechaProgramada.compareTo(b.fechaProgramada));
+
+    final cosechaSamples = <String>[];
+    for (final e in cosechaEvents) {
+      final c = cultivosById[e.cultivoId]!;
+      final pl = plantasById[c.plantaId];
+      final desc = e.descripcion.trim().isEmpty ? 'Cosecha' : e.descripcion;
+      final parts = <String>[
+        _fmtDia(e.fechaProgramada),
+        pl?.nombre ?? '?',
+        if (c.lote.trim().isNotEmpty) c.lote,
+        desc,
+      ];
+      cosechaSamples.add(parts.join(' · '));
+    }
+
+    final cultivoSamples = cultivos.map((c) {
+      final pl = plantasById[c.plantaId];
+      final lote = c.lote.trim().isEmpty ? 'Sin lote' : c.lote;
+      return '${pl?.nombre ?? "?"} · $lote';
+    }).toList();
+
+    final invSamples = inventario.map((i) {
+      final cant = i.cantidad == i.cantidad.roundToDouble()
+          ? i.cantidad.toStringAsFixed(0)
+          : i.cantidad.toStringAsFixed(1);
+      return '${i.desc} · $cant ${i.unidad}';
+    }).toList();
+
     final tiles = [
-      _KpiTile(label: 'Cultivos activos', value: '$activos',
-          color: Colors.green, route: '/crops'),
-      _KpiTile(label: 'Alertas', value: '$alertas',
-          color: alertas > 0 ? Colors.orange : Colors.grey, route: '/crops'),
-      _KpiTile(label: 'Próximas cosechas', value: '$proximasCosechas',
-          color: Colors.blue, route: '/schedule'),
-      _KpiTile(label: 'Ítems inventario', value: '$invItems',
-          color: Colors.brown, route: '/inventory'),
+      _KpiTile(
+        label: 'Cultivos activos',
+        value: '${cultivos.length}',
+        color: Colors.green,
+        route: '/crops',
+        rich: rich,
+        samples: cultivoSamples,
+        emptyHint: 'Sin cultivos activos',
+      ),
+      _KpiTile(
+        label: 'Alertas',
+        value: '${alertSamples.length}',
+        color: alertSamples.isNotEmpty ? Colors.orange : Colors.grey,
+        route: '/crops',
+        rich: rich,
+        samples: alertSamples,
+        emptyHint: 'Sin alertas',
+      ),
+      _KpiTile(
+        label: 'Próximas cosechas',
+        value: '${cosechaSamples.length}',
+        color: Colors.blue,
+        route: '/schedule',
+        rich: rich,
+        samples: cosechaSamples,
+        emptyHint: 'Sin cosechas próximas',
+      ),
+      _KpiTile(
+        label: 'Ítems inventario',
+        value: '${inventario.length}',
+        color: Colors.brown,
+        route: '/inventory',
+        rich: rich,
+        samples: invSamples,
+        emptyHint: 'Inventario vacío',
+      ),
     ];
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      childAspectRatio: 2.0,
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      children: tiles,
-    );
+
+    return LayoutBuilder(builder: (context, constraints) {
+      if (!rich) {
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          childAspectRatio: 2.0,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          children: tiles,
+        );
+      }
+      // Escritorio: altura al contenido (sin celdas altas vacías).
+      return Column(
+        children: [
+          for (var row = 0; row < 2; row++) ...[
+            if (row > 0) const SizedBox(height: 10),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: tiles[row * 2]),
+                  const SizedBox(width: 10),
+                  Expanded(child: tiles[row * 2 + 1]),
+                ],
+              ),
+            ),
+          ],
+        ],
+      );
+    });
   }
 }
 
 class _KpiTile extends StatelessWidget {
-  const _KpiTile({required this.label, required this.value, required this.color, this.route});
+  const _KpiTile({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.rich,
+    required this.samples,
+    required this.emptyHint,
+    this.route,
+  });
   final String label;
   final String value;
   final Color color;
   final String? route;
+  final bool rich;
+  final List<String> samples;
+  final String emptyHint;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final content = Padding(
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-              overflow: TextOverflow.ellipsis, maxLines: 1),
-          const SizedBox(height: 1),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(value,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-          ),
-        ],
-      ),
+      padding: EdgeInsets.all(rich ? 10 : 8),
+      child: rich ? _richBody(theme) : _compactBody(),
     );
     return Card(
       clipBehavior: Clip.antiAlias,
       child: route == null
           ? content
           : InkWell(onTap: () => AppNav.open(context, route!), child: content),
+    );
+  }
+
+  Widget _compactBody() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1),
+          const SizedBox(height: 1),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value,
+                style: TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+          ),
+        ],
+      );
+
+  Widget _richBody(ThemeData theme) {
+    final shown = samples.take(_kKpiSampleMax).toList();
+    final more = samples.length - shown.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: theme.hintColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(width: 8),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    height: 1)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Container(height: 1, color: theme.dividerColor.withValues(alpha: 0.35)),
+        const SizedBox(height: 6),
+        if (samples.isEmpty)
+          Text(emptyHint,
+              style: TextStyle(fontSize: 12, color: theme.hintColor))
+        else ...[
+          for (final line in shown)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.85),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(line,
+                        style: const TextStyle(fontSize: 12, height: 1.2),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+              ),
+            ),
+          if (more > 0)
+            Text('+$more más',
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: theme.hintColor)),
+        ],
+      ],
     );
   }
 }
@@ -263,6 +466,7 @@ class _AlertsCard extends ConsumerWidget {
         final info = asyncEst.value!;
         final pl = plantasById[c.plantaId];
         alertas.add(_AlertData(
+          cultivoId: c.id,
           color: info.estado == EstadoCultivo.rojo
               ? AppThemes.colorAlert : AppThemes.colorWarn,
           name: '${pl?.nombre ?? "?"} · ${c.lote}',
@@ -282,7 +486,12 @@ class _AlertsCard extends ConsumerWidget {
               Text('Sin alertas activas ✅',
                   style: TextStyle(color: Theme.of(context).hintColor))
             else
-              ...alertas.map((a) => _AlertLine(color: a.color, name: a.name, note: a.note)),
+              ...alertas.map((a) => _AlertLine(
+                    cultivoId: a.cultivoId,
+                    color: a.color,
+                    name: a.name,
+                    note: a.note,
+                  )),
           ],
         ),
       ),
@@ -291,20 +500,32 @@ class _AlertsCard extends ConsumerWidget {
 }
 
 class _AlertData {
-  const _AlertData({required this.color, required this.name, required this.note});
+  const _AlertData({
+    required this.cultivoId,
+    required this.color,
+    required this.name,
+    required this.note,
+  });
+  final int cultivoId;
   final Color color;
   final String name;
   final String note;
 }
 
 class _AlertLine extends StatelessWidget {
-  const _AlertLine({required this.color, required this.name, required this.note});
+  const _AlertLine({
+    required this.cultivoId,
+    required this.color,
+    required this.name,
+    required this.note,
+  });
+  final int cultivoId;
   final Color color;
   final String name;
   final String note;
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: () => AppNav.open(context, '/crops'),
+        onTap: () => AppNav.open(context, '/crops/$cultivoId'),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(children: [
@@ -343,6 +564,7 @@ class _NextEventsCard extends ConsumerWidget {
           final pl = plantasById[c.plantaId];
           eventos.add((
             _AlertData(
+              cultivoId: c.id,
               color: Colors.grey,
               name: info.nota,
               note: '${pl?.nombre ?? "?"} · ${c.lote}',
@@ -368,6 +590,7 @@ class _NextEventsCard extends ConsumerWidget {
                     desc: e.$1.name,
                     context: e.$1.note,
                     date: 'próximo',
+                    cultivoId: e.$1.cultivoId,
                   )),
           ],
         ),
@@ -377,11 +600,20 @@ class _NextEventsCard extends ConsumerWidget {
 }
 
 class _EventLine extends StatelessWidget {
-  const _EventLine({required this.desc, required this.context, required this.date});
+  const _EventLine({
+    required this.desc,
+    required this.context,
+    required this.date,
+    this.cultivoId,
+  });
   final String desc, context, date;
+  final int? cultivoId;
   @override
   Widget build(BuildContext ctx) => InkWell(
-        onTap: () => AppNav.open(ctx, '/schedule'),
+        onTap: () => AppNav.open(
+          ctx,
+          cultivoId != null ? '/crops/$cultivoId' : '/schedule',
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(children: [
@@ -431,72 +663,84 @@ class _ComprasCard extends StatelessWidget {
     final entries = grupos.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('💰 Compras año fiscal $anio',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            if (delAnio.isEmpty)
-              const Text('Sin compras registradas para el año fiscal en curso.',
-                  style: TextStyle(color: Colors.grey))
-            else ...[
-              Center(
-                child: Column(
-                  children: [
-                    Text('\$ ${_fmt(total)}',
-                        style: const TextStyle(fontSize: 22,
-                            fontWeight: FontWeight.bold, color: Color(0xFF0F5132))),
-                    Text('${delAnio.length} compra(s) registrada(s)',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => AppNav.open(context, '/purchases'),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(width: 140, height: 140,
-                    child: CustomPaint(painter: _DonutPainter(entries: entries,
-                        colors: _tipoColors, total: total))),
-                  const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      children: entries.map((e) {
-                        final pct = (e.value / total * 100).toStringAsFixed(1);
-                        final color = _tipoColors[e.key] ?? _tipoColors['otro']!;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Row(children: [
-                            Container(width: 12, height: 12,
-                                decoration: BoxDecoration(color: color,
-                                    borderRadius: BorderRadius.circular(3))),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(_tipoLabels[e.key] ?? e.key,
-                                  style: const TextStyle(fontSize: 12)),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text('$pct%',
-                                    style: const TextStyle(fontSize: 12,
-                                        fontWeight: FontWeight.bold)),
-                                Text('\$ ${_fmt(e.value)}',
-                                    style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                              ],
-                            ),
-                          ]),
-                        );
-                      }).toList(),
-                    ),
+                    child: Text('💰 Compras año fiscal $anio',
+                        style: Theme.of(context).textTheme.titleMedium),
                   ),
+                  Icon(Icons.chevron_right,
+                      color: Theme.of(context).hintColor),
                 ],
               ),
+              const SizedBox(height: 8),
+              if (delAnio.isEmpty)
+                const Text('Sin compras registradas para el año fiscal en curso.',
+                    style: TextStyle(color: Colors.grey))
+              else ...[
+                Center(
+                  child: Column(
+                    children: [
+                      Text('\$ ${_fmt(total)}',
+                          style: const TextStyle(fontSize: 22,
+                              fontWeight: FontWeight.bold, color: Color(0xFF0F5132))),
+                      Text('${delAnio.length} compra(s) registrada(s)',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 140, height: 140,
+                      child: CustomPaint(painter: _DonutPainter(entries: entries,
+                          colors: _tipoColors, total: total))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        children: entries.map((e) {
+                          final pct = (e.value / total * 100).toStringAsFixed(1);
+                          final color = _tipoColors[e.key] ?? _tipoColors['otro']!;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(children: [
+                              Container(width: 12, height: 12,
+                                  decoration: BoxDecoration(color: color,
+                                      borderRadius: BorderRadius.circular(3))),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(_tipoLabels[e.key] ?? e.key,
+                                    style: const TextStyle(fontSize: 12)),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text('$pct%',
+                                      style: const TextStyle(fontSize: 12,
+                                          fontWeight: FontWeight.bold)),
+                                  Text('\$ ${_fmt(e.value)}',
+                                      style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                ],
+                              ),
+                            ]),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -2,7 +2,7 @@
 
 Plan de verificación completa del ciclo multi-usuario introducido en las
 fases 3e-1 hasta 3e-8, ampliado con sync por lotes/paginado, soft-delete
-de cultivos (tombstones), eliminar cuenta y build **0.2.7+**.
+de cultivos (tombstones), eliminar cuenta y build **0.2.8+**.
 
 Ejecutar en orden con **dos cuentas Supabase**:
 
@@ -13,8 +13,9 @@ Se recomienda usar dos dispositivos (o dispositivo + emulador) para
 observar la propagación. Tras cada cambio relevante, sincronizar en el
 dispositivo origen y luego en el peer.
 
-**Versión mínima de app:** 0.2.7 (incluye soft-delete remoto al vaciar
-papelera y verificación de tombstones de cultivo tras el pull).
+**Versión mínima de app:** 0.2.8 (incluye soft-delete remoto al vaciar
+papelera, verificación de tombstones de cultivo tras el pull, Dashboard
+Windows con muestras y cronograma→Registrar tarea).
 
 **Esquema remoto:** `schema_meta.version` ≥ **11** (alineado con
 `SyncService.schemaRemotoRequerido`). Aplicar todas las migraciones en
@@ -392,7 +393,7 @@ Si alguna prueba falla, adjuntar:
 2. Salida del script `verificacion_e2e.sql` para el bloque relevante.
 3. Log exportado desde la app (`nexus_logs_*.txt`) filtrado por
    `[sync]` / FK / `23503`.
-4. Commit o build number (`0.2.7` o superior con fix de tombstones).
+4. Commit o build number (`0.2.8` o superior con fix de tombstones).
 
 ### Cobertura automatizada relacionada
 

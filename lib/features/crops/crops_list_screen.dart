@@ -297,21 +297,70 @@ class _CultivoTile extends ConsumerWidget {
 ///
 /// Función pública y compartida: se llama desde el listado de cultivos
 /// (botón ✓ en cada card) y desde el detalle del cultivo (botón en
-/// "Historial de tareas"). Reutilizar la misma implementación evita
-/// duplicar el formulario en más de una pantalla.
+/// "Historial de tareas" / círculos del Cronograma). Reutilizar la misma
+/// implementación evita duplicar el formulario en más de una pantalla.
+///
+/// [fechaInicial] y [actividadInicial] precargan el formulario (p. ej. al
+/// tocar un evento del cronograma). [actividadInicial] debe ser un código
+/// del dropdown (`Abono1`, `Cosecha1`, …); ver [actividadDesdeEvento].
 void showRegistrarTareaModal({
   required BuildContext context,
   required int cultivoId,
   required String plantaNombre,
+  DateTime? fechaInicial,
+  String? actividadInicial,
 }) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) =>
-        _RegistrarTareaModal(cultivoId: cultivoId, plantaNombre: plantaNombre),
+    builder: (_) => _RegistrarTareaModal(
+      cultivoId: cultivoId,
+      plantaNombre: plantaNombre,
+      fechaInicial: fechaInicial,
+      actividadInicial: actividadInicial,
+    ),
   );
 }
 
+/// Invierte el mapeo de eventos proyectados → código de actividad del
+/// modal (alineado con `_actividadDescMap` / `_actividadTipoMap` del repo).
+String? actividadDesdeEvento(Evento e) {
+  final desc = e.descripcion.trim();
+  // Prefijos más largos primero (p. ej. "Cosecha periódica" antes de "Cosecha").
+  const porDesc = <(String, String)>[
+    ('Cosecha periódica', 'Cosecha periódica'),
+    ('Abono 1', 'Abono1'),
+    ('Abono 2', 'Abono2'),
+    ('Cosecha 1', 'Cosecha1'),
+    ('Cosecha 2', 'Cosecha2'),
+    ('Siembra', 'Siembra'),
+    ('Semillero', 'Semillero'),
+    ('Trasplante', 'Trasplante'),
+    ('Desmalezada', 'Desmalezada'),
+    ('Renovación', 'Renovación'),
+    ('Riego', 'Riego'),
+    ('Fumigación', 'Fumigación'),
+  ];
+  for (final (prefix, code) in porDesc) {
+    if (desc == prefix ||
+        desc.startsWith('$prefix ·') ||
+        desc.startsWith('$prefix ')) {
+      return code;
+    }
+  }
+  return switch (e.tipo.toLowerCase()) {
+    'siembra' => 'Siembra',
+    'semillero' => 'Semillero',
+    'trasplante' => 'Trasplante',
+    'abono' => null, // ambiguo Abono1/Abono2 sin descripción
+    'control_fito' => 'Desmalezada',
+    'cosecha' => 'Cosecha1',
+    'renovacion' => 'Renovación',
+    'riego' => 'Riego',
+    'poda' => null,
+    _ => null,
+  };
+}
 
 const _actividadesBaseComun = [
   'Riego', 'Abono1', 'Abono2', 'Desmalezada', 'Fumigación',
@@ -321,10 +370,16 @@ const _actividadesPerenne = ['Cosecha periódica', 'Renovación'];
 const _actividadesGerminador = ['Semillero', 'Trasplante'];
 
 class _RegistrarTareaModal extends ConsumerStatefulWidget {
-  const _RegistrarTareaModal(
-      {required this.cultivoId, required this.plantaNombre});
+  const _RegistrarTareaModal({
+    required this.cultivoId,
+    required this.plantaNombre,
+    this.fechaInicial,
+    this.actividadInicial,
+  });
   final int cultivoId;
   final String plantaNombre;
+  final DateTime? fechaInicial;
+  final String? actividadInicial;
   @override
   ConsumerState<_RegistrarTareaModal> createState() =>
       _RegistrarTareaModalState();
@@ -338,7 +393,7 @@ class _InsumoRow {
 }
 
 class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
-  DateTime _fecha = DateTime.now();
+  late DateTime _fecha;
   final _hh = TextEditingController(text: '1');
   final _notas = TextEditingController();
   final _periodicidadCosecha = DuracionController();
@@ -347,6 +402,13 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
   final List<_InsumoRow> _insumos = [];
 
   bool _periodicidadInicializada = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fecha = widget.fechaInicial ?? DateTime.now();
+    _act1 = widget.actividadInicial;
+  }
 
   @override
   void dispose() {
@@ -377,11 +439,20 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
       _periodicidadInicializada = true;
       _periodicidadCosecha.setDias(cul.periodicidadCosechaDias);
     }
-    final opts = [
+    final opts = <String>{
       ..._actividadesBaseComun,
       if (esPerenne) ..._actividadesPerenne else ..._actividadesCicloUnico,
       if (esGerm) ..._actividadesGerminador,
-    ];
+      'Siembra',
+      if (_act1 != null) _act1!,
+    }.toList();
+    final act1Value = opts.contains(_act1) ? _act1 : null;
+
+    final firstDate = DateTime(2020);
+    final lastDate = DateTime.now().add(const Duration(days: 366));
+    var pickerInitial = _fecha;
+    if (pickerInitial.isBefore(firstDate)) pickerInitial = firstDate;
+    if (pickerInitial.isAfter(lastDate)) pickerInitial = lastDate;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -401,9 +472,9 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
             onTap: () async {
               final d = await showDatePicker(
                 context: context,
-                initialDate: _fecha,
-                firstDate: DateTime(2020),
-                lastDate: DateTime.now().add(const Duration(days: 30)),
+                initialDate: pickerInitial,
+                firstDate: firstDate,
+                lastDate: lastDate,
               );
               if (d != null) setState(() => _fecha = d);
             },
@@ -429,7 +500,7 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
           Row(children: [
             Expanded(
               child: DropdownButtonFormField<String>(
-                value: _act1,
+                value: act1Value,
                 decoration: const InputDecoration(
                     labelText: 'Actividad 1', border: OutlineInputBorder()),
                 items: opts
