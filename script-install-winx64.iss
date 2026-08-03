@@ -1,0 +1,119 @@
+; =============================================================================
+; NEXUS Siembras — Instalador Windows x64 (Inno Setup 7)
+; =============================================================================
+;
+; Mantener AppVersion / OutputBaseFilename alineados con `version:` en pubspec.yaml.
+;
+; Requisitos:
+;   - Inno Setup 7 (https://jrsoftware.org/isinfo.php)
+;   - Compilación Release de Flutter:
+;       flutter build windows --release
+;
+; Compilar el instalador (desde la raíz del proyecto, donde está este archivo):
+;   "C:\Program Files\Inno Setup 7\ISCC.exe" script-install-winx64.ini
+;
+; Edición 32-bit (alternativa): "C:\Program Files (x86)\Inno Setup 7\ISCC.exe"
+;
+; Salida:
+;   dist\NexusSiembras-Setup-0.2.7-win-x64.exe
+;
+; =============================================================================
+
+#define MyAppName        "NEXUS Siembras"
+#define MyAppExeName     "nexus_siembras.exe"
+#define MyAppPublisher   "NEXUS CREATIO"
+#define MyAppURL         "https://github.com/nexuscreatio"
+#define MyAppVersion     "0.2.7"
+#define MyAppVersionFull "0.2.7.0"
+#define MyBuildOutput    "build\windows\x64\runner\Release"
+; GUID fijo: permite actualizar sobre instalaciones previas sin duplicar entradas.
+#define MyAppId          "8F3A2B1C-4D5E-6F70-8192-A3B4C5D6E7F8"
+
+; Validación en COMPILACIÓN (no en el PC del usuario). Si se chequea en
+; InitializeSetup con esta ruta relativa, el instalador falla al ejecutarse
+; fuera del árbol del proyecto aunque los binarios ya vayan empaquetados.
+#if !FileExists(MyBuildOutput + "\" + MyAppExeName)
+  #error "No se encontró la compilación Release. Ejecute: flutter build windows --release"
+#endif
+
+[Setup]
+; Instalador nativo x64 (IS7). Compatible con Windows x64 y Arm64 (emulación x64).
+SetupArchitecture=x64
+AppId={{8F3A2B1C-4D5E-6F70-8192-A3B4C5D6E7F8}}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+AppPublisherURL={#MyAppURL}
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}
+AppCopyright=Copyright (C) 2026 {#MyAppPublisher}. Todos los derechos reservados.
+DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+DisableProgramGroupPage=yes
+OutputDir=dist
+OutputBaseFilename=NexusSiembras-Setup-{#MyAppVersion}-win-x64
+SetupIconFile=windows\runner\resources\app_icon.ico
+UninstallDisplayIcon={app}\{#MyAppExeName}
+UninstallDisplayName={#MyAppName}
+VersionInfoVersion={#MyAppVersionFull}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription={#MyAppName} — Control agropecuario
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersionFull}
+Compression=lzma2/ultra64
+SolidCompression=yes
+WizardStyle=modern
+; Solo Windows 10/11 x64 (Flutter Windows desktop).
+MinVersion=10.0
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+; Instalación por usuario (sin UAC). Para todos los usuarios del PC, cambiar a
+; PrivilegesRequired=admin y DefaultDirName={commonpf}\{#MyAppName}.
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=dialog
+; Cierra la app si está abierta durante actualización/desinstalación.
+CloseApplications=force
+CloseApplicationsFilter=*.exe,nexus_siembras.exe
+; Evita instalaciones parciales si el usuario cancela a mitad.
+RestartIfNeededByRun=no
+
+[Languages]
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
+[Files]
+; Binarios, DLLs de plugins, carpeta data\ (flutter_assets, icudtl.dat, etc.).
+; Excluye .env embebido para no machacar la configuración Supabase del usuario.
+Source: "{#MyBuildOutput}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "data\flutter_assets\.env"
+; Primera instalación: copia .env del build (plantilla del proyecto).
+; Actualizaciones: conserva el .env existente del usuario.
+Source: "{#MyBuildOutput}\data\flutter_assets\.env"; DestDir: "{app}\data\flutter_assets"; Flags: onlyifdoesntexist ignoreversion
+
+[Icons]
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Comment: "Control agropecuario para pequeños productores"
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Comment: "Control agropecuario para pequeños productores"
+
+[Run]
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[UninstallDelete]
+; Limpia caché de reportes/logs generados dentro de la carpeta de instalación.
+Type: filesandordirs; Name: "{app}\reports"
+
+[Code]
+function InitializeUninstall: Boolean;
+begin
+  if MsgBox(
+    'Se desinstalará {#MyAppName}.' + #13#10 + #13#10 +
+    'Los datos locales (base de datos cifrada, backups JSON y fotos) ' +
+    'permanecen en la carpeta Documentos del usuario y no se borran automáticamente.',
+    mbConfirmation, MB_YESNO) = IDNO then
+    Result := False
+  else
+    Result := True;
+end;
