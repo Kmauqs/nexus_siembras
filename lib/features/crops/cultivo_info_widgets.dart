@@ -59,9 +59,17 @@ class PeriodosConfiguradosList extends StatelessWidget {
 }
 
 /// Cronograma de eventos programados/ejecutados de un cultivo.
+///
+/// Si [onTapEventoPendiente] no es null, los círculos de eventos aún no
+/// ejecutados son clickeables (p. ej. para abrir "Registrar tarea").
 class CronogramaCultivoList extends StatelessWidget {
-  const CronogramaCultivoList({super.key, required this.eventos});
+  const CronogramaCultivoList({
+    super.key,
+    required this.eventos,
+    this.onTapEventoPendiente,
+  });
   final List<Evento> eventos;
+  final ValueChanged<Evento>? onTapEventoPendiente;
 
   static String _iso(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, "0")}-${d.day.toString().padLeft(2, "0")}';
@@ -103,18 +111,38 @@ class CronogramaCultivoList extends StatelessWidget {
         final color = e.ejecutada
             ? AppThemes.colorOk
             : (vencido ? AppThemes.colorAlert : Colors.grey.shade600);
+        final clickable =
+            onTapEventoPendiente != null && !e.ejecutada;
+
+        final icon = Icon(
+          e.ejecutada ? Icons.check_circle : Icons.radio_button_unchecked,
+          size: 18,
+          color: color,
+        );
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                e.ejecutada ? Icons.check_circle : Icons.radio_button_unchecked,
-                size: 16,
-                color: color,
-              ),
-              const SizedBox(width: 8),
+              if (clickable)
+                Tooltip(
+                  message: 'Registrar tarea',
+                  child: InkWell(
+                    onTap: () => onTapEventoPendiente!(e),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: icon,
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: icon,
+                ),
+              const SizedBox(width: 4),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

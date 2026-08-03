@@ -1,7 +1,7 @@
 name: nexus_siembras
 description: NEXUS Siembras — Control agropecuario para pequeños productores.
 publish_to: 'none'
-version: 0.2.7
+version: 0.2.8
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
