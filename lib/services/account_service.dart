@@ -91,6 +91,9 @@ class AccountService {
       await db.delete(db.syncMappings).go();
       await db.delete(db.syncTables).go();
       await db.delete(db.syncOps).go();
+      // Revisión C2-3 (2026-08-03): la caché del banco comunitario también
+      // se limpia — contenido público, pero el "reset total" debe serlo.
+      await db.delete(db.variedadesComunitariasCache).go();
       await db.delete(db.configs).go();
     });
   }

@@ -20,6 +20,7 @@ import 'features/predios/predios_admin_screen.dart';
 import 'features/predios/predio_detail_screen.dart';
 import 'features/predios/lote_editor_screen.dart';
 import 'features/auth/auth_screen.dart';
+import 'features/feedback/feedback_screen.dart';
 import 'features/reports/reports_screen.dart';
 import 'features/wizard/wizard_screen.dart';
 
@@ -80,5 +81,6 @@ final appRouter = GoRouter(
     GoRoute(path: '/auth', builder: (_, __) => const AuthScreen()),
     GoRoute(path: '/wizard', builder: (_, __) => const WizardScreen()),
     GoRoute(path: '/reports', builder: (_, __) => const ReportsScreen()),
+    GoRoute(path: '/feedback', builder: (_, __) => const FeedbackScreen()),
   ],
 );

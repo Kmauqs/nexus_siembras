@@ -147,5 +147,14 @@
     }
   },
   "noSession": "Nenhuma sessão iniciada",
-  "offlineMode": "Modo local"
+  "offlineMode": "Modo local",
+  "menuFeedback": "Enviar comentários",
+  "feedbackTitle": "Como foi sua experiência?",
+  "feedbackHint": "Seu comentário ajuda a melhorar o NEXUS Siembras. Funciona offline: será enviado automaticamente quando houver internet.",
+  "feedbackComment": "Comentário (opcional)",
+  "feedbackSend": "Enviar",
+  "feedbackThanks": "Obrigado! Seu comentário foi salvo e será enviado automaticamente quando houver conexão.",
+  "feedbackMine": "Meus comentários",
+  "feedbackPending": "pendente de envio",
+  "feedbackSent": "enviado"
 }

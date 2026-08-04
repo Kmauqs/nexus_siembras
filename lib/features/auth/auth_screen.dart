@@ -515,9 +515,11 @@ class _ProfileViewState extends ConsumerState<_ProfileView> {
         content: const Text(
             'Se eliminará tu cuenta y todos tus datos privados en la nube '
             '(predios, cultivos, inventario, compras, colaboradores, etc.).\n\n'
-            'Se CONSERVAN en la comunidad:\n'
-            '• Variedades que aportaste al banco comunitario\n'
-            '• Reportes de patologías compartidos (anonimizados)\n\n'
+            'Se CONSERVAN en la comunidad (patrimonio comunitario):\n'
+            '• Todas las variedades que aportaste al banco comunitario\n'
+            '• Todos tus reportes de patologías — siguen alimentando el '
+            'mapa de alertas de otros productores\n'
+            'Ambos quedan anónimos: sin tu nombre ni el de tu predio.\n\n'
             'Si eres dueño de predios compartidos, tus colaboradores '
             'perderán acceso a esos predios.\n\n'
             'Esta acción no se puede deshacer.'),

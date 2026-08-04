@@ -25,6 +25,7 @@ import '../data/repositories/colaborador_repository.dart';
 import '../data/repositories/lote_repository.dart';
 import '../services/auto_sync_service.dart';
 import '../services/account_service.dart';
+import '../services/feedback_service.dart';
 import '../services/backup_service.dart';
 import '../services/event_notification_sync.dart';
 import '../services/maintenance_service.dart';
@@ -449,10 +450,22 @@ final maintenanceServiceProvider = Provider<MaintenanceService>((ref) {
 final accountServiceProvider = Provider<AccountService>(
     (ref) => AccountService(ref.watch(databaseProvider)));
 
+/// Micro-encuestas de feedback (C2-9): cola local + envío diferido.
+final feedbackServiceProvider = Provider<FeedbackService>(
+    (ref) => FeedbackService(ref.watch(databaseProvider)));
+
+/// Encuestas guardadas aún sin subir al servidor (badge en la pantalla).
+final feedbackPendientesProvider = FutureProvider<int>((ref) async {
+  return ref.watch(feedbackServiceProvider).contarPendientes();
+});
+
 /// Servicio de auto-retry de sync al recuperar conexión.
 /// Debe `iniciar()`se en un widget listener (app.dart) tras auth OK.
 final autoSyncServiceProvider = Provider<AutoSyncService>((ref) {
-  final srv = AutoSyncService(ref.watch(syncServiceProvider));
+  final srv = AutoSyncService(
+    ref.watch(syncServiceProvider),
+    feedback: ref.watch(feedbackServiceProvider), // C2-9
+  );
   ref.onDispose(srv.detener);
   return srv;
 });
@@ -630,6 +643,10 @@ final todosCultivosGeorreferenciadosProvider =
       );
 });
 
+/// Días sin actividad tras los que un foco pasa a «desatendido» (gris).
+/// Debe coincidir con `app_config.patologia_dias_desatendida` (0018).
+const int kDiasDesatendida = 60;
+
 /// Punto para el heatmap de patologías con info detallada para el
 /// bottom sheet de "zonas calientes" (Fase 3e-7).
 class PuntoPatologia {
@@ -644,6 +661,9 @@ class PuntoPatologia {
   final bool comunitario;       // true si viene de PatologiasReportadas
   final String? plantaNombre;   // solo para reportes comunitarios
   final String? notas;          // síntomas/observaciones
+  /// Última señal de vida del foco (reporte cercano o intervención del
+  /// administrador). Null = usar `fecha`. Ver migración 0018.
+  final DateTime? ultimaActividad;
 
   const PuntoPatologia({
     required this.lat,
@@ -657,7 +677,17 @@ class PuntoPatologia {
     this.comunitario = false,
     this.plantaNombre,
     this.notas,
+    this.ultimaActividad,
   });
+
+  /// Días transcurridos sin actividad en el foco.
+  int get diasSinActividad =>
+      DateTime.now().difference(ultimaActividad ?? fecha).inDays;
+
+  /// Un foco se considera «desatendido» tras [kDiasDesatendida] días sin
+  /// señales: ni reportes nuevos en coordenadas cercanas, ni intervención
+  /// del administrador. Se pinta gris en el mapa (decisión 2026-08-04).
+  bool get desatendida => diasSinActividad >= kDiasDesatendida;
 
   /// Etiqueta corta para chips/marker tooltips.
   String get etiquetaCorta {

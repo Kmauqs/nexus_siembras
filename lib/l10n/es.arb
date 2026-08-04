@@ -147,5 +147,14 @@
     }
   },
   "noSession": "No hay sesión iniciada",
-  "offlineMode": "Modo local"
+  "offlineMode": "Modo local",
+  "menuFeedback": "Enviar comentarios",
+  "feedbackTitle": "¿Cómo te fue con la app?",
+  "feedbackHint": "Tu respuesta ayuda a mejorar NEXUS Siembras. Funciona sin conexión: se envía sola cuando vuelvas a tener internet.",
+  "feedbackComment": "Comentario (opcional)",
+  "feedbackSend": "Enviar",
+  "feedbackThanks": "¡Gracias! Tu comentario se guardó y se enviará automáticamente cuando haya conexión.",
+  "feedbackMine": "Mis comentarios",
+  "feedbackPending": "pendiente de envío",
+  "feedbackSent": "enviado"
 }

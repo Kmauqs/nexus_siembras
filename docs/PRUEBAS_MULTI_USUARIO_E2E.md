@@ -356,7 +356,18 @@ Además:
 
 Usar una **cuenta desechable** (no A/B de producción de pruebas).
 
-- [ ] Cuenta → Eliminar cuenta → confirma.
+### 10.0 Precondición técnica (Revisión C2-2, una sola vez por proyecto)
+
+- [ ] Aplicar `supabase/migrations/0015_verificacion_fks_auth.sql` en el
+      SQL Editor. Debe terminar SIN excepción (si corrigió FKs, muestra
+      `NOTICE` por cada una).
+- [ ] La consulta de auditoría del final del script lista todas las FKs
+      hacia `auth.users` con acción `c` (CASCADE) o `n` (SET NULL) —
+      ninguna otra letra.
+
+### 10.1 Cuenta simple
+
+- [ ] Cuenta → Eliminar cuenta → confirma (doble diálogo, muestra email).
 - [ ] La sesión se cierra; no se puede volver a iniciar con esa
       contraseña (usuario Auth eliminado o deshabilitado según RPC).
 - [ ] Datos privados del usuario desaparecen del remoto; variedades
@@ -364,6 +375,50 @@ Usar una **cuenta desechable** (no A/B de producción de pruebas).
       preservan / anonimizan según diseño de `eliminar_mi_cuenta`.
 - [ ] Diálogo de wipe local: si se acepta, BD local queda limpia al
       reabrir.
+
+### 10.2 Cuenta CON datos completos y colaboradores (Revisión C2-2)
+
+Escenario máximo: es el que ejercita todos los CASCADE a la vez.
+
+Preparación con cuenta desechable **D**:
+
+- [ ] D crea un predio con: lote, cultivo con tareas registradas,
+      compra con comprobante, ítem de inventario, análisis de suelo,
+      condiciones del predio y un reporte de patología compartido.
+- [ ] D comparte el predio con **B** (rol trabajador); B sincroniza y
+      registra al menos 1 tarea en el cultivo de D (queda
+      `created_by_user_id` de B en datos de D, y de D en ninguna parte
+      de B).
+- [ ] D aporta una variedad al banco comunitario.
+
+Ejecución:
+
+- [ ] D → Cuenta → Eliminar cuenta → confirmar los 2 diálogos.
+- [ ] El resultado en pantalla reporta reportes anonimizados,
+      variedades conservadas y predios con colaboradores (>0).
+- [ ] **No aparece ningún error de FK** (`23503` en logs; ver Reportes →
+      Logs). Si aparece, adjuntar log: significa que 10.0 no se ejecutó
+      o hay una FK nueva sin acción.
+
+Verificación cruzada en **B** (tras sincronizar):
+
+- [ ] El predio de D desaparece para B (o queda "sin acceso"), sin
+      romper el sync de B (`Sincronización OK`).
+- [ ] Los datos propios de B están intactos.
+- [ ] La variedad comunitaria de D sigue apareciendo en el
+      autocompletado de "Nueva variedad" de B.
+- [ ] El reporte comunitario de D sigue en el mapa/heatmap, ya sin
+      autor.
+
+Verificación en SQL (opcional, service_role):
+
+```sql
+-- 0 filas privadas huérfanas del usuario eliminado:
+SELECT 'predios', count(*) FROM predios WHERE owner_id NOT IN (SELECT id FROM auth.users)
+UNION ALL SELECT 'shares', count(*) FROM predio_shares WHERE owner_id NOT IN (SELECT id FROM auth.users);
+-- Reportes anonimizados conservados:
+SELECT count(*) FROM patologias_reportadas WHERE owner_id IS NULL AND deleted_at IS NULL;
+```
 
 ---
 

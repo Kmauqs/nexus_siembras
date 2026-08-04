@@ -982,6 +982,40 @@ class _EppoCardState extends ConsumerState<_EppoCard> {
                     'de data.eppo.int.',
                     style:
                         TextStyle(fontSize: 12, color: theme.hintColor)),
+                // C2-8: recordatorio proactivo de rotación del pin TLS.
+                // El intermedio Sectigo mantiene Android funcionando, pero
+                // conviene renovar la hoja en la ventana de rotación.
+                if (EppoClient.pinHojaProntoAVencer()) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.amber.shade300),
+                    ),
+                    child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.schedule,
+                              size: 16, color: Colors.amber.shade900),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                                'El certificado anclado de EPPO lleva '
+                                '${EppoClient.diasDesdeCapturaPin()} días '
+                                '(rotación típica: ~90). Si la conexión '
+                                'falla en Android con '
+                                'CERTIFICATE_VERIFY_FAILED, seguir '
+                                'docs/RUNBOOK_PIN_EPPO.md para renovar el '
+                                'pin.',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.amber.shade900)),
+                          ),
+                        ]),
+                  ),
+                ],
                 const SizedBox(height: 10),
                 TextField(
                   controller: _ctrl,

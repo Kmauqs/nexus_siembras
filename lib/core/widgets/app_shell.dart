@@ -285,6 +285,7 @@ class _MainDrawer extends ConsumerWidget {
     ('/auth',        Icons.cloud,         'menuAccount'),
     ('/settings',    Icons.settings,      'menuSettings'),
     ('/trash',       Icons.delete,        'menuTrash'),
+    ('/feedback',    Icons.rate_review,   'menuFeedback'),
   ];
 
   @override

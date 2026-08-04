@@ -9,11 +9,16 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/log.dart';
+import 'feedback_service.dart';
 import 'sync_service.dart';
 
 class AutoSyncService {
-  AutoSyncService(this.sync);
+  AutoSyncService(this.sync, {this.feedback});
   final SyncService sync;
+
+  /// C2-9: al recuperar conexión también se suben las micro-encuestas
+  /// que quedaron en la cola local. Opcional para no romper tests.
+  final FeedbackService? feedback;
 
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _huboOffline = true; // arranca asumiendo offline hasta que se confirme
@@ -74,6 +79,13 @@ class AutoSyncService {
         _ultimoAutoSync = ahora;
       } else if (res.error != null) {
         Log.w('[auto-sync] fallo: ${res.error}');
+      }
+      // C2-9: aprovechar la ventana de conectividad para subir las
+      // micro-encuestas pendientes. Nunca interrumpe el sync de datos.
+      try {
+        await feedback?.enviarPendientes();
+      } catch (e) {
+        Log.d('[auto-sync] envío de feedback pospuesto: $e');
       }
     } finally {
       _sincronizando = false;
