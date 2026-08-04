@@ -224,9 +224,28 @@ class EppoClient {
   /// observado en el log para poder copiarlo aquí. Si Dart logra validar
   /// la cadena por sí mismo (p. ej. EPPO arregló sus intermediates), la
   /// conexión funciona sin necesidad de pin.
+  /// Fecha en que se capturó el pin de la HOJA (C2-8). Actualizarla cada
+  /// vez que se rote el pin con tool/eppo_fingerprint.dart.
+  static final DateTime pinHojaCapturadoEl = DateTime(2026, 7, 20);
+
+  /// Vida típica del certificado hoja (~90 días). A partir de este umbral
+  /// la UI muestra advertencia preventiva (C2-8).
+  static const int _diasAvisoPin = 75;
+
+  /// True si el pin de la hoja está cerca de (o pasado) su rotación
+  /// esperada. No implica fallo: en Android el intermedio Sectigo sigue
+  /// cubriendo la validación; es un recordatorio operativo del runbook
+  /// (docs/RUNBOOK_PIN_EPPO.md).
+  static bool pinHojaProntoAVencer() =>
+      DateTime.now().difference(pinHojaCapturadoEl).inDays >= _diasAvisoPin;
+
+  static int diasDesdeCapturaPin() =>
+      DateTime.now().difference(pinHojaCapturadoEl).inDays;
+
   static const Set<String> _eppoPins = {
     // Certificado HOJA vigente de api.eppo.int (obtenido con
-    // tool/eppo_fingerprint.dart el 2026-07-20). Rota cada pocos meses.
+    // tool/eppo_fingerprint.dart el 2026-07-20 — mantener sincronizado
+    // con [pinHojaCapturadoEl]). Rota cada pocos meses.
     '7f05c01be3c6dc40c82237524c2645fea2e36a3b5f528652a379e3ddae6048ba',
     // Certificado INTERMEDIO "Sectigo Public Server Authentication CA OV
     // R36" (emisor: Sectigo Root R46). Es el que falla en Android: su raíz

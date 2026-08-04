@@ -7,7 +7,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 -   **Desarrollador:** NEXUS CREATIO
 -   **Package Android:** `com.nexuscreatio.nexus_siembras`
 -   **Versión:** 0.2.8 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
--   **Fase actual:** Fase 3 completa + sync tombstones multi-dispositivo, Dashboard Windows enriquecido y cronograma→tarea (2026-08-03). Próximo: web de consulta (drift_wasm).
+-   **Fase actual:** **Versión abierta funcionalmente completa** (Fase 3 cerrada + sync tombstones multi-dispositivo, Dashboard Windows enriquecido, cronograma→tarea — 2026-08-03). **En espera de pruebas por terceros**, con canal de feedback integrado (micro-encuestas offline-first, menú → «Enviar comentarios»). Próximo: herramienta de gestión web (bandeja de feedback + notificaciones), web de consulta (drift_wasm) y modelo freemium.
 
 ## Alcance funcional
 

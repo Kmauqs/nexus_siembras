@@ -696,6 +696,30 @@ class Configs extends Table {
 /// Espejo local de `variedades_comunitarias` (Supabase). Se refresca al
 /// arrancar la app (con sesión) para autocompletar el modal "Nueva variedad"
 /// sin depender de una búsqueda remota en cada tecleo.
+/// Cola local de micro-encuestas de feedback (v21 — Revisión C2-9).
+///
+/// Offline-first: la encuesta se guarda aquí SIEMPRE (funciona sin red y
+/// sin sesión) y `FeedbackService.enviarPendientes` la sube a la tabla
+/// Supabase `feedback_encuestas` (migración 0016) cuando hay conexión y
+/// sesión — al guardar, tras cada auto-sync y al abrir la pantalla.
+class FeedbackEncuestas extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  /// Contexto que disparó la encuesta: 'general' | 'wizard' | 'reporte'…
+  TextColumn get tipo => text().withDefault(const Constant('general'))();
+  /// Calificación 1-5 (estrellas). Nullable: comentario sin calificación.
+  IntColumn get calificacion => integer().nullable()();
+  /// Respuestas estructuradas (JSON) — chips/aspectos seleccionados.
+  TextColumn get respuestasJson => text().withDefault(const Constant('{}'))();
+  TextColumn get comentario => text().nullable()();
+  TextColumn get appVersion => text().nullable()();
+  TextColumn get plataforma => text().nullable()(); // android|windows|...
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get intentos => integer().withDefault(const Constant(0))();
+  TextColumn get ultimoError => text().nullable()();
+  /// Timestamp de envío exitoso al remoto; null = pendiente.
+  DateTimeColumn get enviadaAt => dateTime().nullable()();
+}
+
 class VariedadesComunitariasCache extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get remoteId => integer().unique()();
@@ -734,6 +758,7 @@ class VariedadesComunitariasCache extends Table {
   PredioColaboradores, PatologiasReportadas,
   SyncMappings, SyncTables, SyncOps,
   VariedadesComunitariasCache,
+  FeedbackEncuestas,
   Configs,
 ])
 class AppDatabase extends _$AppDatabase {
@@ -749,7 +774,7 @@ class AppDatabase extends _$AppDatabase {
   final bool _skipSeed;
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -893,6 +918,10 @@ class AppDatabase extends _$AppDatabase {
               await customStatement(
                   'UPDATE cultivo_patologias SET updated_at = created_at');
             }
+          }
+          if (from < 21) {
+            // v21: cola local de micro-encuestas de feedback (C2-9).
+            await m.createTable(feedbackEncuestas);
           }
         },
       );

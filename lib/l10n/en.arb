@@ -147,5 +147,14 @@
     }
   },
   "noSession": "Not signed in",
-  "offlineMode": "Local mode"
+  "offlineMode": "Local mode",
+  "menuFeedback": "Send feedback",
+  "feedbackTitle": "How was your experience?",
+  "feedbackHint": "Your feedback helps improve NEXUS Siembras. Works offline: it will be sent automatically when you are back online.",
+  "feedbackComment": "Comment (optional)",
+  "feedbackSend": "Send",
+  "feedbackThanks": "Thank you! Your feedback was saved and will be sent automatically when online.",
+  "feedbackMine": "My feedback",
+  "feedbackPending": "pending upload",
+  "feedbackSent": "sent"
 }

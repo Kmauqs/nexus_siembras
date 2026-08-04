@@ -18565,6 +18565,581 @@ class VariedadesComunitariasCacheCompanion
   }
 }
 
+class $FeedbackEncuestasTable extends FeedbackEncuestas
+    with TableInfo<$FeedbackEncuestasTable, FeedbackEncuesta> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FeedbackEncuestasTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _tipoMeta = const VerificationMeta('tipo');
+  @override
+  late final GeneratedColumn<String> tipo = GeneratedColumn<String>(
+      'tipo', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('general'));
+  static const VerificationMeta _calificacionMeta =
+      const VerificationMeta('calificacion');
+  @override
+  late final GeneratedColumn<int> calificacion = GeneratedColumn<int>(
+      'calificacion', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _respuestasJsonMeta =
+      const VerificationMeta('respuestasJson');
+  @override
+  late final GeneratedColumn<String> respuestasJson = GeneratedColumn<String>(
+      'respuestas_json', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  static const VerificationMeta _comentarioMeta =
+      const VerificationMeta('comentario');
+  @override
+  late final GeneratedColumn<String> comentario = GeneratedColumn<String>(
+      'comentario', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _appVersionMeta =
+      const VerificationMeta('appVersion');
+  @override
+  late final GeneratedColumn<String> appVersion = GeneratedColumn<String>(
+      'app_version', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _plataformaMeta =
+      const VerificationMeta('plataforma');
+  @override
+  late final GeneratedColumn<String> plataforma = GeneratedColumn<String>(
+      'plataforma', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _intentosMeta =
+      const VerificationMeta('intentos');
+  @override
+  late final GeneratedColumn<int> intentos = GeneratedColumn<int>(
+      'intentos', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _ultimoErrorMeta =
+      const VerificationMeta('ultimoError');
+  @override
+  late final GeneratedColumn<String> ultimoError = GeneratedColumn<String>(
+      'ultimo_error', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _enviadaAtMeta =
+      const VerificationMeta('enviadaAt');
+  @override
+  late final GeneratedColumn<DateTime> enviadaAt = GeneratedColumn<DateTime>(
+      'enviada_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        tipo,
+        calificacion,
+        respuestasJson,
+        comentario,
+        appVersion,
+        plataforma,
+        createdAt,
+        intentos,
+        ultimoError,
+        enviadaAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'feedback_encuestas';
+  @override
+  VerificationContext validateIntegrity(Insertable<FeedbackEncuesta> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('tipo')) {
+      context.handle(
+          _tipoMeta, tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta));
+    }
+    if (data.containsKey('calificacion')) {
+      context.handle(
+          _calificacionMeta,
+          calificacion.isAcceptableOrUnknown(
+              data['calificacion']!, _calificacionMeta));
+    }
+    if (data.containsKey('respuestas_json')) {
+      context.handle(
+          _respuestasJsonMeta,
+          respuestasJson.isAcceptableOrUnknown(
+              data['respuestas_json']!, _respuestasJsonMeta));
+    }
+    if (data.containsKey('comentario')) {
+      context.handle(
+          _comentarioMeta,
+          comentario.isAcceptableOrUnknown(
+              data['comentario']!, _comentarioMeta));
+    }
+    if (data.containsKey('app_version')) {
+      context.handle(
+          _appVersionMeta,
+          appVersion.isAcceptableOrUnknown(
+              data['app_version']!, _appVersionMeta));
+    }
+    if (data.containsKey('plataforma')) {
+      context.handle(
+          _plataformaMeta,
+          plataforma.isAcceptableOrUnknown(
+              data['plataforma']!, _plataformaMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('intentos')) {
+      context.handle(_intentosMeta,
+          intentos.isAcceptableOrUnknown(data['intentos']!, _intentosMeta));
+    }
+    if (data.containsKey('ultimo_error')) {
+      context.handle(
+          _ultimoErrorMeta,
+          ultimoError.isAcceptableOrUnknown(
+              data['ultimo_error']!, _ultimoErrorMeta));
+    }
+    if (data.containsKey('enviada_at')) {
+      context.handle(_enviadaAtMeta,
+          enviadaAt.isAcceptableOrUnknown(data['enviada_at']!, _enviadaAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FeedbackEncuesta map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FeedbackEncuesta(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      tipo: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tipo'])!,
+      calificacion: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}calificacion']),
+      respuestasJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}respuestas_json'])!,
+      comentario: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}comentario']),
+      appVersion: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}app_version']),
+      plataforma: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}plataforma']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      intentos: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}intentos'])!,
+      ultimoError: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}ultimo_error']),
+      enviadaAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}enviada_at']),
+    );
+  }
+
+  @override
+  $FeedbackEncuestasTable createAlias(String alias) {
+    return $FeedbackEncuestasTable(attachedDatabase, alias);
+  }
+}
+
+class FeedbackEncuesta extends DataClass
+    implements Insertable<FeedbackEncuesta> {
+  final int id;
+
+  /// Contexto que disparó la encuesta: 'general' | 'wizard' | 'reporte'…
+  final String tipo;
+
+  /// Calificación 1-5 (estrellas). Nullable: comentario sin calificación.
+  final int? calificacion;
+
+  /// Respuestas estructuradas (JSON) — chips/aspectos seleccionados.
+  final String respuestasJson;
+  final String? comentario;
+  final String? appVersion;
+  final String? plataforma;
+  final DateTime createdAt;
+  final int intentos;
+  final String? ultimoError;
+
+  /// Timestamp de envío exitoso al remoto; null = pendiente.
+  final DateTime? enviadaAt;
+  const FeedbackEncuesta(
+      {required this.id,
+      required this.tipo,
+      this.calificacion,
+      required this.respuestasJson,
+      this.comentario,
+      this.appVersion,
+      this.plataforma,
+      required this.createdAt,
+      required this.intentos,
+      this.ultimoError,
+      this.enviadaAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['tipo'] = Variable<String>(tipo);
+    if (!nullToAbsent || calificacion != null) {
+      map['calificacion'] = Variable<int>(calificacion);
+    }
+    map['respuestas_json'] = Variable<String>(respuestasJson);
+    if (!nullToAbsent || comentario != null) {
+      map['comentario'] = Variable<String>(comentario);
+    }
+    if (!nullToAbsent || appVersion != null) {
+      map['app_version'] = Variable<String>(appVersion);
+    }
+    if (!nullToAbsent || plataforma != null) {
+      map['plataforma'] = Variable<String>(plataforma);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['intentos'] = Variable<int>(intentos);
+    if (!nullToAbsent || ultimoError != null) {
+      map['ultimo_error'] = Variable<String>(ultimoError);
+    }
+    if (!nullToAbsent || enviadaAt != null) {
+      map['enviada_at'] = Variable<DateTime>(enviadaAt);
+    }
+    return map;
+  }
+
+  FeedbackEncuestasCompanion toCompanion(bool nullToAbsent) {
+    return FeedbackEncuestasCompanion(
+      id: Value(id),
+      tipo: Value(tipo),
+      calificacion: calificacion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(calificacion),
+      respuestasJson: Value(respuestasJson),
+      comentario: comentario == null && nullToAbsent
+          ? const Value.absent()
+          : Value(comentario),
+      appVersion: appVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(appVersion),
+      plataforma: plataforma == null && nullToAbsent
+          ? const Value.absent()
+          : Value(plataforma),
+      createdAt: Value(createdAt),
+      intentos: Value(intentos),
+      ultimoError: ultimoError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ultimoError),
+      enviadaAt: enviadaAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(enviadaAt),
+    );
+  }
+
+  factory FeedbackEncuesta.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FeedbackEncuesta(
+      id: serializer.fromJson<int>(json['id']),
+      tipo: serializer.fromJson<String>(json['tipo']),
+      calificacion: serializer.fromJson<int?>(json['calificacion']),
+      respuestasJson: serializer.fromJson<String>(json['respuestasJson']),
+      comentario: serializer.fromJson<String?>(json['comentario']),
+      appVersion: serializer.fromJson<String?>(json['appVersion']),
+      plataforma: serializer.fromJson<String?>(json['plataforma']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      intentos: serializer.fromJson<int>(json['intentos']),
+      ultimoError: serializer.fromJson<String?>(json['ultimoError']),
+      enviadaAt: serializer.fromJson<DateTime?>(json['enviadaAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'tipo': serializer.toJson<String>(tipo),
+      'calificacion': serializer.toJson<int?>(calificacion),
+      'respuestasJson': serializer.toJson<String>(respuestasJson),
+      'comentario': serializer.toJson<String?>(comentario),
+      'appVersion': serializer.toJson<String?>(appVersion),
+      'plataforma': serializer.toJson<String?>(plataforma),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'intentos': serializer.toJson<int>(intentos),
+      'ultimoError': serializer.toJson<String?>(ultimoError),
+      'enviadaAt': serializer.toJson<DateTime?>(enviadaAt),
+    };
+  }
+
+  FeedbackEncuesta copyWith(
+          {int? id,
+          String? tipo,
+          Value<int?> calificacion = const Value.absent(),
+          String? respuestasJson,
+          Value<String?> comentario = const Value.absent(),
+          Value<String?> appVersion = const Value.absent(),
+          Value<String?> plataforma = const Value.absent(),
+          DateTime? createdAt,
+          int? intentos,
+          Value<String?> ultimoError = const Value.absent(),
+          Value<DateTime?> enviadaAt = const Value.absent()}) =>
+      FeedbackEncuesta(
+        id: id ?? this.id,
+        tipo: tipo ?? this.tipo,
+        calificacion:
+            calificacion.present ? calificacion.value : this.calificacion,
+        respuestasJson: respuestasJson ?? this.respuestasJson,
+        comentario: comentario.present ? comentario.value : this.comentario,
+        appVersion: appVersion.present ? appVersion.value : this.appVersion,
+        plataforma: plataforma.present ? plataforma.value : this.plataforma,
+        createdAt: createdAt ?? this.createdAt,
+        intentos: intentos ?? this.intentos,
+        ultimoError: ultimoError.present ? ultimoError.value : this.ultimoError,
+        enviadaAt: enviadaAt.present ? enviadaAt.value : this.enviadaAt,
+      );
+  FeedbackEncuesta copyWithCompanion(FeedbackEncuestasCompanion data) {
+    return FeedbackEncuesta(
+      id: data.id.present ? data.id.value : this.id,
+      tipo: data.tipo.present ? data.tipo.value : this.tipo,
+      calificacion: data.calificacion.present
+          ? data.calificacion.value
+          : this.calificacion,
+      respuestasJson: data.respuestasJson.present
+          ? data.respuestasJson.value
+          : this.respuestasJson,
+      comentario:
+          data.comentario.present ? data.comentario.value : this.comentario,
+      appVersion:
+          data.appVersion.present ? data.appVersion.value : this.appVersion,
+      plataforma:
+          data.plataforma.present ? data.plataforma.value : this.plataforma,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      intentos: data.intentos.present ? data.intentos.value : this.intentos,
+      ultimoError:
+          data.ultimoError.present ? data.ultimoError.value : this.ultimoError,
+      enviadaAt: data.enviadaAt.present ? data.enviadaAt.value : this.enviadaAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeedbackEncuesta(')
+          ..write('id: $id, ')
+          ..write('tipo: $tipo, ')
+          ..write('calificacion: $calificacion, ')
+          ..write('respuestasJson: $respuestasJson, ')
+          ..write('comentario: $comentario, ')
+          ..write('appVersion: $appVersion, ')
+          ..write('plataforma: $plataforma, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('intentos: $intentos, ')
+          ..write('ultimoError: $ultimoError, ')
+          ..write('enviadaAt: $enviadaAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      tipo,
+      calificacion,
+      respuestasJson,
+      comentario,
+      appVersion,
+      plataforma,
+      createdAt,
+      intentos,
+      ultimoError,
+      enviadaAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FeedbackEncuesta &&
+          other.id == this.id &&
+          other.tipo == this.tipo &&
+          other.calificacion == this.calificacion &&
+          other.respuestasJson == this.respuestasJson &&
+          other.comentario == this.comentario &&
+          other.appVersion == this.appVersion &&
+          other.plataforma == this.plataforma &&
+          other.createdAt == this.createdAt &&
+          other.intentos == this.intentos &&
+          other.ultimoError == this.ultimoError &&
+          other.enviadaAt == this.enviadaAt);
+}
+
+class FeedbackEncuestasCompanion extends UpdateCompanion<FeedbackEncuesta> {
+  final Value<int> id;
+  final Value<String> tipo;
+  final Value<int?> calificacion;
+  final Value<String> respuestasJson;
+  final Value<String?> comentario;
+  final Value<String?> appVersion;
+  final Value<String?> plataforma;
+  final Value<DateTime> createdAt;
+  final Value<int> intentos;
+  final Value<String?> ultimoError;
+  final Value<DateTime?> enviadaAt;
+  const FeedbackEncuestasCompanion({
+    this.id = const Value.absent(),
+    this.tipo = const Value.absent(),
+    this.calificacion = const Value.absent(),
+    this.respuestasJson = const Value.absent(),
+    this.comentario = const Value.absent(),
+    this.appVersion = const Value.absent(),
+    this.plataforma = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.intentos = const Value.absent(),
+    this.ultimoError = const Value.absent(),
+    this.enviadaAt = const Value.absent(),
+  });
+  FeedbackEncuestasCompanion.insert({
+    this.id = const Value.absent(),
+    this.tipo = const Value.absent(),
+    this.calificacion = const Value.absent(),
+    this.respuestasJson = const Value.absent(),
+    this.comentario = const Value.absent(),
+    this.appVersion = const Value.absent(),
+    this.plataforma = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.intentos = const Value.absent(),
+    this.ultimoError = const Value.absent(),
+    this.enviadaAt = const Value.absent(),
+  });
+  static Insertable<FeedbackEncuesta> custom({
+    Expression<int>? id,
+    Expression<String>? tipo,
+    Expression<int>? calificacion,
+    Expression<String>? respuestasJson,
+    Expression<String>? comentario,
+    Expression<String>? appVersion,
+    Expression<String>? plataforma,
+    Expression<DateTime>? createdAt,
+    Expression<int>? intentos,
+    Expression<String>? ultimoError,
+    Expression<DateTime>? enviadaAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tipo != null) 'tipo': tipo,
+      if (calificacion != null) 'calificacion': calificacion,
+      if (respuestasJson != null) 'respuestas_json': respuestasJson,
+      if (comentario != null) 'comentario': comentario,
+      if (appVersion != null) 'app_version': appVersion,
+      if (plataforma != null) 'plataforma': plataforma,
+      if (createdAt != null) 'created_at': createdAt,
+      if (intentos != null) 'intentos': intentos,
+      if (ultimoError != null) 'ultimo_error': ultimoError,
+      if (enviadaAt != null) 'enviada_at': enviadaAt,
+    });
+  }
+
+  FeedbackEncuestasCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? tipo,
+      Value<int?>? calificacion,
+      Value<String>? respuestasJson,
+      Value<String?>? comentario,
+      Value<String?>? appVersion,
+      Value<String?>? plataforma,
+      Value<DateTime>? createdAt,
+      Value<int>? intentos,
+      Value<String?>? ultimoError,
+      Value<DateTime?>? enviadaAt}) {
+    return FeedbackEncuestasCompanion(
+      id: id ?? this.id,
+      tipo: tipo ?? this.tipo,
+      calificacion: calificacion ?? this.calificacion,
+      respuestasJson: respuestasJson ?? this.respuestasJson,
+      comentario: comentario ?? this.comentario,
+      appVersion: appVersion ?? this.appVersion,
+      plataforma: plataforma ?? this.plataforma,
+      createdAt: createdAt ?? this.createdAt,
+      intentos: intentos ?? this.intentos,
+      ultimoError: ultimoError ?? this.ultimoError,
+      enviadaAt: enviadaAt ?? this.enviadaAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (tipo.present) {
+      map['tipo'] = Variable<String>(tipo.value);
+    }
+    if (calificacion.present) {
+      map['calificacion'] = Variable<int>(calificacion.value);
+    }
+    if (respuestasJson.present) {
+      map['respuestas_json'] = Variable<String>(respuestasJson.value);
+    }
+    if (comentario.present) {
+      map['comentario'] = Variable<String>(comentario.value);
+    }
+    if (appVersion.present) {
+      map['app_version'] = Variable<String>(appVersion.value);
+    }
+    if (plataforma.present) {
+      map['plataforma'] = Variable<String>(plataforma.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (intentos.present) {
+      map['intentos'] = Variable<int>(intentos.value);
+    }
+    if (ultimoError.present) {
+      map['ultimo_error'] = Variable<String>(ultimoError.value);
+    }
+    if (enviadaAt.present) {
+      map['enviada_at'] = Variable<DateTime>(enviadaAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeedbackEncuestasCompanion(')
+          ..write('id: $id, ')
+          ..write('tipo: $tipo, ')
+          ..write('calificacion: $calificacion, ')
+          ..write('respuestasJson: $respuestasJson, ')
+          ..write('comentario: $comentario, ')
+          ..write('appVersion: $appVersion, ')
+          ..write('plataforma: $plataforma, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('intentos: $intentos, ')
+          ..write('ultimoError: $ultimoError, ')
+          ..write('enviadaAt: $enviadaAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ConfigsTable extends Configs with TableInfo<$ConfigsTable, Config> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -19296,6 +19871,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncOpsTable syncOps = $SyncOpsTable(this);
   late final $VariedadesComunitariasCacheTable variedadesComunitariasCache =
       $VariedadesComunitariasCacheTable(this);
+  late final $FeedbackEncuestasTable feedbackEncuestas =
+      $FeedbackEncuestasTable(this);
   late final $ConfigsTable configs = $ConfigsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -19332,6 +19909,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         syncTables,
         syncOps,
         variedadesComunitariasCache,
+        feedbackEncuestas,
         configs
       ];
 }
@@ -27736,6 +28314,268 @@ typedef $$VariedadesComunitariasCacheTableProcessedTableManager
         ),
         VariedadesComunitariasCacheData,
         PrefetchHooks Function()>;
+typedef $$FeedbackEncuestasTableCreateCompanionBuilder
+    = FeedbackEncuestasCompanion Function({
+  Value<int> id,
+  Value<String> tipo,
+  Value<int?> calificacion,
+  Value<String> respuestasJson,
+  Value<String?> comentario,
+  Value<String?> appVersion,
+  Value<String?> plataforma,
+  Value<DateTime> createdAt,
+  Value<int> intentos,
+  Value<String?> ultimoError,
+  Value<DateTime?> enviadaAt,
+});
+typedef $$FeedbackEncuestasTableUpdateCompanionBuilder
+    = FeedbackEncuestasCompanion Function({
+  Value<int> id,
+  Value<String> tipo,
+  Value<int?> calificacion,
+  Value<String> respuestasJson,
+  Value<String?> comentario,
+  Value<String?> appVersion,
+  Value<String?> plataforma,
+  Value<DateTime> createdAt,
+  Value<int> intentos,
+  Value<String?> ultimoError,
+  Value<DateTime?> enviadaAt,
+});
+
+class $$FeedbackEncuestasTableFilterComposer
+    extends Composer<_$AppDatabase, $FeedbackEncuestasTable> {
+  $$FeedbackEncuestasTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tipo => $composableBuilder(
+      column: $table.tipo, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get calificacion => $composableBuilder(
+      column: $table.calificacion, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get respuestasJson => $composableBuilder(
+      column: $table.respuestasJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get comentario => $composableBuilder(
+      column: $table.comentario, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get appVersion => $composableBuilder(
+      column: $table.appVersion, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get plataforma => $composableBuilder(
+      column: $table.plataforma, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get intentos => $composableBuilder(
+      column: $table.intentos, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ultimoError => $composableBuilder(
+      column: $table.ultimoError, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get enviadaAt => $composableBuilder(
+      column: $table.enviadaAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$FeedbackEncuestasTableOrderingComposer
+    extends Composer<_$AppDatabase, $FeedbackEncuestasTable> {
+  $$FeedbackEncuestasTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tipo => $composableBuilder(
+      column: $table.tipo, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get calificacion => $composableBuilder(
+      column: $table.calificacion,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get respuestasJson => $composableBuilder(
+      column: $table.respuestasJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get comentario => $composableBuilder(
+      column: $table.comentario, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get appVersion => $composableBuilder(
+      column: $table.appVersion, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get plataforma => $composableBuilder(
+      column: $table.plataforma, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get intentos => $composableBuilder(
+      column: $table.intentos, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ultimoError => $composableBuilder(
+      column: $table.ultimoError, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get enviadaAt => $composableBuilder(
+      column: $table.enviadaAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$FeedbackEncuestasTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FeedbackEncuestasTable> {
+  $$FeedbackEncuestasTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tipo =>
+      $composableBuilder(column: $table.tipo, builder: (column) => column);
+
+  GeneratedColumn<int> get calificacion => $composableBuilder(
+      column: $table.calificacion, builder: (column) => column);
+
+  GeneratedColumn<String> get respuestasJson => $composableBuilder(
+      column: $table.respuestasJson, builder: (column) => column);
+
+  GeneratedColumn<String> get comentario => $composableBuilder(
+      column: $table.comentario, builder: (column) => column);
+
+  GeneratedColumn<String> get appVersion => $composableBuilder(
+      column: $table.appVersion, builder: (column) => column);
+
+  GeneratedColumn<String> get plataforma => $composableBuilder(
+      column: $table.plataforma, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get intentos =>
+      $composableBuilder(column: $table.intentos, builder: (column) => column);
+
+  GeneratedColumn<String> get ultimoError => $composableBuilder(
+      column: $table.ultimoError, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get enviadaAt =>
+      $composableBuilder(column: $table.enviadaAt, builder: (column) => column);
+}
+
+class $$FeedbackEncuestasTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $FeedbackEncuestasTable,
+    FeedbackEncuesta,
+    $$FeedbackEncuestasTableFilterComposer,
+    $$FeedbackEncuestasTableOrderingComposer,
+    $$FeedbackEncuestasTableAnnotationComposer,
+    $$FeedbackEncuestasTableCreateCompanionBuilder,
+    $$FeedbackEncuestasTableUpdateCompanionBuilder,
+    (
+      FeedbackEncuesta,
+      BaseReferences<_$AppDatabase, $FeedbackEncuestasTable, FeedbackEncuesta>
+    ),
+    FeedbackEncuesta,
+    PrefetchHooks Function()> {
+  $$FeedbackEncuestasTableTableManager(
+      _$AppDatabase db, $FeedbackEncuestasTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FeedbackEncuestasTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FeedbackEncuestasTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FeedbackEncuestasTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> tipo = const Value.absent(),
+            Value<int?> calificacion = const Value.absent(),
+            Value<String> respuestasJson = const Value.absent(),
+            Value<String?> comentario = const Value.absent(),
+            Value<String?> appVersion = const Value.absent(),
+            Value<String?> plataforma = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> intentos = const Value.absent(),
+            Value<String?> ultimoError = const Value.absent(),
+            Value<DateTime?> enviadaAt = const Value.absent(),
+          }) =>
+              FeedbackEncuestasCompanion(
+            id: id,
+            tipo: tipo,
+            calificacion: calificacion,
+            respuestasJson: respuestasJson,
+            comentario: comentario,
+            appVersion: appVersion,
+            plataforma: plataforma,
+            createdAt: createdAt,
+            intentos: intentos,
+            ultimoError: ultimoError,
+            enviadaAt: enviadaAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> tipo = const Value.absent(),
+            Value<int?> calificacion = const Value.absent(),
+            Value<String> respuestasJson = const Value.absent(),
+            Value<String?> comentario = const Value.absent(),
+            Value<String?> appVersion = const Value.absent(),
+            Value<String?> plataforma = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> intentos = const Value.absent(),
+            Value<String?> ultimoError = const Value.absent(),
+            Value<DateTime?> enviadaAt = const Value.absent(),
+          }) =>
+              FeedbackEncuestasCompanion.insert(
+            id: id,
+            tipo: tipo,
+            calificacion: calificacion,
+            respuestasJson: respuestasJson,
+            comentario: comentario,
+            appVersion: appVersion,
+            plataforma: plataforma,
+            createdAt: createdAt,
+            intentos: intentos,
+            ultimoError: ultimoError,
+            enviadaAt: enviadaAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$FeedbackEncuestasTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $FeedbackEncuestasTable,
+    FeedbackEncuesta,
+    $$FeedbackEncuestasTableFilterComposer,
+    $$FeedbackEncuestasTableOrderingComposer,
+    $$FeedbackEncuestasTableAnnotationComposer,
+    $$FeedbackEncuestasTableCreateCompanionBuilder,
+    $$FeedbackEncuestasTableUpdateCompanionBuilder,
+    (
+      FeedbackEncuesta,
+      BaseReferences<_$AppDatabase, $FeedbackEncuestasTable, FeedbackEncuesta>
+    ),
+    FeedbackEncuesta,
+    PrefetchHooks Function()>;
 typedef $$ConfigsTableCreateCompanionBuilder = ConfigsCompanion Function({
   Value<int> id,
   Value<String> idioma,
@@ -28097,6 +28937,8 @@ class $AppDatabaseManager {
       get variedadesComunitariasCache =>
           $$VariedadesComunitariasCacheTableTableManager(
               _db, _db.variedadesComunitariasCache);
+  $$FeedbackEncuestasTableTableManager get feedbackEncuestas =>
+      $$FeedbackEncuestasTableTableManager(_db, _db.feedbackEncuestas);
   $$ConfigsTableTableManager get configs =>
       $$ConfigsTableTableManager(_db, _db.configs);
 }

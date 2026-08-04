@@ -1,0 +1,17 @@
+tabla,columna,accion
+predios,owner_id,c
+lotes,owner_id,c
+proveedores,owner_id,c
+cultivos,owner_id,c
+eventos_cultivo,owner_id,c
+tareas_completadas,owner_id,c
+tareas_completadas,created_by_user_id,n
+inventarios,owner_id,c
+compras,owner_id,c
+compras,created_by_user_id,n
+analisis_suelo,owner_id,c
+condiciones_predio,owner_id,c
+predio_shares,shared_with_id,c
+predio_shares,owner_id,c
+patologias_reportadas,owner_id,n
+cultivo_patologias,owner_id,c
