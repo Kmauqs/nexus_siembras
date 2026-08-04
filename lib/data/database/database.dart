@@ -586,6 +586,9 @@ class PatologiasReportadas extends Table {
   TextColumn get municipioNombre => text().nullable()();
   RealColumn get climaTempC => real().nullable()();
   RealColumn get climaHumedadPct => real().nullable()();
+  /// Última señal de vida del foco (reporte cercano o admin). Alineado con
+  /// `patologias_reportadas.ultima_actividad_at` (migración 0018).
+  DateTimeColumn get ultimaActividadAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -774,7 +777,7 @@ class AppDatabase extends _$AppDatabase {
   final bool _skipSeed;
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -922,6 +925,18 @@ class AppDatabase extends _$AppDatabase {
           if (from < 21) {
             // v21: cola local de micro-encuestas de feedback (C2-9).
             await m.createTable(feedbackEncuestas);
+          }
+          if (from < 22) {
+            // v22: actividad del foco para estado activa/desatendida (0018).
+            await m.addColumn(
+              patologiasReportadas,
+              patologiasReportadas.ultimaActividadAt,
+            );
+            await customStatement(
+              'UPDATE patologias_reportadas '
+              'SET ultima_actividad_at = COALESCE(updated_at, created_at, fecha_deteccion) '
+              'WHERE ultima_actividad_at IS NULL',
+            );
           }
         },
       );

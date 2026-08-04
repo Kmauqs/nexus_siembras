@@ -753,6 +753,7 @@ final heatmapPatologiasProvider =
       cultivoId: cp.cultivoId,
       comunitario: false,
       notas: cp.notas,
+      ultimaActividad: cp.updatedAt,
     ));
   }
 
@@ -779,6 +780,7 @@ final heatmapPatologiasProvider =
       comunitario: true,
       plantaNombre: pr.plantaNombre,
       notas: pr.sintomas,
+      ultimaActividad: pr.ultimaActividadAt ?? pr.updatedAt,
     ));
   }
   return salida;

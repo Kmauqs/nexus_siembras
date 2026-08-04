@@ -15835,6 +15835,12 @@ class $PatologiasReportadasTable extends PatologiasReportadas
   late final GeneratedColumn<double> climaHumedadPct = GeneratedColumn<double>(
       'clima_humedad_pct', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _ultimaActividadAtMeta =
+      const VerificationMeta('ultimaActividadAt');
+  @override
+  late final GeneratedColumn<DateTime> ultimaActividadAt =
+      GeneratedColumn<DateTime>('ultima_actividad_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -15877,6 +15883,7 @@ class $PatologiasReportadasTable extends PatologiasReportadas
         municipioNombre,
         climaTempC,
         climaHumedadPct,
+        ultimaActividadAt,
         createdAt,
         updatedAt,
         deletedAt
@@ -15993,6 +16000,12 @@ class $PatologiasReportadasTable extends PatologiasReportadas
           climaHumedadPct.isAcceptableOrUnknown(
               data['clima_humedad_pct']!, _climaHumedadPctMeta));
     }
+    if (data.containsKey('ultima_actividad_at')) {
+      context.handle(
+          _ultimaActividadAtMeta,
+          ultimaActividadAt.isAcceptableOrUnknown(
+              data['ultima_actividad_at']!, _ultimaActividadAtMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -16050,6 +16063,8 @@ class $PatologiasReportadasTable extends PatologiasReportadas
           .read(DriftSqlType.double, data['${effectivePrefix}clima_temp_c']),
       climaHumedadPct: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}clima_humedad_pct']),
+      ultimaActividadAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}ultima_actividad_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -16091,6 +16106,10 @@ class PatologiasReportada extends DataClass
   final String? municipioNombre;
   final double? climaTempC;
   final double? climaHumedadPct;
+
+  /// Última señal de vida del foco (reporte cercano o admin). Alineado con
+  /// `patologias_reportadas.ultima_actividad_at` (migración 0018).
+  final DateTime? ultimaActividadAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -16113,6 +16132,7 @@ class PatologiasReportada extends DataClass
       this.municipioNombre,
       this.climaTempC,
       this.climaHumedadPct,
+      this.ultimaActividadAt,
       required this.createdAt,
       required this.updatedAt,
       this.deletedAt});
@@ -16162,6 +16182,9 @@ class PatologiasReportada extends DataClass
     }
     if (!nullToAbsent || climaHumedadPct != null) {
       map['clima_humedad_pct'] = Variable<double>(climaHumedadPct);
+    }
+    if (!nullToAbsent || ultimaActividadAt != null) {
+      map['ultima_actividad_at'] = Variable<DateTime>(ultimaActividadAt);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -16215,6 +16238,9 @@ class PatologiasReportada extends DataClass
       climaHumedadPct: climaHumedadPct == null && nullToAbsent
           ? const Value.absent()
           : Value(climaHumedadPct),
+      ultimaActividadAt: ultimaActividadAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ultimaActividadAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -16246,6 +16272,8 @@ class PatologiasReportada extends DataClass
       municipioNombre: serializer.fromJson<String?>(json['municipioNombre']),
       climaTempC: serializer.fromJson<double?>(json['climaTempC']),
       climaHumedadPct: serializer.fromJson<double?>(json['climaHumedadPct']),
+      ultimaActividadAt:
+          serializer.fromJson<DateTime?>(json['ultimaActividadAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -16273,6 +16301,7 @@ class PatologiasReportada extends DataClass
       'municipioNombre': serializer.toJson<String?>(municipioNombre),
       'climaTempC': serializer.toJson<double?>(climaTempC),
       'climaHumedadPct': serializer.toJson<double?>(climaHumedadPct),
+      'ultimaActividadAt': serializer.toJson<DateTime?>(ultimaActividadAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -16298,6 +16327,7 @@ class PatologiasReportada extends DataClass
           Value<String?> municipioNombre = const Value.absent(),
           Value<double?> climaTempC = const Value.absent(),
           Value<double?> climaHumedadPct = const Value.absent(),
+          Value<DateTime?> ultimaActividadAt = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           Value<DateTime?> deletedAt = const Value.absent()}) =>
@@ -16332,6 +16362,9 @@ class PatologiasReportada extends DataClass
         climaHumedadPct: climaHumedadPct.present
             ? climaHumedadPct.value
             : this.climaHumedadPct,
+        ultimaActividadAt: ultimaActividadAt.present
+            ? ultimaActividadAt.value
+            : this.ultimaActividadAt,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -16377,6 +16410,9 @@ class PatologiasReportada extends DataClass
       climaHumedadPct: data.climaHumedadPct.present
           ? data.climaHumedadPct.value
           : this.climaHumedadPct,
+      ultimaActividadAt: data.ultimaActividadAt.present
+          ? data.ultimaActividadAt.value
+          : this.ultimaActividadAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -16404,6 +16440,7 @@ class PatologiasReportada extends DataClass
           ..write('municipioNombre: $municipioNombre, ')
           ..write('climaTempC: $climaTempC, ')
           ..write('climaHumedadPct: $climaHumedadPct, ')
+          ..write('ultimaActividadAt: $ultimaActividadAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -16431,6 +16468,7 @@ class PatologiasReportada extends DataClass
         municipioNombre,
         climaTempC,
         climaHumedadPct,
+        ultimaActividadAt,
         createdAt,
         updatedAt,
         deletedAt
@@ -16457,6 +16495,7 @@ class PatologiasReportada extends DataClass
           other.municipioNombre == this.municipioNombre &&
           other.climaTempC == this.climaTempC &&
           other.climaHumedadPct == this.climaHumedadPct &&
+          other.ultimaActividadAt == this.ultimaActividadAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -16482,6 +16521,7 @@ class PatologiasReportadasCompanion
   final Value<String?> municipioNombre;
   final Value<double?> climaTempC;
   final Value<double?> climaHumedadPct;
+  final Value<DateTime?> ultimaActividadAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -16504,6 +16544,7 @@ class PatologiasReportadasCompanion
     this.municipioNombre = const Value.absent(),
     this.climaTempC = const Value.absent(),
     this.climaHumedadPct = const Value.absent(),
+    this.ultimaActividadAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -16527,6 +16568,7 @@ class PatologiasReportadasCompanion
     this.municipioNombre = const Value.absent(),
     this.climaTempC = const Value.absent(),
     this.climaHumedadPct = const Value.absent(),
+    this.ultimaActividadAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -16553,6 +16595,7 @@ class PatologiasReportadasCompanion
     Expression<String>? municipioNombre,
     Expression<double>? climaTempC,
     Expression<double>? climaHumedadPct,
+    Expression<DateTime>? ultimaActividadAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -16578,6 +16621,7 @@ class PatologiasReportadasCompanion
       if (municipioNombre != null) 'municipio_nombre': municipioNombre,
       if (climaTempC != null) 'clima_temp_c': climaTempC,
       if (climaHumedadPct != null) 'clima_humedad_pct': climaHumedadPct,
+      if (ultimaActividadAt != null) 'ultima_actividad_at': ultimaActividadAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -16603,6 +16647,7 @@ class PatologiasReportadasCompanion
       Value<String?>? municipioNombre,
       Value<double?>? climaTempC,
       Value<double?>? climaHumedadPct,
+      Value<DateTime?>? ultimaActividadAt,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<DateTime?>? deletedAt}) {
@@ -16625,6 +16670,7 @@ class PatologiasReportadasCompanion
       municipioNombre: municipioNombre ?? this.municipioNombre,
       climaTempC: climaTempC ?? this.climaTempC,
       climaHumedadPct: climaHumedadPct ?? this.climaHumedadPct,
+      ultimaActividadAt: ultimaActividadAt ?? this.ultimaActividadAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -16688,6 +16734,9 @@ class PatologiasReportadasCompanion
     if (climaHumedadPct.present) {
       map['clima_humedad_pct'] = Variable<double>(climaHumedadPct.value);
     }
+    if (ultimaActividadAt.present) {
+      map['ultima_actividad_at'] = Variable<DateTime>(ultimaActividadAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -16721,6 +16770,7 @@ class PatologiasReportadasCompanion
           ..write('municipioNombre: $municipioNombre, ')
           ..write('climaTempC: $climaTempC, ')
           ..write('climaHumedadPct: $climaHumedadPct, ')
+          ..write('ultimaActividadAt: $ultimaActividadAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -27031,6 +27081,7 @@ typedef $$PatologiasReportadasTableCreateCompanionBuilder
   Value<String?> municipioNombre,
   Value<double?> climaTempC,
   Value<double?> climaHumedadPct,
+  Value<DateTime?> ultimaActividadAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -27055,6 +27106,7 @@ typedef $$PatologiasReportadasTableUpdateCompanionBuilder
   Value<String?> municipioNombre,
   Value<double?> climaTempC,
   Value<double?> climaHumedadPct,
+  Value<DateTime?> ultimaActividadAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -27127,6 +27179,10 @@ class $$PatologiasReportadasTableFilterComposer
 
   ColumnFilters<double> get climaHumedadPct => $composableBuilder(
       column: $table.climaHumedadPct,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get ultimaActividadAt => $composableBuilder(
+      column: $table.ultimaActividadAt,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -27212,6 +27268,10 @@ class $$PatologiasReportadasTableOrderingComposer
       column: $table.climaHumedadPct,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get ultimaActividadAt => $composableBuilder(
+      column: $table.ultimaActividadAt,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -27285,6 +27345,9 @@ class $$PatologiasReportadasTableAnnotationComposer
   GeneratedColumn<double> get climaHumedadPct => $composableBuilder(
       column: $table.climaHumedadPct, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get ultimaActividadAt => $composableBuilder(
+      column: $table.ultimaActividadAt, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -27343,6 +27406,7 @@ class $$PatologiasReportadasTableTableManager extends RootTableManager<
             Value<String?> municipioNombre = const Value.absent(),
             Value<double?> climaTempC = const Value.absent(),
             Value<double?> climaHumedadPct = const Value.absent(),
+            Value<DateTime?> ultimaActividadAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -27366,6 +27430,7 @@ class $$PatologiasReportadasTableTableManager extends RootTableManager<
             municipioNombre: municipioNombre,
             climaTempC: climaTempC,
             climaHumedadPct: climaHumedadPct,
+            ultimaActividadAt: ultimaActividadAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -27389,6 +27454,7 @@ class $$PatologiasReportadasTableTableManager extends RootTableManager<
             Value<String?> municipioNombre = const Value.absent(),
             Value<double?> climaTempC = const Value.absent(),
             Value<double?> climaHumedadPct = const Value.absent(),
+            Value<DateTime?> ultimaActividadAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -27412,6 +27478,7 @@ class $$PatologiasReportadasTableTableManager extends RootTableManager<
             municipioNombre: municipioNombre,
             climaTempC: climaTempC,
             climaHumedadPct: climaHumedadPct,
+            ultimaActividadAt: ultimaActividadAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,

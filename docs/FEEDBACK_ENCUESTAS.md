@@ -85,11 +85,13 @@ para la bandeja «sin atender» del backoffice.
 
 | Columna | Valor inicial | Para qué |
 |---|---|---|
-| `email_notificacion` | `mauchito@gmail.com` | destino de los avisos |
+| `email_notificacion` | `email@domain.com` (placeholder) | destino de los avisos |
 | `notificar_activo` | `true` | interruptor global |
 
-Sin policies RLS: solo accesible con `service_role`. **El email es
-editable desde la herramienta web** — ese es el punto de extensión pedido.
+Sin policies RLS: solo accesible con `service_role`. **No se commitea el
+correo real** en el repositorio. Tras aplicar la migración 0016 hay que
+sustituir el placeholder (SQL abajo o panel **Configuración** del
+backoffice). Detalle: `nexus_backoffice/README.md` §2.4.
 
 ---
 
@@ -113,14 +115,20 @@ promedio por versión (útil para ver si una release mejoró la experiencia).
 
 ### 3.2 Edición del email de notificación
 
+Tras aplicar `0016`, sustituir el placeholder (SQL Editor o panel web):
+
 ```sql
 UPDATE public.feedback_config
-SET email_notificacion = $1, notificar_activo = $2, updated_at = now()
+SET email_notificacion = 'TU_EMAIL_ADMIN@ejemplo.com',
+    notificar_activo = true,
+    updated_at = now()
 WHERE id = 1;
 ```
 
-Validar formato de email en el formulario. Este es el único lugar donde se
-cambia el destino — la app **no** conoce ningún correo.
+Desde el backoffice: **Configuración** → parámetro `email_desarrollador`
+(se replica automáticamente a `feedback_config.email_notificacion`).
+
+La app móvil **no** conoce ningún correo de notificación.
 
 ### 3.3 Notificación por email
 

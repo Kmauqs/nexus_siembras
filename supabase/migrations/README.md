@@ -22,9 +22,10 @@ Ejecutar en el SQL Editor, en este orden exacto:
 | 10 | `migrations/0009_rls_reportes_privacidad.sql` | **Privacidad reportes**: tabla base solo del dueño; lectura comunitaria por la vista anonimizada |
 | … | `migrations/0010` … `0014` | Tipo de ciclo, autoría de compras, proveedores compartidos, sync de patologías por cultivo, eliminar cuenta |
 | 15 | `migrations/0015_verificacion_fks_auth.sql` | **C2-2**: verifica y corrige (autocorrectivo) que toda FK a `auth.users` tenga CASCADE/SET NULL — prerrequisito seguro de `eliminar_mi_cuenta` |
-| 16 | `migrations/0016_feedback_encuestas.sql` | **C2-9**: micro-encuestas (`feedback_encuestas`, RLS insert-only) + `feedback_config` con el email de notificación editable desde la gestión web |
-| 17 | `migrations/0017_backoffice.sql` | **Backoffice web**: `app_config` (parámetros centralizados), `admin_allowlist` + `es_admin()`, RPCs de estadísticas públicas y de administración, policies de gestión |
+| 16 | `migrations/0016_feedback_encuestas.sql` | **C2-9**: micro-encuestas (`feedback_encuestas`, RLS insert-only) + `feedback_config` (email placeholder `email@domain.com` — sustituir a mano; ver `nexus_backoffice/README.md` §2.4) |
+| 17 | `migrations/0017_backoffice.sql` | **Backoffice web**: `app_config`, `admin_allowlist` + `es_admin()`, RPCs de estadísticas y admin (emails en placeholder; configurar según README §2.4) |
 | 18 | `migrations/0018_patrimonio_comunitario.sql` | **Patrimonio comunitario**: variedades y reportes se conservan al eliminar la cuenta (solo se anonimizan); reportes imposibles de borrar por RLS; estado `activa`/`desatendida` a los 60 días sin actividad, con reactivación por proximidad. **Redefine las funciones de 0014 y 0017** eliminando sus `DELETE` de reportes |
+| 19 | `migrations/0019_usuarios_papelera.sql` | **Papelera de usuarios** del backoffice: soft-delete (ban + registro) con recuperación o borrado definitivo |
 | 11 | `migrations/0010_cultivos_tipo_ciclo.sql` | Tipo de ciclo y periodos en `cultivos` (ciclo único / perenne) |
 | 12 | `migrations/0011_compras_created_by.sql` | Autor (`created_by_user_id`) en compras para co-propietarios |
 | 13 | `migrations/0012_proveedores_compartidos.sql` | **Proveedores compartidos**: lectura para colaboradores propietario/trabajador del predio |

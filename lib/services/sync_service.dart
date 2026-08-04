@@ -1254,7 +1254,80 @@ class SyncService {
     // el bug histórico donde el colaborador subía su fila informativa
     // del owner como si fuera un share invertido.
     await _limpiarSharesInvertidos();
+    // Patrimonio comunitario (0018): refresca ultima_actividad_at local
+    // desde la vista pública (reactivación por proximidad / admin).
+    await _refrescarActividadPatologias();
     return total;
+  }
+
+  /// Actualiza `ultima_actividad_at` de reportes locales cruzando con la
+  /// vista `patologias_reportadas_publica` (lat/lng/nombre/fecha).
+  Future<void> _refrescarActividadPatologias() async {
+    try {
+      final remote = await _sb
+          .from('patologias_reportadas_publica')
+          .select(
+            'lat, lng, patologia_nombre, fecha_deteccion, ultima_actividad_at',
+          )
+          .limit(2000);
+      final lista = <Map<String, dynamic>>[
+        for (final raw in remote) Map<String, dynamic>.from(raw as Map),
+      ];
+      if (lista.isEmpty) return;
+
+      final locales = await (db.select(db.patologiasReportadas)
+            ..where((t) => t.deletedAt.isNull()))
+          .get();
+      if (locales.isEmpty) return;
+
+      var actualizados = 0;
+      for (final local in locales) {
+        final fechaLocal = local.fechaDeteccion.toUtc();
+        Map<String, dynamic>? match;
+        for (final r in lista) {
+          final lat = (r['lat'] as num?)?.toDouble();
+          final lng = (r['lng'] as num?)?.toDouble();
+          if (lat == null || lng == null) continue;
+          if ((lat - local.lat).abs() > 0.00015) continue; // ~15 m
+          if ((lng - local.lng).abs() > 0.00015) continue;
+          final nombre = (r['patologia_nombre'] as String?)?.trim() ?? '';
+          if (nombre.toLowerCase() != local.patologiaNombre.toLowerCase()) {
+            continue;
+          }
+          final fechaRemota = DateTime.tryParse(
+            (r['fecha_deteccion'] as String?) ?? '',
+          );
+          if (fechaRemota == null) continue;
+          final mismaFecha = fechaRemota.toUtc().year == fechaLocal.year &&
+              fechaRemota.toUtc().month == fechaLocal.month &&
+              fechaRemota.toUtc().day == fechaLocal.day;
+          if (!mismaFecha) continue;
+          match = r;
+          break;
+        }
+        if (match == null) continue;
+        final actStr = match['ultima_actividad_at'] as String?;
+        final act = actStr == null ? null : DateTime.tryParse(actStr);
+        if (act == null) continue;
+        if (local.ultimaActividadAt != null &&
+            !act.isAfter(local.ultimaActividadAt!)) {
+          continue;
+        }
+        await (db.update(db.patologiasReportadas)
+              ..where((t) => t.id.equals(local.id)))
+            .write(PatologiasReportadasCompanion(
+          ultimaActividadAt: Value(act.toLocal()),
+        ));
+        actualizados++;
+      }
+      if (actualizados > 0) {
+        Log.i('[sync] actividad de $actualizados reporte(s) de patología '
+            'refrescada desde la comunidad');
+      }
+    } catch (e) {
+      // Vista o columna ausente hasta aplicar 0018 — no bloquea el sync.
+      Log.d('[sync] refresco actividad patologías omitido: $e');
+    }
   }
 
   /// Purga filas locales con rol='propietario' que no se explican por
