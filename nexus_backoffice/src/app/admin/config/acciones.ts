@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { supabaseServer } from '@/lib/supabase/server';
 import { obtenerSesionAdmin } from '@/lib/auth';
 
 export type Resultado = { ok: boolean; mensaje: string };
@@ -28,7 +28,7 @@ export async function guardarParametro(
     return { ok: false, mensaje: 'Debe ser verdadero o falso.' };
   }
 
-  const sb = supabaseAdmin();
+  const sb = supabaseServer();
   const { error } = await sb
     .from('app_config')
     .update({
@@ -39,19 +39,33 @@ export async function guardarParametro(
     .eq('clave', clave);
   if (error) return { ok: false, mensaje: error.message };
 
-  // El email del desarrollador también alimenta las notificaciones de
-  // feedback: se replica en `feedback_config` para el webhook.
+  // Replica al destino de notificaciones (webhook / Edge Function).
   if (clave === 'email_desarrollador') {
-    await sb
+    const { error: errFb } = await sb
       .from('feedback_config')
       .update({ email_notificacion: v, updated_at: new Date().toISOString() })
       .eq('id', 1);
+    if (errFb) {
+      return {
+        ok: false,
+        mensaje:
+          `Parámetro guardado, pero no se replicó a feedback_config: ${errFb.message}. ` +
+          '¿Aplicaste la migración 0020?',
+      };
+    }
   }
   if (clave === 'feedback_notificar') {
-    await sb
+    const { error: errFb } = await sb
       .from('feedback_config')
       .update({ notificar_activo: v === 'true' })
       .eq('id', 1);
+    if (errFb) {
+      return {
+        ok: false,
+        mensaje:
+          `Parámetro guardado, pero no se actualizó feedback_config: ${errFb.message}`,
+      };
+    }
   }
 
   revalidatePath('/admin/config');
@@ -79,7 +93,7 @@ export async function guardarAdmin(
     };
   }
 
-  const { error } = await supabaseAdmin()
+  const { error } = await supabaseServer()
     .from('admin_allowlist')
     .upsert(
       { email: e, activo, nombre: nombre?.trim() || null },

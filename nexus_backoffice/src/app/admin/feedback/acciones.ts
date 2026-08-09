@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { supabaseServer } from '@/lib/supabase/server';
 import { obtenerSesionAdmin } from '@/lib/auth';
 
 export type Resultado = { ok: boolean; mensaje: string };
@@ -23,7 +23,8 @@ export async function actualizarFeedback(
     return { ok: false, mensaje: 'Nada que actualizar.' };
   }
 
-  const { error } = await supabaseAdmin()
+  // JWT + RLS (feedback_admin / es_admin) — no service_role.
+  const { error } = await supabaseServer()
     .from('feedback_encuestas')
     .update(patch)
     .eq('id', id);
@@ -43,7 +44,7 @@ export async function marcarLoteAtendido(
   }
   if (!ids.length) return { ok: false, mensaje: 'Sin selección.' };
 
-  const { error } = await supabaseAdmin()
+  const { error } = await supabaseServer()
     .from('feedback_encuestas')
     .update({ atendido: true })
     .in('id', ids);

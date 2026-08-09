@@ -58,8 +58,9 @@ export function FormConfig({
       <section className="border-t border-slate-200 pt-5">
         <h3 className="card-title">👤 Acceso al panel</h3>
         <p className="mb-3 text-sm text-slate-600">
-          Correos que pueden solicitar código de acceso. El ingreso es sin
-          contraseña: código de 6 dígitos enviado por email.
+          Correos que pueden solicitar el enlace de acceso. El ingreso es
+          sin contraseña: magic link por email (plantilla por defecto de
+          Supabase).
         </p>
         <TablaAdmins
           admins={admins}

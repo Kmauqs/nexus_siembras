@@ -9,8 +9,8 @@ export type AdminSesion = { userId: string; email: string };
  * Devuelve la sesión si el usuario está autenticado Y su email está en
  * `admin_allowlist` (o es el bootstrap del .env). Si no, null.
  *
- * La verificación se hace SIEMPRE en el servidor: el cliente nunca
- * decide si alguien es admin.
+ * Tras el login se valida con `es_admin()` (SECURITY DEFINER + JWT).
+ * service_role solo se usa como respaldo o en el pre-chequeo sin sesión.
  */
 export async function obtenerSesionAdmin(): Promise<AdminSesion | null> {
   const sb = supabaseServer();
@@ -21,10 +21,19 @@ export async function obtenerSesionAdmin(): Promise<AdminSesion | null> {
 
   const email = user.email.toLowerCase();
 
-  // Respaldo por si la migración 0017 aún no se aplicó.
   const bootstrap = (process.env.ADMIN_EMAIL_BOOTSTRAP ?? '').toLowerCase();
   if (bootstrap && email === bootstrap) {
     return { userId: user.id, email };
+  }
+
+  try {
+    const { data, error } = await sb.rpc('es_admin');
+    if (!error && data === true) {
+      return { userId: user.id, email };
+    }
+    if (!error && data === false) return null;
+  } catch {
+    // Función ausente: caer al respaldo con service_role.
   }
 
   try {
@@ -47,7 +56,10 @@ export async function requerirAdmin(): Promise<AdminSesion> {
   return sesion;
 }
 
-/** ¿Este email puede pedir un código de acceso? (pre-chequeo del login) */
+/**
+ * ¿Este email puede pedir un magic link? (pre-chequeo sin sesión).
+ * Usa service_role porque aún no hay JWT de admin.
+ */
 export async function emailAutorizado(email: string): Promise<boolean> {
   const e = email.trim().toLowerCase();
   if (!e) return false;

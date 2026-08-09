@@ -1,7 +1,11 @@
 import 'package:drift/drift.dart';
+import 'package:path/path.dart' as p;
 import '../../core/units/units_catalog.dart';
 import '../database/database.dart';
 import 'inventory_repository.dart';
+
+String? _basename(String? path) =>
+    path == null || path.isEmpty ? null : p.basename(path);
 
 class CompraRepository {
   CompraRepository(this.db, this.inv);
@@ -56,6 +60,7 @@ class CompraRepository {
           plantaRef: Value(plantaRef),
           soportePath: Value(soporteName),
           soporteTipo: Value(soporteTipo),
+          soporteNombre: Value(_basename(soporteName)),
           idUnico: Value(idUnico),
           createdByUserId: Value(createdByUserId),
         ));
@@ -100,6 +105,8 @@ class CompraRepository {
     int? plantaRef,
     String? soporteName,
     String? soporteTipo,
+    /// true = el usuario quitó el comprobante (también si solo existía en nube).
+    bool limpiarSoporte = false,
   }) async {
     final old = await (db.select(db.compras)..where((c) => c.id.equals(id)))
         .getSingleOrNull();
@@ -118,6 +125,10 @@ class CompraRepository {
     final idUnico =
         '$desc-${fecha.year.toString().substring(2)}${fecha.month.toString().padLeft(2, "0")}${fecha.day.toString().padLeft(2, "0")}';
 
+    final soporteCambio =
+        limpiarSoporte || soporteName != old.soportePath;
+    final pathFinal = limpiarSoporte ? null : soporteName;
+    final tipoFinal = limpiarSoporte ? null : soporteTipo;
     await (db.update(db.compras)..where((c) => c.id.equals(id))).write(
       ComprasCompanion(
         proveedorId: Value(proveedorId),
@@ -132,8 +143,20 @@ class CompraRepository {
         factura: Value(factura),
         tipo: Value(tipo),
         plantaRef: Value(plantaRef),
-        soportePath: Value(soporteName),
-        soporteTipo: Value(soporteTipo),
+        soportePath: soporteCambio
+            ? Value(pathFinal)
+            : const Value.absent(),
+        soporteTipo: soporteCambio
+            ? Value(tipoFinal)
+            : const Value.absent(),
+        // Si quitaron o reemplazaron el archivo, invalidar metadatos
+        // remotos para forzar re-subida / borrado en el próximo sync.
+        soporteStoragePath: soporteCambio
+            ? const Value(null)
+            : const Value.absent(),
+        soporteNombre: soporteCambio
+            ? Value(pathFinal == null ? null : _basename(pathFinal))
+            : const Value.absent(),
         idUnico: Value(idUnico),
         updatedAt: Value(DateTime.now()),
       ),

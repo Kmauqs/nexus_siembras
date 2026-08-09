@@ -23,6 +23,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/log.dart';
 import '../data/database/database.dart';
 import '../data/repositories/cultivo_repository.dart';
+import 'compra_soporte_storage.dart';
 import 'supabase_service.dart';
 import 'sync_policy.dart';
 
@@ -73,6 +74,12 @@ class SyncService {
   /// (auditoría S6). Se compara contra `public.schema_meta.version`.
   /// Ver supabase/migrations/README.md.
   static const int schemaRemotoRequerido = 11;
+
+  /// Columnas `soporte_*` de compras + bucket Storage (migración 0021).
+  static const int _schemaSoportesCompras = 18;
+
+  int? _schemaVersionCache;
+  CompraSoporteStorage get _soportesCompras => CompraSoporteStorage(db);
 
   /// Guard de reentrada: botón manual + auto-sync pueden coincidir
   /// (auditoría P6).
@@ -366,6 +373,7 @@ class SyncService {
     _erroresFilas = 0;
     _permisoCache.clear();
     _propietarioCache.clear();
+    _schemaVersionCache = null;
     try {
       // Auditoría S6: verificar versión del esquema remoto antes de tocar
       // datos. Si el servidor está desactualizado respecto a lo que este
@@ -430,6 +438,7 @@ class SyncService {
           await _sb.from('schema_meta').select('version').maybeSingle();
       if (res == null) return null; // tabla vacía → no decidible
       final v = (res['version'] as num?)?.toInt() ?? 0;
+      _schemaVersionCache = v;
       if (v < schemaRemotoRequerido) {
         return 'Esquema del servidor desactualizado (v$v < v$schemaRemotoRequerido). '
             'Aplique las migraciones de supabase/migrations/ en el dashboard.';
@@ -604,11 +613,28 @@ class SyncService {
     total += await _pushInventarios();
     total += await _pushAnalisis();
     total += await _pushCompras();
+    // Tras mapear remote_id: subir binarios y re-pushear metadatos Storage.
+    total += await _pushComprasSoportes();
     total += await _pushEventos();
     total += await _pushTareas();
     total += await _pushColaboradores();
     return total;
   }
+
+  Future<int> _schemaVersionRemota() async {
+    if (_schemaVersionCache != null) return _schemaVersionCache!;
+    try {
+      final row =
+          await _sb.from('schema_meta').select('version').maybeSingle();
+      _schemaVersionCache = (row?['version'] as num?)?.toInt() ?? 0;
+    } catch (_) {
+      _schemaVersionCache = 0;
+    }
+    return _schemaVersionCache!;
+  }
+
+  Future<bool> get _soportesComprasDisponibles async =>
+      (await _schemaVersionRemota()) >= _schemaSoportesCompras;
 
   /// Push de predio_colaboradores (locales) hacia predio_shares (remoto).
   /// Solo se envían las invitaciones que YO hago a otros (los shares
@@ -1076,6 +1102,7 @@ class SyncService {
     final mappings = await _mappingsDe('compras');
     final prediosMap = await _mappingsDe('predios');
     final provMap = await _mappingsDe('proveedores');
+    final conSoportes = await _soportesComprasDisponibles;
     final filas = <_FilaPush>[];
     for (final r in rows) {
       if (!_debeSubirEnMapa(mappings, r.id, r.updatedAt)) continue;
@@ -1085,30 +1112,93 @@ class SyncService {
       if (!await _soyPropietarioPredioCached(r.predioId)) continue;
       final provRemote =
           r.proveedorId == null ? null : provMap[r.proveedorId!]?.remoteId;
+      final payload = <String, dynamic>{
+        'cliente_id': r.id,
+        'predio_id': predioRemote,
+        'proveedor_id': provRemote,
+        'fecha': _fmtDate(r.fecha),
+        'descripcion1': r.descripcion1,
+        'descripcion2': r.descripcion2,
+        'valor_total': r.valorTotal,
+        'cantidad_base': r.cantidadBase,
+        'unidad_base': r.unidadBase,
+        'codigo': r.codigo,
+        'factura': r.factura,
+        'tipo': r.tipo,
+        'notas': r.notas,
+        'created_by_user_id': r.createdByUserId,
+        'updated_at': r.updatedAt.toUtc().toIso8601String(),
+        'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
+      };
+      if (conSoportes) {
+        payload['soporte_storage_path'] = r.soporteStoragePath;
+        payload['soporte_nombre'] = r.soporteNombre;
+        payload['soporte_tipo'] = r.soporteTipo;
+      }
       filas.add(_FilaPush(
         localId: r.id,
         remoteId: mappings[r.id]?.remoteId,
-        payload: <String, dynamic>{
-          'cliente_id': r.id,
-          'predio_id': predioRemote,
-          'proveedor_id': provRemote,
-          'fecha': _fmtDate(r.fecha),
-          'descripcion1': r.descripcion1,
-          'descripcion2': r.descripcion2,
-          'valor_total': r.valorTotal,
-          'cantidad_base': r.cantidadBase,
-          'unidad_base': r.unidadBase,
-          'codigo': r.codigo,
-          'factura': r.factura,
-          'tipo': r.tipo,
-          'notas': r.notas,
-          'created_by_user_id': r.createdByUserId,
-          'updated_at': r.updatedAt.toUtc().toIso8601String(),
-          'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
-        },
+        payload: payload,
       ));
     }
     return _pushBatch('compras', filas);
+  }
+
+  /// Sube comprobantes locales al bucket y actualiza metadatos remotos.
+  Future<int> _pushComprasSoportes() async {
+    if (!await _soportesComprasDisponibles) return 0;
+    final rows = await db.select(db.compras).get();
+    final mappings = await _mappingsDe('compras');
+    final prediosMap = await _mappingsDe('predios');
+    var subidos = 0;
+    final pendientesMeta = <_FilaPush>[];
+    for (final r in rows) {
+      if (r.deletedAt != null) continue;
+      final compraRemote = mappings[r.id]?.remoteId;
+      final predioRemote = prediosMap[r.predioId]?.remoteId;
+      if (compraRemote == null || predioRemote == null) continue;
+      if (!await _soyPropietarioPredioCached(r.predioId)) continue;
+
+      final hasLocal =
+          r.soportePath != null && r.soportePath!.isNotEmpty;
+      final hasRemoteMeta = r.soporteStoragePath != null &&
+          r.soporteStoragePath!.isNotEmpty;
+      if (!hasLocal && !hasRemoteMeta) continue;
+
+      final before = r.soporteStoragePath;
+      await _soportesCompras.subirSiNecesario(
+        compra: r,
+        predioRemoteId: predioRemote,
+        compraRemoteId: compraRemote,
+      );
+      final actual = await (db.select(db.compras)
+            ..where((c) => c.id.equals(r.id)))
+          .getSingleOrNull();
+      if (actual == null) continue;
+      if (actual.soporteStoragePath == before && hasLocal == hasRemoteMeta) {
+        continue;
+      }
+      subidos++;
+      pendientesMeta.add(_FilaPush(
+        localId: actual.id,
+        remoteId: compraRemote,
+        payload: <String, dynamic>{
+          'cliente_id': actual.id,
+          'predio_id': predioRemote,
+          'soporte_storage_path': actual.soporteStoragePath,
+          'soporte_nombre': actual.soporteNombre,
+          'soporte_tipo': actual.soporteTipo,
+          'updated_at': actual.updatedAt.toUtc().toIso8601String(),
+        },
+      ));
+    }
+    if (pendientesMeta.isNotEmpty) {
+      await _pushBatch('compras', pendientesMeta);
+    }
+    if (subidos > 0) {
+      Log.i('[sync] soportes de compras procesados: $subidos');
+    }
+    return subidos;
   }
 
   Future<int> _pushEventos() async {
@@ -1257,6 +1347,8 @@ class SyncService {
     // Patrimonio comunitario (0018): refresca ultima_actividad_at local
     // desde la vista pública (reactivación por proximidad / admin).
     await _refrescarActividadPatologias();
+    // Tras pull + hidratación: materializar comprobantes de co-propietarios.
+    await _descargarSoportesComprasPendientes();
     return total;
   }
 
@@ -2708,6 +2800,9 @@ class SyncService {
         : await _resolveLocalId('proveedores', provRemote);
     final localId = await _resolveLocalId('compras', remoteId);
     final updatedRemote = _parseDate(row['updated_at']);
+    final soporteStorage = row['soporte_storage_path'] as String?;
+    final soporteNombre = row['soporte_nombre'] as String?;
+    final soporteTipo = row['soporte_tipo'] as String?;
     final c = ComprasCompanion(
       predioId: Value(predioLocalId),
       proveedorId: Value(provLocalId),
@@ -2722,6 +2817,9 @@ class SyncService {
       tipo: Value(row['tipo'] as String?),
       notas: Value(row['notas'] as String?),
       createdByUserId: Value(row['created_by_user_id'] as String?),
+      soporteStoragePath: Value(soporteStorage),
+      soporteNombre: Value(soporteNombre),
+      soporteTipo: Value(soporteTipo),
       updatedAt: Value(updatedRemote),
       deletedAt: Value(_parseDateOrNull(row['deleted_at'])),
     );
@@ -2730,13 +2828,34 @@ class SyncService {
             ..where((c) => c.id.equals(localId)))
           .getSingleOrNull();
       if (local != null && local.updatedAt.isAfter(updatedRemote)) return;
+      // Si el object key cambió, invalidar caché local del archivo.
+      final companion = (local != null &&
+              local.soporteStoragePath != soporteStorage)
+          ? c.copyWith(soportePath: const Value(null))
+          : c;
       await (db.update(db.compras)..where((c) => c.id.equals(localId)))
-          .write(c);
+          .write(companion);
       await _saveMapping('compras', localId, remoteId);
     } else {
       final newId = await db.into(db.compras).insert(c);
       await _saveMapping('compras', newId, remoteId);
     }
+  }
+
+  /// Descarga comprobantes remotos que aún no tienen archivo local.
+  Future<void> _descargarSoportesComprasPendientes() async {
+    if (!await _soportesComprasDisponibles) return;
+    final rows = await (db.select(db.compras)
+          ..where((c) => c.deletedAt.isNull())
+          ..where((c) => c.soporteStoragePath.isNotNull()))
+        .get();
+    var n = 0;
+    for (final r in rows) {
+      if (!await _soyPropietarioPredioCached(r.predioId)) continue;
+      final path = await _soportesCompras.asegurarLocal(r);
+      if (path != null) n++;
+    }
+    if (n > 0) Log.i('[sync] soportes de compras en caché local: $n');
   }
 
   Future<void> _mergeEvento(Map<String, dynamic> row) async {

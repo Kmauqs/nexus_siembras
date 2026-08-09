@@ -66,14 +66,29 @@ class Compra {
     this.desc2, required this.valor, required this.cantidad,
     required this.unidad, required this.cod, required this.factura,
     required this.proveedor, required this.tipo,
-    this.plantaRef, this.soporteName, this.createdByUserId,
+    this.plantaRef, this.soporteName, this.soporteStoragePath,
+    this.soporteNombre, this.createdByUserId,
   });
   final int id;
   final String fecha, desc, cod, factura, proveedor, tipo, unidad;
   final String? desc2, soporteName;
+  /// Object key remoto (bucket compras-soportes); null si aún no sync.
+  final String? soporteStoragePath;
+  /// Nombre de archivo del comprobante (UI / ZIP).
+  final String? soporteNombre;
   final String? createdByUserId;
   final double valor, cantidad;
   final int? plantaRef;
+
+  bool get tieneSoporte =>
+      (soporteName != null && soporteName!.isNotEmpty) ||
+      (soporteStoragePath != null && soporteStoragePath!.isNotEmpty);
+
+  String? get etiquetaSoporte =>
+      soporteNombre ??
+      (soporteName != null && soporteName!.isNotEmpty
+          ? soporteName!.split(RegExp(r'[\\/]')).last
+          : null);
 
   factory Compra.fromDrift(drift.Compra c, String proveedorNombre) => Compra(
         id: c.id, fecha: _iso(c.fecha),
@@ -84,6 +99,8 @@ class Compra {
         tipo: c.tipo ?? 'otro',
         plantaRef: c.plantaRef,
         soporteName: c.soportePath,
+        soporteStoragePath: c.soporteStoragePath,
+        soporteNombre: c.soporteNombre,
         createdByUserId: c.createdByUserId,
       );
 }
@@ -1414,6 +1431,7 @@ class DataMutations {
     required String tipo,
     int? plantaRef,
     String? soporteName,
+    bool limpiarSoporte = false,
   }) async {
     if (!ref.read(permisosPredioActivoProvider).puedeEditarCompras) {
       throw StateError('Sin permiso para editar compras en este predio');
@@ -1442,6 +1460,7 @@ class DataMutations {
           soporteTipo: soporteName?.toLowerCase().endsWith('.pdf') == true
               ? 'application/pdf'
               : (soporteName != null ? 'image/*' : null),
+          limpiarSoporte: limpiarSoporte,
         );
   }
 

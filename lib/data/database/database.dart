@@ -300,8 +300,13 @@ class Compras extends Table {
   IntColumn get unidadDisplayId => integer().nullable().references(UnidadesMedida, #id)();
   TextColumn get codigo => text().nullable()();
   TextColumn get factura => text().nullable()();
+  /// Caché local del comprobante (path absoluto del dispositivo; no se sube).
   TextColumn get soportePath => text().nullable()();
   TextColumn get soporteTipo => text().nullable()(); // application/pdf | image/*
+  /// Object key en bucket `compras-soportes` (sí se sincroniza).
+  TextColumn get soporteStoragePath => text().nullable()();
+  /// Nombre de archivo del comprobante (para UI/ZIP tras sync).
+  TextColumn get soporteNombre => text().nullable()();
   TextColumn get idUnico => text().nullable()(); // Descripción1-YYMMDD
   TextColumn get tipo => text().nullable()(); // semilla|abono|pesticida|herramienta|servicio|otro
   IntColumn get plantaRef => integer().nullable().references(Plantas, #id)();
@@ -777,7 +782,7 @@ class AppDatabase extends _$AppDatabase {
   final bool _skipSeed;
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -937,6 +942,11 @@ class AppDatabase extends _$AppDatabase {
               'SET ultima_actividad_at = COALESCE(updated_at, created_at, fecha_deteccion) '
               'WHERE ultima_actividad_at IS NULL',
             );
+          }
+          if (from < 23) {
+            // v23: metadatos de comprobante en Storage (migración 0021).
+            await m.addColumn(compras, compras.soporteStoragePath);
+            await m.addColumn(compras, compras.soporteNombre);
           }
         },
       );

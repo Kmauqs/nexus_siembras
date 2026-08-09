@@ -37,13 +37,7 @@ export default async function Home() {
       {/* Encabezado con la identidad de la app */}
       <header className="bg-nexus-800 text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl" aria-hidden>🌱</span>
-            <div className="leading-tight">
-              <p className="text-lg font-bold">NEXUS Siembras</p>
-              <p className="text-xs text-nexus-100">Control agropecuario</p>
-            </div>
-          </div>
+          <Marca clara tamaño={40} />
           <Link href="/login" className="btn bg-white/15 text-white hover:bg-white/25">
             Ingresar al panel
           </Link>

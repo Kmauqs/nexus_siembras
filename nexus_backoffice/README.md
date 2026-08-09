@@ -11,15 +11,24 @@ conectado al mismo proyecto Supabase que la app móvil/escritorio.
 ### Requisitos
 - Node.js 20+
 - Proyecto Supabase de NEXUS Siembras con las migraciones aplicadas
-  **hasta la 0019** (`supabase/migrations/` de la app).
+  **hasta la 0020** (panel); **0021** solo si usás sync de comprobantes de compras.
 
 ### Pasos
 
 ```bash
 cd nexus_backoffice
 npm install
-cp .env.example .env.local     # completar valores (ver abajo)
-npm run dev                    # http://localhost:3000
+cp .env.example .env.local     # OBLIGATORIO: Next no lee .env.example
+# Editar .env.local con URL, anon/publishable key, service_role y ADMIN_EMAIL_BOOTSTRAP
+npm run dev                    # http://localhost:3000  (reiniciar tras crear/editar .env.local)
+```
+
+`npm warn deprecated` y el aviso de `unrs-resolver` (script postinstall
+bloqueado) son ruido habitual: el install ya quedó bien. No uses
+`npm audit fix --force`. Si querés aprobar el postinstall nativo:
+
+```bash
+npm install-scripts approve unrs-resolver
 ```
 
 ### Variables de entorno
@@ -45,28 +54,24 @@ a mano en cada entorno (detalle en §2.4).
 ## 2. Configuración de Supabase (una sola vez)
 
 ### 2.1 Migración
-Aplicar en el SQL Editor, en orden: `0016_feedback_encuestas.sql` (si
-aún no), `0017_backoffice.sql`, `0018_patrimonio_comunitario.sql` y
-`0019_usuarios_papelera.sql`. Crean feedback, `app_config`, allowlist,
-patrimonio comunitario y la papelera.
+Aplicar en el SQL Editor, en orden: `0016` … `0020` (feedback,
+`app_config`, allowlist, patrimonio, papelera y RLS de escritura admin).
+La `0021` (soportes de compras en Storage) es de la app móvil, no del panel.
 
-### 2.2 Código de acceso de 6 dígitos
-El login usa OTP por email. Por defecto Supabase envía un *magic link*;
-para que llegue el **código numérico** hay que editar la plantilla:
+### 2.2 Magic link (plan gratuito de Supabase)
+El login usa el **magic link por defecto** de Supabase (plantilla
+*Magic Link* sin personalizar). No hace falta editar el HTML del correo
+ni usar el código de 6 dígitos.
 
-> Dashboard → Authentication → Email Templates → **Magic Link**
+En **Authentication → URL Configuration** agregá:
 
-y dejar el cuerpo con el token:
+| Campo | Valor (dev) | Valor (prod) |
+|---|---|---|
+| *Site URL* | `http://localhost:3000` | URL de Netlify |
+| *Redirect URLs* | `http://localhost:3000/auth/callback` | `https://TU-SITIO.netlify.app/auth/callback` |
 
-```html
-<h2>Tu código de acceso</h2>
-<p>Usa este código para entrar al panel de NEXUS Siembras:</p>
-<p style="font-size:32px;font-weight:bold;letter-spacing:8px">{{ .Token }}</p>
-<p>Vence en 60 minutos. Si no lo solicitaste, ignora este correo.</p>
-```
-
-En **Authentication → URL Configuration** agregar la URL de Netlify a
-*Site URL* y *Redirect URLs*.
+Podés dejar ambas redirect URLs a la vez. El enlace del correo lleva a
+`/auth/callback`, que crea la sesión y comprueba la allowlist.
 
 ### 2.3 Administradores
 La tabla `admin_allowlist` define quién entra al panel. El correo debe
@@ -143,7 +148,8 @@ netlify deploy --build --prod
 | Ruta | Acceso | Contenido |
 |---|---|---|
 | `/` | público | Card de la app + GitHub, KPIs, usuarios por país (pie), tabla de estadísticas, mapa de calor de patologías |
-| `/login` | público | Código de 6 dígitos al correo autorizado |
+| `/login` | público | Solicitud de magic link al correo autorizado |
+| `/auth/callback` | público | Intercambio del código del enlace por sesión |
 | `/admin` | admin | Series de uso 30 días, usuarios por país, feedback con errores, últimos comentarios |
 | `/admin/usuarios` | admin | Listado con país/ciudad, predios, lotes, cultivos, feedback; soft-delete a papelera |
 | `/admin/usuarios/papelera` | admin | Recuperar cuentas suspendidas o eliminarlas definitivamente |
@@ -154,13 +160,23 @@ netlify deploy --build --prod
 ### Seguridad en capas
 
 1. **Middleware** — bloquea `/admin/*` sin sesión.
-2. **Layout del panel** — `requerirAdmin()` valida contra la allowlist.
+2. **Layout del panel** — `requerirAdmin()` / `es_admin()` (JWT).
 3. **Cada Server Action** — vuelve a verificar antes de escribir.
-4. **RLS + `es_admin()`** — última barrera en la base de datos.
+4. **RLS + `es_admin()`** — escrituras de datos, feedback, config,
+   allowlist y papelera van con el JWT del admin (migración **0020**).
+   `service_role` solo para Auth Admin API (ban/listUsers) y agregados
+   públicos de la landing. El borrado definitivo usa la RPC
+   `admin_eliminar_usuario` (re-chequea `es_admin` en Postgres).
 
 El soft-delete de usuario exige escribir el correo exacto y no permite
 auto-borrarse. El borrado definitivo (desde la papelera) tiene la misma
 fricción.
+
+### Avisos por email de feedback
+
+Código en `../supabase/functions/notify-feedback/`. Tras configurar el
+email real (§2.4), desplegar la función y crear el webhook INSERT
+(instrucciones en el README de esa carpeta).
 
 ---
 
@@ -195,8 +211,7 @@ fricción.
 
 ## 6. Pendiente / siguiente etapa
 
-- [ ] Edge Function `notify-feedback` + Database Webhook para el aviso por
-      correo (especificado en `docs/FEEDBACK_ENCUESTAS.md` §3.3 de la app).
+- [ ] Deploy operativo de `notify-feedback` + webhook INSERT (código listo).
 - [ ] Paginación real en usuarios y datos si superan ~1000 filas
       (hoy hay límite de 500-1000 por consulta).
 - [ ] Métricas de retención y embudo de onboarding.

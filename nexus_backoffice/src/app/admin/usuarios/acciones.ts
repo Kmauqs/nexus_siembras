@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { supabaseServer } from '@/lib/supabase/server';
 import { obtenerSesionAdmin } from '@/lib/auth';
 
 export type ResultadoAccion = { ok: boolean; mensaje: string };
@@ -25,9 +26,9 @@ async function verificarAdminYEmail(
     };
   }
 
-  const sb = supabaseAdmin();
+  // Auth Admin API requiere service_role (no hay equivalente con JWT de usuario).
   const { data: userData, error: errUser } =
-    await sb.auth.admin.getUserById(userId);
+    await supabaseAdmin().auth.admin.getUserById(userId);
   if (errUser || !userData?.user) {
     return { ok: false, mensaje: 'Usuario no encontrado.' };
   }
@@ -44,6 +45,7 @@ async function verificarAdminYEmail(
 /**
  * Soft-delete: mueve el usuario a papelera y lo banea (no puede entrar).
  * Los datos privados se conservan hasta el borrado definitivo.
+ * Papelera: JWT + RLS (es_admin). Ban: Auth Admin API (service_role).
  */
 export async function moverAPapelera(
   userId: string,
@@ -53,24 +55,36 @@ export async function moverAPapelera(
   const check = await verificarAdminYEmail(userId, emailConfirmacion);
   if (!check.ok) return check;
 
-  const sb = supabaseAdmin();
-  const { data: ya } = await sb
+  const sbSesion = supabaseServer();
+  const sbAdmin = supabaseAdmin();
+
+  const { data: ya, error: errYa } = await sbSesion
     .from('usuarios_papelera')
     .select('user_id')
     .eq('user_id', userId)
     .maybeSingle();
+  if (errYa) {
+    return {
+      ok: false,
+      mensaje:
+        `No se pudo consultar la papelera: ${errYa.message}. ` +
+        '¿Aplicaste las migraciones 0019 y 0020?',
+    };
+  }
   if (ya) {
     return { ok: false, mensaje: 'Ese usuario ya está en la papelera.' };
   }
 
+  // Conteos de datos ajenos: RLS de predios/lotes no deja verlos al admin
+  // por JWT → service_role solo para el snapshot informativo.
   const [predios, lotes, cultivos, feedbacks] = await Promise.all([
-    sb.from('predios').select('id', { count: 'exact', head: true })
+    sbAdmin.from('predios').select('id', { count: 'exact', head: true })
       .eq('owner_id', userId).is('deleted_at', null),
-    sb.from('lotes').select('id', { count: 'exact', head: true })
+    sbAdmin.from('lotes').select('id', { count: 'exact', head: true })
       .eq('owner_id', userId).is('deleted_at', null),
-    sb.from('cultivos').select('id', { count: 'exact', head: true })
+    sbAdmin.from('cultivos').select('id', { count: 'exact', head: true })
       .eq('owner_id', userId).is('deleted_at', null),
-    sb.from('feedback_encuestas').select('id', { count: 'exact', head: true })
+    sbSesion.from('feedback_encuestas').select('id', { count: 'exact', head: true })
       .eq('user_id', userId),
   ]);
 
@@ -81,7 +95,7 @@ export async function moverAPapelera(
     feedbacks: feedbacks.count ?? 0,
   };
 
-  const { error: errInsert } = await sb.from('usuarios_papelera').insert({
+  const { error: errInsert } = await sbSesion.from('usuarios_papelera').insert({
     user_id: userId,
     email: check.emailReal,
     snapshot,
@@ -93,18 +107,23 @@ export async function moverAPapelera(
       ok: false,
       mensaje:
         `No se pudo registrar en papelera: ${errInsert.message}. ` +
-        '¿Aplicaste la migración 0019?',
+        '¿Aplicaste la migración 0019/0020?',
     };
   }
 
-  const { error: errBan } = await sb.auth.admin.updateUserById(userId, {
+  const { error: errBan } = await sbAdmin.auth.admin.updateUserById(userId, {
     ban_duration: BAN_SOFT_DELETE,
   });
   if (errBan) {
-    await sb.from('usuarios_papelera').delete().eq('user_id', userId);
+    const { error: errRollback } = await sbSesion
+      .from('usuarios_papelera')
+      .delete()
+      .eq('user_id', userId);
     return {
       ok: false,
-      mensaje: `No se pudo suspender la cuenta: ${errBan.message}`,
+      mensaje:
+        `No se pudo suspender la cuenta: ${errBan.message}` +
+        (errRollback ? ` (rollback papelera: ${errRollback.message})` : ''),
     };
   }
 
@@ -126,8 +145,8 @@ export async function recuperarUsuario(
   const sesion = await obtenerSesionAdmin();
   if (!sesion) return { ok: false, mensaje: 'No autorizado.' };
 
-  const sb = supabaseAdmin();
-  const { data: fila, error: errFila } = await sb
+  const sbSesion = supabaseServer();
+  const { data: fila, error: errFila } = await sbSesion
     .from('usuarios_papelera')
     .select('email')
     .eq('user_id', userId)
@@ -136,9 +155,10 @@ export async function recuperarUsuario(
     return { ok: false, mensaje: 'Usuario no encontrado en la papelera.' };
   }
 
-  const { error: errUnban } = await sb.auth.admin.updateUserById(userId, {
-    ban_duration: 'none',
-  });
+  const { error: errUnban } = await supabaseAdmin().auth.admin.updateUserById(
+    userId,
+    { ban_duration: 'none' }
+  );
   if (errUnban) {
     return {
       ok: false,
@@ -146,7 +166,7 @@ export async function recuperarUsuario(
     };
   }
 
-  const { error: errDel } = await sb
+  const { error: errDel } = await sbSesion
     .from('usuarios_papelera')
     .delete()
     .eq('user_id', userId);
@@ -167,7 +187,7 @@ export async function recuperarUsuario(
 }
 
 /**
- * Borrado definitivo desde la papelera (o con confirmación de email).
+ * Borrado definitivo vía RPC `admin_eliminar_usuario` (es_admin en BD).
  * Anonimiza patrimonio comunitario y borra auth.users → CASCADE privado.
  */
 export async function eliminarUsuarioDefinitivo(
@@ -177,40 +197,25 @@ export async function eliminarUsuarioDefinitivo(
   const check = await verificarAdminYEmail(userId, emailConfirmacion);
   if (!check.ok) return check;
 
-  const sb = supabaseAdmin();
+  // JWT del admin → la RPC vuelve a verificar es_admin() (capa BD).
+  const { data, error } = await supabaseServer().rpc('admin_eliminar_usuario', {
+    p_user_id: userId,
+  });
 
-  const { error: errVar } = await sb
-    .from('variedades_comunitarias')
-    .update({ created_by: null })
-    .eq('created_by', userId);
-  if (errVar) {
-    return {
-      ok: false,
-      mensaje: `No se pudo anonimizar variedades: ${errVar.message}`,
-    };
-  }
-
-  const { error: errPat } = await sb
-    .from('patologias_reportadas')
-    .update({ owner_id: null, cliente_id: null })
-    .eq('owner_id', userId);
-  if (errPat) {
-    return {
-      ok: false,
-      mensaje: `No se pudo anonimizar reportes: ${errPat.message}`,
-    };
-  }
-
-  // Quitar de papelera antes del CASCADE (FK ON DELETE CASCADE también lo haría).
-  await sb.from('usuarios_papelera').delete().eq('user_id', userId);
-
-  const { error } = await sb.auth.admin.deleteUser(userId);
   if (error) {
     return {
       ok: false,
       mensaje:
         `No se pudo eliminar la cuenta: ${error.message}. ` +
-        'Verifica que la migración 0015 (FKs a auth.users) esté aplicada.',
+        'Verifica migraciones 0015/0018 (FKs y patrimonio comunitario).',
+    };
+  }
+
+  const ok = data && typeof data === 'object' && (data as { ok?: boolean }).ok;
+  if (!ok) {
+    return {
+      ok: false,
+      mensaje: 'La RPC no confirmó el borrado. Revisa los logs de Supabase.',
     };
   }
 
@@ -226,7 +231,7 @@ export async function eliminarUsuarioDefinitivo(
   };
 }
 
-/** @deprecated Usar moverAPapelera — se mantiene por si queda algún import. */
+/** @deprecated Usar moverAPapelera. */
 export async function eliminarUsuario(
   userId: string,
   emailConfirmacion: string

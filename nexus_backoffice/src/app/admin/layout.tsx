@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { requerirAdmin } from '@/lib/auth';
 import { cerrarSesion } from '../login/acciones';
 import { NavAdmin } from './nav';
@@ -15,7 +16,14 @@ export default async function AdminLayout({
       <header className="sticky top-0 z-30 bg-nexus-800 text-white shadow">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3">
           <Link href="/admin" className="flex items-center gap-2">
-            <span className="text-2xl" aria-hidden>🌱</span>
+            <Image
+              src="/Icon-maskable-192.png"
+              alt="NEXUS Siembras"
+              width={36}
+              height={36}
+              className="rounded-lg"
+              priority
+            />
             <div className="leading-tight">
               <p className="font-bold">NEXUS Siembras</p>
               <p className="text-[11px] text-nexus-100">Administración</p>

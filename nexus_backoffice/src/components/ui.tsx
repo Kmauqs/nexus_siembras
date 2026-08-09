@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Image from 'next/image';
 
 export function Card({
   titulo,
@@ -84,16 +85,34 @@ export function Vacio({ texto }: { texto: string }) {
 }
 
 /** Marca de la app, reutilizada en la web pública y en el backoffice. */
-export function Marca({ compacta = false }: { compacta?: boolean }) {
+export function Marca({
+  compacta = false,
+  clara = false,
+  tamaño = 36,
+}: {
+  compacta?: boolean;
+  /** Texto claro (p. ej. cabecera sobre fondo verde). */
+  clara?: boolean;
+  tamaño?: number;
+}) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-2xl" aria-hidden>
-        🌱
-      </span>
+      <Image
+        src="/Icon-maskable-192.png"
+        alt="NEXUS Siembras"
+        width={tamaño}
+        height={tamaño}
+        className="shrink-0 rounded-lg"
+        priority
+      />
       <div className="leading-tight">
-        <p className="font-bold text-nexus-800">NEXUS Siembras</p>
+        <p className={`font-bold ${clara ? 'text-white' : 'text-nexus-800'}`}>
+          NEXUS Siembras
+        </p>
         {!compacta && (
-          <p className="text-xs text-slate-500">Control agropecuario</p>
+          <p className={`text-xs ${clara ? 'text-nexus-100' : 'text-slate-500'}`}>
+            Control agropecuario
+          </p>
         )}
       </div>
     </div>

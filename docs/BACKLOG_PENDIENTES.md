@@ -1,5 +1,5 @@
 # Backlog de tareas pendientes — NEXUS Siembras
-**Actualizado:** 2026-08-02
+**Actualizado:** 2026-08-04
 
 ## A. Operativos inmediatos (no requieren código)
 
@@ -37,9 +37,9 @@
 | C2-7 | Fijar `file_picker` 12 estable cuando salga (hoy beta) | Revisión C2 · baja |
 | ~~C2-8~~ | ~~Rotación del pin EPPO~~ — **COMPLETADO 2026-08-03**: `pinHojaCapturadoEl` + `pinHojaProntoAVencer()` (umbral 75 días) y aviso ámbar en la card EPPO de Configuración con enlace al runbook. Al rotar el pin, actualizar también esa fecha | ✔ |
 | ~~C2-9~~ | ~~Canal de feedback~~ — **COMPLETADO 2026-08-03**: micro-encuestas offline-first (Drift v21 `feedback_encuestas` + `FeedbackService` + pantalla `/feedback` + hoja modal contextual + envío tras auto-sync) y migración `0016` con `feedback_encuestas` (RLS insert-only) y `feedback_config.email_notificacion` editable. Documentación de la gestión web y del email en `docs/FEEDBACK_ENCUESTAS.md`. Pendiente operativo: aplicar 0016 | ✔ |
-| C2-9b | Guía de 1 página para testers (qué probar / cómo reportar) — el canal ya existe; falta el documento de bienvenida | Revisión C2 · pruebas |
-| ~~C2-9c~~ | ~~Gestión web~~ — **COMPLETADO 2026-08-04**: backoffice Next.js en `nexus_backoffice/` (landing pública + panel con usuarios, datos, feedback, papelera y configuración). Migraciones `0017`–`0019`. Pendiente: Edge Function `notify-feedback` para el correo automático | ✔ |
-| W1 | Edge Function `notify-feedback` + Database Webhook ON INSERT → email al desarrollador (código listo en `docs/FEEDBACK_ENCUESTAS.md` §3.3) | Backoffice · media |
+| ~~C2-9b~~ | ~~Guía de 1 página para testers~~ — **COMPLETADO 2026-08-04**: `docs/GUIA_TESTER.md` (bienvenida, canal Enviar comentarios + logs, 9 recorridos mínimos). Entregar junto al build de prueba | ✔ |
+| ~~C2-9c~~ | ~~Gestión web~~ — **COMPLETADO 2026-08-04**: backoffice Next.js en `nexus_backoffice/` (landing pública + panel con usuarios, datos, feedback, papelera y configuración). Migraciones `0017`–`0020`. Código de `notify-feedback` listo (W1); falta deploy operativo | ✔ |
+| ~~W1~~ | ~~Edge Function `notify-feedback`~~ — **COMPLETADO 2026-08-04**: `supabase/functions/notify-feedback/` (lee destino de `feedback_config`, ignora placeholder). Pendiente operativo: deploy + secrets Resend + webhook INSERT (ver README de la función) | ✔ |
 | W2 | Paginación server-side en `/admin/usuarios` y `/admin/datos` cuando superen ~1000 filas | Backoffice · baja |
 | W3 | Vista de detalle por usuario (predios, lotes y cultivos individuales) en el backoffice | Backoffice · baja |
 | ~~C3~~ | ~~Ampliar tests: SyncService (mergers/LWW/batch) + widgets~~ — **COMPLETADO 2026-08-02**: `sync_policy.dart` + `test/sync_policy_test.dart`, `test/sync_service_test.dart` (merge/tombstone/cola), `test/widgets/core_widgets_test.dart`; `AppDatabase.forTesting` | ✔ |

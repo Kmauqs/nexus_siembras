@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { supabaseServer } from '@/lib/supabase/server';
 import { obtenerSesionAdmin } from '@/lib/auth';
 
 export type Tabla =
@@ -67,7 +67,8 @@ export async function guardarFila(
     return { ok: false, mensaje: 'Nada que guardar.' };
   }
 
-  const sb = supabaseAdmin();
+  // JWT + RLS (policies *_admin / es_admin) — no service_role.
+  const sb = supabaseServer();
   const { error } =
     id === null
       ? await sb.from(tabla).insert(datos)
@@ -101,7 +102,7 @@ export async function eliminarFila(
     };
   }
 
-  const { error } = await supabaseAdmin().from(tabla).delete().eq('id', id);
+  const { error } = await supabaseServer().from(tabla).delete().eq('id', id);
   if (error) return { ok: false, mensaje: error.message };
   revalidatePath('/admin/datos');
   return { ok: true, mensaje: 'Registro eliminado.' };
@@ -118,7 +119,7 @@ export async function moderarReporte(
   if (!(await obtenerSesionAdmin())) {
     return { ok: false, mensaje: 'No autorizado.' };
   }
-  const { error } = await supabaseAdmin()
+  const { error } = await supabaseServer()
     .from('patologias_reportadas')
     .update({
       deleted_at: ocultar ? new Date().toISOString() : null,
@@ -147,7 +148,7 @@ export async function atenderReporte(
     return { ok: false, mensaje: 'No autorizado.' };
   }
   const ahora = new Date().toISOString();
-  const { error } = await supabaseAdmin()
+  const { error } = await supabaseServer()
     .from('patologias_reportadas')
     .update({
       ultima_actividad_at: ahora,

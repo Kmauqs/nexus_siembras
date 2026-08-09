@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description:
     'Aplicación de control agropecuario para pequeños productores: ' +
     'cultivos, inventario, compras, patologías y reportes. Offline-first.',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/Icon-maskable-192.png',
+  },
 };
 
 export default function RootLayout({

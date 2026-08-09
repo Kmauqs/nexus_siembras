@@ -1,37 +1,21 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { solicitarCodigo, verificarCodigo } from './acciones';
+import { solicitarMagicLink } from './acciones';
 
 export function FormularioLogin({ emailSugerido }: { emailSugerido: string }) {
-  const router = useRouter();
-  const [paso, setPaso] = useState<'email' | 'codigo'>('email');
   const [email, setEmail] = useState(emailSugerido);
-  const [codigo, setCodigo] = useState('');
+  const [enviado, setEnviado] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const [pendiente, iniciar] = useTransition();
 
-  const pedirCodigo = () =>
+  const pedirEnlace = () =>
     iniciar(async () => {
       const fd = new FormData();
       fd.set('email', email);
-      const r = await solicitarCodigo(null, fd);
+      const r = await solicitarMagicLink(null, fd);
       setMsg({ ok: r.ok, texto: r.mensaje });
-      if (r.ok) setPaso('codigo');
-    });
-
-  const validar = () =>
-    iniciar(async () => {
-      const fd = new FormData();
-      fd.set('email', email);
-      fd.set('codigo', codigo);
-      const r = await verificarCodigo(null, fd);
-      setMsg({ ok: r.ok, texto: r.mensaje });
-      if (r.ok) {
-        router.replace('/admin');
-        router.refresh();
-      }
+      if (r.ok) setEnviado(true);
     });
 
   return (
@@ -44,37 +28,15 @@ export function FormularioLogin({ emailSugerido }: { emailSugerido: string }) {
           type="email"
           className="input"
           value={email}
-          disabled={paso === 'codigo' || pendiente}
+          disabled={pendiente || enviado}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="tucorreo@dominio.com"
           autoComplete="email"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && email.includes('@')) pedirEnlace();
+          }}
         />
       </div>
-
-      {paso === 'codigo' && (
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
-            Código de 6 dígitos
-          </label>
-          <input
-            inputMode="numeric"
-            maxLength={6}
-            className="input text-center text-2xl font-bold tracking-[0.5em]"
-            value={codigo}
-            disabled={pendiente}
-            onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))}
-            placeholder="······"
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && codigo.length === 6) validar();
-            }}
-          />
-          <p className="mt-1 text-xs text-slate-500">
-            Revisa tu bandeja de entrada (y la carpeta de correo no deseado).
-            El código vence en 60 minutos.
-          </p>
-        </div>
-      )}
 
       {msg && (
         <p
@@ -88,40 +50,37 @@ export function FormularioLogin({ emailSugerido }: { emailSugerido: string }) {
         </p>
       )}
 
-      {paso === 'email' ? (
-        <button
-          className="btn-primario w-full"
-          onClick={pedirCodigo}
-          disabled={pendiente || !email.includes('@')}
-        >
-          {pendiente ? 'Enviando…' : 'Enviar código de acceso'}
-        </button>
-      ) : (
+      {enviado ? (
         <div className="space-y-2">
-          <button
-            className="btn-primario w-full"
-            onClick={validar}
-            disabled={pendiente || codigo.length !== 6}
-          >
-            {pendiente ? 'Verificando…' : 'Ingresar'}
-          </button>
+          <p className="rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-700">
+            Abre el correo y pulsa <strong>Sign in</strong> (o el enlace
+            equivalente). Te traerá de vuelta a este sitio ya autenticado.
+          </p>
           <button
             className="btn-sutil w-full"
             onClick={() => {
-              setPaso('email');
-              setCodigo('');
+              setEnviado(false);
               setMsg(null);
             }}
             disabled={pendiente}
           >
-            Usar otro correo o reenviar código
+            Usar otro correo o reenviar enlace
           </button>
         </div>
+      ) : (
+        <button
+          className="btn-primario w-full"
+          onClick={pedirEnlace}
+          disabled={pendiente || !email.includes('@')}
+        >
+          {pendiente ? 'Enviando…' : 'Enviar enlace de acceso'}
+        </button>
       )}
 
       <p className="border-t border-slate-100 pt-3 text-xs text-slate-500">
         El acceso está restringido a los correos autorizados. No se usa
-        contraseña: cada ingreso requiere un código nuevo enviado por email.
+        contraseña: cada ingreso usa el enlace mágico enviado por email
+        (plantilla por defecto de Supabase).
       </p>
     </div>
   );
