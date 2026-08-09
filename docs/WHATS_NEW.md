@@ -1,8 +1,38 @@
 # NEXUS Siembras — Notas de versión (What's new)
 
 Texto listo para Play Store / comunicación de release.  
-**Última generación:** 2026-08-03 · **Versión:** 0.2.8  
-**Versión anterior documentada:** 0.2.7 (2026-08-01)
+**Última generación:** 2026-08-09 · **Versión:** 0.3.0  
+**Versión anterior documentada:** 0.2.8 (2026-08-03)
+
+---
+
+## Novedades (What's new) — v0.3.0
+
+### Sitio web y panel de gestión
+
+**Web pública y backoffice:** sitio en Netlify con estadísticas del proyecto (usuarios, predios, mapa de calor de patologías) y panel de administración: usuarios, papelera, datos comunitarios, bandeja de feedback y configuración.
+
+**Acceso sin contraseña:** el panel usa el enlace mágico por email de Supabase (compatible con el plan gratuito; no hace falta código de 6 dígitos).
+
+**Papelera de usuarios:** suspender cuentas con opción de recuperar o borrar de forma definitiva (patrimonio comunitario protegido).
+
+**Feedback de testers:** micro-encuestas en la app y bandeja web con filtros, notas, marcado masivo y export CSV. Guía corta para testers incluida.
+
+### Compras entre co-propietarios
+
+**Comprobantes en la nube:** los PDF/fotos de soporte de compras se sincronizan por Supabase Storage. El **ZIP completo** incluye los adjuntos de todas las cuentas con rol Propietario del predio, no solo los guardados en el dispositivo local.
+
+### Comunidad y privacidad
+
+**Patrimonio comunitario:** al eliminar una cuenta se conservan variedades aportadas y reportes de patologías (anonimizados). Los focos pueden pasar a «desatendidos» tras inactividad y reactivarse.
+
+**Más seguro en el panel:** escrituras administrativas validadas con rol admin en la base; emails reales del administrador no van en el repositorio (configuración manual).
+
+### App
+
+**Reset local más limpio:** al borrar datos locales también se vacía la cola de feedback pendiente.
+
+**Identidad visual en la web:** logotipo de la app en cabecera, login y panel (en lugar del emoji).
 
 ---
 
@@ -84,10 +114,13 @@ Sigue funcionando **offline** con base de datos cifrada; sincroniza con la nube 
 
 ## Cambios y correcciones acumulados (post v0.2.2)
 
-Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.2.8:
+Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.3.0:
 
 | Área | Qué se corrigió o mejoró |
 |------|--------------------------|
+| **Web / backoffice (0.3.0)** | Next.js en Netlify: sitio público + panel admin; magic link; papelera de usuarios; feedback; logo de la app. |
+| **Compras sync (0.3.0)** | Bucket `compras-soportes` + metadatos; ZIP con comprobantes de todos los Propietario. |
+| **Patrimonio (0.3.0)** | Migraciones 0018–0021; estado desatendida; RLS admin; Edge Function `notify-feedback` (código). |
 | **Sync tombstones (0.2.8)** | Soft-delete remoto al vaciar papelera; verificación post-pull de cultivos ausentes/borrados; no push de hijos de cultivo borrado (evita FK 23503). |
 | **Dashboard Windows (0.2.8)** | KPI con muestra de ítems; navegación alerta→cultivo y compras→pantalla Compras. |
 | **Cronograma (0.2.8)** | Círculos pendientes abren Registrar tarea precargada. |
@@ -103,7 +136,7 @@ Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.2.8:
 | **Cuenta (0.2.7)** | Eliminar cuenta: RPC `eliminar_mi_cuenta`; borra datos privados y Auth; conserva variedades comunitarias y anonimiza patologías compartidas; opción de borrar o conservar datos locales. |
 | **Exportaciones** | Reporte integral, CSV/PDF, adjuntos y ZIP de compras. |
 | **Asistente** | Guía de 10 pasos; mismo AppShell/navegación inferior. |
-| **Migraciones Supabase** | `0011` autor en compras; `0012` proveedores compartidos; `0013` patologías por cultivo; `0014` eliminar cuenta. |
+| **Migraciones Supabase** | `0011`–`0021` (compras, proveedores, patologías, cuenta, feedback, backoffice, patrimonio, papelera, RLS admin, soportes Storage). |
 
 ---
 
