@@ -136,7 +136,7 @@ export function ListaFeedback({
             disabled={pendiente}
             onClick={() =>
               iniciar(async () => {
-                const r = await marcarLoteAtendido([...seleccion]);
+                const r = await marcarLoteAtendido(Array.from(seleccion));
                 setAviso({ ok: r.ok, texto: r.mensaje });
                 if (r.ok) setSeleccion(new Set());
               })
