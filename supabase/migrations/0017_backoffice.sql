@@ -29,8 +29,10 @@ CREATE TABLE IF NOT EXISTS public.app_config (
   updated_by  uuid REFERENCES auth.users(id) ON DELETE SET NULL
 );
 
+-- Placeholders deliberados (no commitear correos reales). Tras aplicar,
+-- sustituir manualmente — ver nexus_backoffice/README.md §2.4.
 INSERT INTO public.app_config (clave, valor, descripcion, tipo) VALUES
-  ('email_desarrollador', 'mauchitoq@gmail.com',
+  ('email_desarrollador', 'email@domain.com',
    'Correo que recibe copia de los feedback de usuarios.', 'email'),
   ('feedback_notificar', 'true',
    'Enviar aviso por email al recibir un feedback nuevo.', 'bool'),
@@ -44,7 +46,7 @@ INSERT INTO public.app_config (clave, valor, descripcion, tipo) VALUES
    'Habilita el mapa de calor comunitario de patologías.', 'bool'),
   ('github_url', 'https://github.com/nexuscreatio/nexus-siembras',
    'Repositorio público mostrado en la web.', 'texto'),
-  ('contacto_soporte', 'mauchitoq@gmail.com',
+  ('contacto_soporte', 'email@domain.com',
    'Correo de soporte mostrado a los usuarios.', 'email')
 ON CONFLICT (clave) DO NOTHING;   -- nunca pisar valores ya editados
 
@@ -65,8 +67,9 @@ CREATE TABLE IF NOT EXISTS public.admin_allowlist (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Placeholder: reemplazar por el email real del admin (README §2.4).
 INSERT INTO public.admin_allowlist (email, nombre)
-VALUES ('mauchitoq@gmail.com', 'Desarrollador')
+VALUES ('email@domain.com', 'Administrador')
 ON CONFLICT (email) DO NOTHING;
 
 ALTER TABLE public.admin_allowlist ENABLE ROW LEVEL SECURITY;

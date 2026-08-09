@@ -13,9 +13,46 @@ import '../../core/widgets/acceso_denegado.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/autor_label.dart';
 import '../../core/widgets/unit_dropdown.dart';
+import '../../services/compra_soporte_storage.dart';
 import '../../services/soporte_service.dart';
 import '../../state/app_state.dart';
 import '../../state/data_state.dart';
+
+Future<void> _abrirSoporteCompra(
+  BuildContext context,
+  WidgetRef ref,
+  Compra item,
+) async {
+  final local = item.soporteName;
+  if (local != null && local.isNotEmpty) {
+    await abrirAdjunto(context, local);
+    return;
+  }
+  if (item.soporteStoragePath == null || item.soporteStoragePath!.isEmpty) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No hay comprobante disponible')),
+    );
+    return;
+  }
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Descargando comprobante…')),
+  );
+  final db = ref.read(databaseProvider);
+  final row = await (db.select(db.compras)..where((c) => c.id.equals(item.id)))
+      .getSingleOrNull();
+  if (row == null) return;
+  final path = await CompraSoporteStorage(db).asegurarLocal(row);
+  if (!context.mounted) return;
+  if (path == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No se pudo descargar el comprobante')),
+    );
+    return;
+  }
+  await abrirAdjunto(context, path);
+}
 
 class PurchasesScreen extends ConsumerWidget {
   const PurchasesScreen({super.key});
@@ -152,6 +189,13 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
   late String _unidad = widget.existing?.unidad ?? 'kg';
   late String _tipo = widget.existing?.tipo ?? 'semilla';
   late String? _soporteName = widget.existing?.soporteName;
+  late String? _soporteRemotoEtiqueta =
+      widget.existing?.tieneSoporte == true &&
+              (widget.existing?.soporteName == null ||
+                  widget.existing!.soporteName!.isEmpty)
+          ? widget.existing?.etiquetaSoporte
+          : null;
+  bool _quitarSoporteRemoto = false;
 
   @override
   Widget build(BuildContext context) {
@@ -334,18 +378,24 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
                 onPressed: _adjuntarComprobante,
                 icon: const Icon(Icons.attach_file),
                 label: Text(
-                  _soporteName == null
-                      ? 'Adjuntar comprobante (PDF/foto)'
-                      : p.basename(_soporteName!),
+                  _soporteName != null
+                      ? p.basename(_soporteName!)
+                      : (_soporteRemotoEtiqueta != null
+                          ? 'En nube: $_soporteRemotoEtiqueta'
+                          : 'Adjuntar comprobante (PDF/foto)'),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
-            if (_soporteName != null)
+            if (_soporteName != null || _soporteRemotoEtiqueta != null)
               IconButton(
                 tooltip: 'Quitar comprobante',
                 icon: const Icon(Icons.close, size: 18),
-                onPressed: () => setState(() => _soporteName = null),
+                onPressed: () => setState(() {
+                  _soporteName = null;
+                  _soporteRemotoEtiqueta = null;
+                  _quitarSoporteRemoto = true;
+                }),
               ),
           ]),
           const SizedBox(height: 16),
@@ -414,7 +464,11 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
               anio: anio, nombreBase: nombreBase, desdeCamara: false);
       }
       if (path != null && mounted) {
-        setState(() => _soporteName = path);
+        setState(() {
+          _soporteName = path;
+          _soporteRemotoEtiqueta = null;
+          _quitarSoporteRemoto = false;
+        });
       }
     } catch (e) {
       if (!mounted) return;
@@ -449,6 +503,7 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
         cod: _cod.text.trim(), factura: _factura.text.trim(),
         proveedor: _proveedor.text.trim(), tipo: _tipo,
         soporteName: _soporteName,
+        limpiarSoporte: _quitarSoporteRemoto && _soporteName == null,
       );
     }
     if (!mounted) return;
@@ -490,17 +545,19 @@ class _CompraTile extends ConsumerWidget {
               ),
             Row(children: [
               _TipoChip(tipo: item.tipo),
-              if (item.soporteName != null) ...[
+              if (item.tieneSoporte) ...[
                 const SizedBox(width: 6),
                 // B8: tocar el nombre abre el comprobante (PDF/imagen).
+                // Si solo está en Storage (otro propietario), descarga primero.
                 Flexible(
                   child: InkWell(
-                    onTap: () => abrirAdjunto(context, item.soporteName!),
+                    onTap: () => _abrirSoporteCompra(context, ref, item),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       const Icon(Icons.attach_file,
                           size: 14, color: Colors.teal),
                       Flexible(
-                        child: Text(p.basename(item.soporteName!),
+                        child: Text(
+                            item.etiquetaSoporte ?? 'comprobante',
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                                 fontSize: 11,

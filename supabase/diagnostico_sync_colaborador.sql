@@ -9,9 +9,9 @@
 --   3. Copia el resultado y pásalo aquí
 --   4. Repite con el siguiente bloque
 --
--- Los emails asumidos son:
---   Propietario:  mauchitoq@gmail.com
---   Colaborador:  camuquisu@outlook.com
+-- Sustituir a mano antes de ejecutar (no versionar correos reales):
+--   Propietario:  'EMAIL_PROPIETARIO@ejemplo.com'
+--   Colaborador:  'EMAIL_COLABORADOR@ejemplo.com'
 -- Predio: 'Finca Villamariana'
 -- =============================================================
 
@@ -19,7 +19,7 @@
 -- ▓▓▓ BLOQUE 1 — usuarios ▓▓▓
 SELECT id, email, created_at
 FROM auth.users
-WHERE email IN ('mauchitoq@gmail.com', 'camuquisu@outlook.com')
+WHERE email IN ('EMAIL_PROPIETARIO@ejemplo.com', 'EMAIL_COLABORADOR@ejemplo.com')
 ORDER BY email;
 
 
@@ -70,19 +70,19 @@ WHERE p.nombre = 'Finca Villamariana';
 
 
 -- ▓▓▓ BLOQUE 5 — simulación RLS como colaborador ▓▓▓
--- Este bloque simula ser 'camuquisu@outlook.com' y ejecuta rol_en_predio()
+-- Simula ser EMAIL_COLABORADOR@ejemplo.com y ejecuta rol_en_predio()
 -- + puede_ver_predio() sobre 'Finca Villamariana'. Debe retornar:
 --   rol_calculado = 'trabajador' (o 'consultor')
 --   puede_ver     = true
 WITH cfg AS (
   SELECT set_config(
     'request.jwt.claim.sub',
-    (SELECT id::text FROM auth.users WHERE email = 'camuquisu@outlook.com'),
+    (SELECT id::text FROM auth.users WHERE email = 'EMAIL_COLABORADOR@ejemplo.com'),
     true
   ) AS uid_simulado
 )
 SELECT
-  cfg.uid_simulado AS uid_camuquisu,
+  cfg.uid_simulado AS uid_colaborador,
   p.id AS predio_id,
   p.nombre,
   public.rol_en_predio(p.id) AS rol_calculado,
@@ -95,7 +95,7 @@ WHERE p.nombre = 'Finca Villamariana';
 WITH cfg AS (
   SELECT set_config(
     'request.jwt.claim.sub',
-    (SELECT id::text FROM auth.users WHERE email = 'camuquisu@outlook.com'),
+    (SELECT id::text FROM auth.users WHERE email = 'EMAIL_COLABORADOR@ejemplo.com'),
     true
   ) AS uid_simulado
 )

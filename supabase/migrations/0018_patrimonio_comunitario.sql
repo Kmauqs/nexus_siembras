@@ -1,40 +1,47 @@
 -- =====================================================================
 -- Migración 0018 — Patrimonio comunitario y estado de los reportes
--- Fecha: 2026-08-04. Idempotente. schema_meta → 15.
+-- Fecha: 2026-08-04 (rev. 2). Idempotente. schema_meta → 15.
+--
+-- EJECUTAR EL ARCHIVO COMPLETO DE UNA SOLA VEZ (los bloques dependen
+-- entre sí: config_num → estado_reporte → vista → heatmap).
+-- Requiere la migración 0017 aplicada (usa `app_config` y `es_admin()`).
 --
 -- Regla de negocio (decisión 2026-08-04): lo que la comunidad aporta es
 -- patrimonio de la comunidad y NO se elimina cuando el autor se va.
 --
---   1. VARIEDADES: se conservan siempre. Al borrarse la cuenta, solo se
---      anonimiza `created_by` (ya no había FK, así que nunca hubo riesgo
---      de CASCADE; ahora además se limpia el UUID huérfano).
+--   1. VARIEDADES: se conservan siempre; solo se anonimiza `created_by`.
 --   2. REPORTES DE PATOLOGÍAS: nunca se borran — ni al eliminar la
 --      cuenta ni desde el backoffice. Se anonimizan y siguen alimentando
---      el mapa comunitario. Se retiran los DELETE de las migraciones
---      0014 y 0017 redefiniendo esas funciones.
---   3. ESTADO DEL REPORTE: un reporte se considera «desatendido» (se
---      pinta gris) tras N días sin actividad — ni del administrador ni
---      de la comunidad en coordenadas cercanas. Un reporte nuevo cerca
---      «reactiva» a sus vecinos: el foco sigue vivo.
+--      el mapa comunitario. Se redefinen las funciones de 0014 y 0017
+--      quitando sus DELETE.
+--   3. ESTADO: un reporte pasa a «desatendido» (gris) tras N días sin
+--      actividad — del administrador o de la comunidad en coordenadas
+--      cercanas. Un reporte nuevo cerca reactiva a sus vecinos.
 --
--- Parámetros configurables desde el backoffice (app_config):
---   · patologia_dias_desatendida  (por defecto 60)
---   · patologia_radio_km          (por defecto 5)
+-- Parámetros (editables desde el backoffice → Configuración):
+--   · patologia_dias_desatendida  (60)
+--   · patologia_radio_km          (5)
 -- =====================================================================
+
+-- Guarda de dependencia: falla temprano y con mensaje claro.
+DO $$
+BEGIN
+  IF to_regclass('public.app_config') IS NULL THEN
+    RAISE EXCEPTION
+      'Falta la migración 0017 (tabla app_config). Aplícala antes de esta.';
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------
 -- 1. Columnas de actividad
 -- ---------------------------------------------------------------------
 ALTER TABLE public.patologias_reportadas
   ADD COLUMN IF NOT EXISTS ultima_actividad_at timestamptz;
-
 ALTER TABLE public.patologias_reportadas
   ADD COLUMN IF NOT EXISTS atendido_por_admin_at timestamptz;
-
 ALTER TABLE public.patologias_reportadas
   ADD COLUMN IF NOT EXISTS notas_admin text;
 
--- Backfill: la actividad inicial es la propia creación del reporte.
 UPDATE public.patologias_reportadas
 SET ultima_actividad_at = coalesce(updated_at, created_at, now())
 WHERE ultima_actividad_at IS NULL;
@@ -45,13 +52,12 @@ ALTER TABLE public.patologias_reportadas
 CREATE INDEX IF NOT EXISTS idx_patologias_actividad
   ON public.patologias_reportadas (ultima_actividad_at DESC)
   WHERE deleted_at IS NULL;
-
 CREATE INDEX IF NOT EXISTS idx_patologias_coords
   ON public.patologias_reportadas (lat, lng)
   WHERE deleted_at IS NULL;
 
 -- ---------------------------------------------------------------------
--- 2. Parámetros configurables
+-- 2. Parámetros configurables + helper de lectura
 -- ---------------------------------------------------------------------
 INSERT INTO public.app_config (clave, valor, descripcion, tipo) VALUES
   ('patologia_dias_desatendida', '60',
@@ -67,13 +73,19 @@ RETURNS numeric
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
   SELECT coalesce(
-    (SELECT nullif(valor, '')::numeric FROM public.app_config
+    (SELECT nullif(trim(valor), '')::numeric FROM public.app_config
       WHERE clave = p_clave),
     p_default);
 $$;
 
+-- La vista pública la consultan anon/authenticated: necesitan EXECUTE.
+GRANT EXECUTE ON FUNCTION public.config_num(text, numeric)
+  TO anon, authenticated;
+
 -- ---------------------------------------------------------------------
 -- 3. Estado derivado del reporte
+--    `make_interval` evita la concatenación numeric||text (más robusto
+--    que construir el intervalo como cadena).
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.estado_reporte(p_ultima_actividad timestamptz)
 RETURNS text
@@ -81,23 +93,22 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
   SELECT CASE
     WHEN p_ultima_actividad IS NULL THEN 'desatendida'
-    WHEN p_ultima_actividad >
-         now() - (public.config_num('patologia_dias_desatendida', 60)
-                  || ' days')::interval
+    WHEN p_ultima_actividad > now() - make_interval(
+           days => public.config_num('patologia_dias_desatendida', 60)::int)
       THEN 'activa'
     ELSE 'desatendida'
   END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.estado_reporte(timestamptz)
+  TO anon, authenticated;
 
 COMMENT ON FUNCTION public.estado_reporte(timestamptz) IS
   'activa | desatendida — según los días sin actividad configurados.';
 
 -- ---------------------------------------------------------------------
 -- 4. Propagación de actividad por proximidad
---    Un reporte nuevo refresca a los vecinos dentro del radio: el foco
---    sigue vigente aunque los reportes originales sean antiguos.
---    Distancia por bounding box (usa el índice) — sin dependencia de
---    PostGIS. 1° lat ≈ 111.045 km; la longitud se corrige por latitud.
+--    Bounding box corregido por latitud (usa el índice, sin PostGIS).
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.propagar_actividad_patologia()
 RETURNS trigger
@@ -113,7 +124,6 @@ BEGIN
   END IF;
 
   d_lat := radio_km / 111.045;
-  -- cos(lat) evita que el radio se ensanche cerca de los polos.
   d_lng := radio_km / (111.045 * greatest(cos(radians(NEW.lat)), 0.01));
 
   UPDATE public.patologias_reportadas
@@ -126,13 +136,12 @@ BEGIN
   RETURN NEW;
 END $$;
 
-DROP TRIGGER IF EXISTS trg_propagar_actividad
-  ON public.patologias_reportadas;
+DROP TRIGGER IF EXISTS trg_propagar_actividad ON public.patologias_reportadas;
 CREATE TRIGGER trg_propagar_actividad
   AFTER INSERT ON public.patologias_reportadas
   FOR EACH ROW EXECUTE FUNCTION public.propagar_actividad_patologia();
 
--- Acción explícita del administrador: revisar/atender un reporte.
+-- Intervención explícita del administrador.
 CREATE OR REPLACE FUNCTION public.admin_atender_patologia(
   p_id bigint,
   p_notas text DEFAULT NULL
@@ -160,8 +169,12 @@ GRANT EXECUTE ON FUNCTION public.admin_atender_patologia(bigint, text)
 
 -- ---------------------------------------------------------------------
 -- 5. Vista pública con el estado incluido
+--    DROP + CREATE (no CREATE OR REPLACE): añadimos columnas y Postgres
+--    rechaza reemplazar una vista cuya lista de columnas cambia.
 -- ---------------------------------------------------------------------
-CREATE OR REPLACE VIEW public.patologias_reportadas_publica AS
+DROP VIEW IF EXISTS public.patologias_reportadas_publica;
+
+CREATE VIEW public.patologias_reportadas_publica AS
 SELECT
   id,
   patologia_nombre,
@@ -181,15 +194,21 @@ SELECT
   clima_humedad_pct,
   created_at,
   ultima_actividad_at,
-  atendido_por_admin_at IS NOT NULL AS atendido_por_admin,
+  (atendido_por_admin_at IS NOT NULL) AS atendido_por_admin,
   public.estado_reporte(ultima_actividad_at) AS estado
 FROM public.patologias_reportadas
 WHERE deleted_at IS NULL;
 
 GRANT SELECT ON public.patologias_reportadas_publica TO anon, authenticated;
 
--- Heatmap con estado (lo consume el mapa público y el de la app).
-CREATE OR REPLACE FUNCTION public.stats_heatmap_patologias()
+-- ---------------------------------------------------------------------
+-- 6. Heatmap con estado
+--    DROP obligatorio: cambia el tipo de retorno (6 → 8 columnas) y
+--    Postgres no permite alterarlo con CREATE OR REPLACE.
+-- ---------------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.stats_heatmap_patologias();
+
+CREATE FUNCTION public.stats_heatmap_patologias()
 RETURNS TABLE (
   lat double precision, lng double precision,
   patologia_nombre text, severidad text,
@@ -214,7 +233,7 @@ GRANT EXECUTE ON FUNCTION public.stats_heatmap_patologias()
   TO anon, authenticated;
 
 -- ---------------------------------------------------------------------
--- 6. Eliminación de cuenta SIN borrar patrimonio comunitario
+-- 7. Eliminación de cuenta SIN destruir patrimonio comunitario
 --    (redefine 0014 y 0017: se quitan los DELETE de reportes)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.eliminar_mi_cuenta()
@@ -237,24 +256,20 @@ BEGIN
     AND ps.shared_with_id IS DISTINCT FROM uid
     AND ps.aceptado_at IS NOT NULL;
 
-  -- Variedades: patrimonio de la comunidad. Se conservan; solo se
-  -- desvincula al autor.
+  -- Variedades: patrimonio comunitario. Se conservan, sin autor.
   UPDATE public.variedades_comunitarias
   SET created_by = NULL
   WHERE created_by = uid;
   GET DIAGNOSTICS n_variedades = ROW_COUNT;
 
-  -- Reportes: TODOS se conservan (incluidos los soft-deleted por el
-  -- usuario, que se reactivan como aporte comunitario anónimo).
+  -- Reportes: TODOS se conservan (incluidos los que el usuario había
+  -- ocultado), anonimizados.
   UPDATE public.patologias_reportadas
-  SET owner_id   = NULL,
-      cliente_id = NULL,
-      updated_at = now()
+  SET owner_id = NULL, cliente_id = NULL, updated_at = now()
   WHERE owner_id = uid;
   GET DIAGNOSTICS n_reportes = ROW_COUNT;
 
-  -- Las fotos NO se borran: son parte del reporte comunitario. Solo se
-  -- desvincula el propietario del objeto en Storage.
+  -- Las fotos NO se borran: son parte del reporte comunitario.
   BEGIN
     UPDATE storage.objects SET owner = NULL
     WHERE bucket_id = 'patologias' AND owner = uid;
@@ -332,23 +347,30 @@ REVOKE ALL ON FUNCTION public.admin_eliminar_usuario(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_eliminar_usuario(uuid) TO authenticated;
 
 -- ---------------------------------------------------------------------
--- 7. Blindaje: nadie puede BORRAR reportes de patologías.
---    Ni usuarios ni admin — el patrimonio comunitario solo se archiva
---    (deleted_at) en casos de moderación, nunca se destruye.
+-- 8. Blindaje del patrimonio: nadie puede BORRAR reportes.
+--    Se conserva el criterio de privacidad de la 0009: la TABLA BASE
+--    solo la lee su dueño (o el admin); la lectura comunitaria ocurre a
+--    través de la vista anonimizada.
 -- ---------------------------------------------------------------------
-DROP POLICY IF EXISTS patologias_reportadas_delete
-  ON public.patologias_reportadas;
-DROP POLICY IF EXISTS patologias_reportadas_admin
-  ON public.patologias_reportadas;
+DROP POLICY IF EXISTS patologias_reportadas_delete    ON public.patologias_reportadas;
+DROP POLICY IF EXISTS patologias_reportadas_admin     ON public.patologias_reportadas;
+DROP POLICY IF EXISTS patologias_reportadas_admin_rw  ON public.patologias_reportadas;
+DROP POLICY IF EXISTS patologias_reportadas_admin_update ON public.patologias_reportadas;
+DROP POLICY IF EXISTS patologias_reportadas_read      ON public.patologias_reportadas;
+DROP POLICY IF EXISTS patologias_reportadas_update    ON public.patologias_reportadas;
 
--- El admin puede leer y editar (moderar), pero no borrar.
-CREATE POLICY patologias_reportadas_admin_rw ON public.patologias_reportadas
-  FOR SELECT USING (public.es_admin() OR owner_id = auth.uid()
-                    OR deleted_at IS NULL);
-CREATE POLICY patologias_reportadas_admin_update ON public.patologias_reportadas
+CREATE POLICY patologias_reportadas_read ON public.patologias_reportadas
+  FOR SELECT USING (
+    public.es_admin() OR (owner_id = auth.uid() AND deleted_at IS NULL)
+  );
+
+CREATE POLICY patologias_reportadas_update ON public.patologias_reportadas
   FOR UPDATE USING (public.es_admin() OR owner_id = auth.uid())
-  WITH CHECK (public.es_admin() OR owner_id = auth.uid());
--- (Sin policy FOR DELETE ⇒ el borrado queda prohibido por RLS.)
+  WITH CHECK  (public.es_admin() OR owner_id = auth.uid());
+
+-- Sin policy FOR DELETE ⇒ el borrado queda prohibido por RLS para todos
+-- los roles (service_role sigue pudiendo, pero el backoffice no lo usa
+-- para borrar: solo oculta con deleted_at).
 
 COMMENT ON COLUMN public.patologias_reportadas.ultima_actividad_at IS
   'Última señal de vida del foco: reporte nuevo en el radio configurado '
@@ -360,8 +382,12 @@ ON CONFLICT (id) DO UPDATE
 SET version = GREATEST(public.schema_meta.version, 15),
     applied_at = NOW();
 
--- Verificación:
--- SELECT estado, count(*) FROM public.patologias_reportadas_publica
---   GROUP BY estado;
--- SELECT clave, valor FROM public.app_config
---   WHERE clave LIKE 'patologia_%';
+-- =====================================================================
+-- Verificación (ejecutar aparte tras aplicar):
+--   SELECT public.estado_reporte(now());                  -- → activa
+--   SELECT public.estado_reporte(now() - interval '90 days'); -- → desatendida
+--   SELECT estado, count(*) FROM public.patologias_reportadas_publica
+--     GROUP BY estado;
+--   SELECT * FROM public.stats_heatmap_patologias() LIMIT 5;
+--   SELECT clave, valor FROM public.app_config WHERE clave LIKE 'patologia_%';
+-- =====================================================================

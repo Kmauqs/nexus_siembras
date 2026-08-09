@@ -94,6 +94,9 @@ class AccountService {
       // Revisión C2-3 (2026-08-03): la caché del banco comunitario también
       // se limpia — contenido público, pero el "reset total" debe serlo.
       await db.delete(db.variedadesComunitariasCache).go();
+      // P2 code-review: cola de micro-encuestas; si quedan pendientes se
+      // subirían atribuidas al siguiente usuario de este dispositivo.
+      await db.delete(db.feedbackEncuestas).go();
       await db.delete(db.configs).go();
     });
   }

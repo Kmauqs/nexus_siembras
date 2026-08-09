@@ -208,6 +208,7 @@ class PatologiaRepository {
                 paisIso2: Value(paisIso2),
                 regionNombre: Value(regionNombre),
                 municipioNombre: Value(municipioNombre),
+                ultimaActividadAt: Value(fechaDeteccion),
               ),
             );
       }

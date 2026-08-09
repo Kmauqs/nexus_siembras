@@ -7479,6 +7479,18 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
   late final GeneratedColumn<String> soporteTipo = GeneratedColumn<String>(
       'soporte_tipo', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _soporteStoragePathMeta =
+      const VerificationMeta('soporteStoragePath');
+  @override
+  late final GeneratedColumn<String> soporteStoragePath =
+      GeneratedColumn<String>('soporte_storage_path', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _soporteNombreMeta =
+      const VerificationMeta('soporteNombre');
+  @override
+  late final GeneratedColumn<String> soporteNombre = GeneratedColumn<String>(
+      'soporte_nombre', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _idUnicoMeta =
       const VerificationMeta('idUnico');
   @override
@@ -7546,6 +7558,8 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
         factura,
         soportePath,
         soporteTipo,
+        soporteStoragePath,
+        soporteNombre,
         idUnico,
         tipo,
         plantaRef,
@@ -7656,6 +7670,18 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
           soporteTipo.isAcceptableOrUnknown(
               data['soporte_tipo']!, _soporteTipoMeta));
     }
+    if (data.containsKey('soporte_storage_path')) {
+      context.handle(
+          _soporteStoragePathMeta,
+          soporteStoragePath.isAcceptableOrUnknown(
+              data['soporte_storage_path']!, _soporteStoragePathMeta));
+    }
+    if (data.containsKey('soporte_nombre')) {
+      context.handle(
+          _soporteNombreMeta,
+          soporteNombre.isAcceptableOrUnknown(
+              data['soporte_nombre']!, _soporteNombreMeta));
+    }
     if (data.containsKey('id_unico')) {
       context.handle(_idUnicoMeta,
           idUnico.isAcceptableOrUnknown(data['id_unico']!, _idUnicoMeta));
@@ -7729,6 +7755,10 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
           .read(DriftSqlType.string, data['${effectivePrefix}soporte_path']),
       soporteTipo: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}soporte_tipo']),
+      soporteStoragePath: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}soporte_storage_path']),
+      soporteNombre: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}soporte_nombre']),
       idUnico: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id_unico']),
       tipo: attachedDatabase.typeMapping
@@ -7768,8 +7798,16 @@ class Compra extends DataClass implements Insertable<Compra> {
   final int? unidadDisplayId;
   final String? codigo;
   final String? factura;
+
+  /// Caché local del comprobante (path absoluto del dispositivo; no se sube).
   final String? soportePath;
   final String? soporteTipo;
+
+  /// Object key en bucket `compras-soportes` (sí se sincroniza).
+  final String? soporteStoragePath;
+
+  /// Nombre de archivo del comprobante (para UI/ZIP tras sync).
+  final String? soporteNombre;
   final String? idUnico;
   final String? tipo;
   final int? plantaRef;
@@ -7796,6 +7834,8 @@ class Compra extends DataClass implements Insertable<Compra> {
       this.factura,
       this.soportePath,
       this.soporteTipo,
+      this.soporteStoragePath,
+      this.soporteNombre,
       this.idUnico,
       this.tipo,
       this.plantaRef,
@@ -7837,6 +7877,12 @@ class Compra extends DataClass implements Insertable<Compra> {
     }
     if (!nullToAbsent || soporteTipo != null) {
       map['soporte_tipo'] = Variable<String>(soporteTipo);
+    }
+    if (!nullToAbsent || soporteStoragePath != null) {
+      map['soporte_storage_path'] = Variable<String>(soporteStoragePath);
+    }
+    if (!nullToAbsent || soporteNombre != null) {
+      map['soporte_nombre'] = Variable<String>(soporteNombre);
     }
     if (!nullToAbsent || idUnico != null) {
       map['id_unico'] = Variable<String>(idUnico);
@@ -7893,6 +7939,12 @@ class Compra extends DataClass implements Insertable<Compra> {
       soporteTipo: soporteTipo == null && nullToAbsent
           ? const Value.absent()
           : Value(soporteTipo),
+      soporteStoragePath: soporteStoragePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(soporteStoragePath),
+      soporteNombre: soporteNombre == null && nullToAbsent
+          ? const Value.absent()
+          : Value(soporteNombre),
       idUnico: idUnico == null && nullToAbsent
           ? const Value.absent()
           : Value(idUnico),
@@ -7932,6 +7984,9 @@ class Compra extends DataClass implements Insertable<Compra> {
       factura: serializer.fromJson<String?>(json['factura']),
       soportePath: serializer.fromJson<String?>(json['soportePath']),
       soporteTipo: serializer.fromJson<String?>(json['soporteTipo']),
+      soporteStoragePath:
+          serializer.fromJson<String?>(json['soporteStoragePath']),
+      soporteNombre: serializer.fromJson<String?>(json['soporteNombre']),
       idUnico: serializer.fromJson<String?>(json['idUnico']),
       tipo: serializer.fromJson<String?>(json['tipo']),
       plantaRef: serializer.fromJson<int?>(json['plantaRef']),
@@ -7961,6 +8016,8 @@ class Compra extends DataClass implements Insertable<Compra> {
       'factura': serializer.toJson<String?>(factura),
       'soportePath': serializer.toJson<String?>(soportePath),
       'soporteTipo': serializer.toJson<String?>(soporteTipo),
+      'soporteStoragePath': serializer.toJson<String?>(soporteStoragePath),
+      'soporteNombre': serializer.toJson<String?>(soporteNombre),
       'idUnico': serializer.toJson<String?>(idUnico),
       'tipo': serializer.toJson<String?>(tipo),
       'plantaRef': serializer.toJson<int?>(plantaRef),
@@ -7988,6 +8045,8 @@ class Compra extends DataClass implements Insertable<Compra> {
           Value<String?> factura = const Value.absent(),
           Value<String?> soportePath = const Value.absent(),
           Value<String?> soporteTipo = const Value.absent(),
+          Value<String?> soporteStoragePath = const Value.absent(),
+          Value<String?> soporteNombre = const Value.absent(),
           Value<String?> idUnico = const Value.absent(),
           Value<String?> tipo = const Value.absent(),
           Value<int?> plantaRef = const Value.absent(),
@@ -8017,6 +8076,11 @@ class Compra extends DataClass implements Insertable<Compra> {
         factura: factura.present ? factura.value : this.factura,
         soportePath: soportePath.present ? soportePath.value : this.soportePath,
         soporteTipo: soporteTipo.present ? soporteTipo.value : this.soporteTipo,
+        soporteStoragePath: soporteStoragePath.present
+            ? soporteStoragePath.value
+            : this.soporteStoragePath,
+        soporteNombre:
+            soporteNombre.present ? soporteNombre.value : this.soporteNombre,
         idUnico: idUnico.present ? idUnico.value : this.idUnico,
         tipo: tipo.present ? tipo.value : this.tipo,
         plantaRef: plantaRef.present ? plantaRef.value : this.plantaRef,
@@ -8060,6 +8124,12 @@ class Compra extends DataClass implements Insertable<Compra> {
           data.soportePath.present ? data.soportePath.value : this.soportePath,
       soporteTipo:
           data.soporteTipo.present ? data.soporteTipo.value : this.soporteTipo,
+      soporteStoragePath: data.soporteStoragePath.present
+          ? data.soporteStoragePath.value
+          : this.soporteStoragePath,
+      soporteNombre: data.soporteNombre.present
+          ? data.soporteNombre.value
+          : this.soporteNombre,
       idUnico: data.idUnico.present ? data.idUnico.value : this.idUnico,
       tipo: data.tipo.present ? data.tipo.value : this.tipo,
       plantaRef: data.plantaRef.present ? data.plantaRef.value : this.plantaRef,
@@ -8091,6 +8161,8 @@ class Compra extends DataClass implements Insertable<Compra> {
           ..write('factura: $factura, ')
           ..write('soportePath: $soportePath, ')
           ..write('soporteTipo: $soporteTipo, ')
+          ..write('soporteStoragePath: $soporteStoragePath, ')
+          ..write('soporteNombre: $soporteNombre, ')
           ..write('idUnico: $idUnico, ')
           ..write('tipo: $tipo, ')
           ..write('plantaRef: $plantaRef, ')
@@ -8120,6 +8192,8 @@ class Compra extends DataClass implements Insertable<Compra> {
         factura,
         soportePath,
         soporteTipo,
+        soporteStoragePath,
+        soporteNombre,
         idUnico,
         tipo,
         plantaRef,
@@ -8148,6 +8222,8 @@ class Compra extends DataClass implements Insertable<Compra> {
           other.factura == this.factura &&
           other.soportePath == this.soportePath &&
           other.soporteTipo == this.soporteTipo &&
+          other.soporteStoragePath == this.soporteStoragePath &&
+          other.soporteNombre == this.soporteNombre &&
           other.idUnico == this.idUnico &&
           other.tipo == this.tipo &&
           other.plantaRef == this.plantaRef &&
@@ -8174,6 +8250,8 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
   final Value<String?> factura;
   final Value<String?> soportePath;
   final Value<String?> soporteTipo;
+  final Value<String?> soporteStoragePath;
+  final Value<String?> soporteNombre;
   final Value<String?> idUnico;
   final Value<String?> tipo;
   final Value<int?> plantaRef;
@@ -8198,6 +8276,8 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     this.factura = const Value.absent(),
     this.soportePath = const Value.absent(),
     this.soporteTipo = const Value.absent(),
+    this.soporteStoragePath = const Value.absent(),
+    this.soporteNombre = const Value.absent(),
     this.idUnico = const Value.absent(),
     this.tipo = const Value.absent(),
     this.plantaRef = const Value.absent(),
@@ -8223,6 +8303,8 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     this.factura = const Value.absent(),
     this.soportePath = const Value.absent(),
     this.soporteTipo = const Value.absent(),
+    this.soporteStoragePath = const Value.absent(),
+    this.soporteNombre = const Value.absent(),
     this.idUnico = const Value.absent(),
     this.tipo = const Value.absent(),
     this.plantaRef = const Value.absent(),
@@ -8253,6 +8335,8 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     Expression<String>? factura,
     Expression<String>? soportePath,
     Expression<String>? soporteTipo,
+    Expression<String>? soporteStoragePath,
+    Expression<String>? soporteNombre,
     Expression<String>? idUnico,
     Expression<String>? tipo,
     Expression<int>? plantaRef,
@@ -8278,6 +8362,9 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       if (factura != null) 'factura': factura,
       if (soportePath != null) 'soporte_path': soportePath,
       if (soporteTipo != null) 'soporte_tipo': soporteTipo,
+      if (soporteStoragePath != null)
+        'soporte_storage_path': soporteStoragePath,
+      if (soporteNombre != null) 'soporte_nombre': soporteNombre,
       if (idUnico != null) 'id_unico': idUnico,
       if (tipo != null) 'tipo': tipo,
       if (plantaRef != null) 'planta_ref': plantaRef,
@@ -8305,6 +8392,8 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       Value<String?>? factura,
       Value<String?>? soportePath,
       Value<String?>? soporteTipo,
+      Value<String?>? soporteStoragePath,
+      Value<String?>? soporteNombre,
       Value<String?>? idUnico,
       Value<String?>? tipo,
       Value<int?>? plantaRef,
@@ -8329,6 +8418,8 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       factura: factura ?? this.factura,
       soportePath: soportePath ?? this.soportePath,
       soporteTipo: soporteTipo ?? this.soporteTipo,
+      soporteStoragePath: soporteStoragePath ?? this.soporteStoragePath,
+      soporteNombre: soporteNombre ?? this.soporteNombre,
       idUnico: idUnico ?? this.idUnico,
       tipo: tipo ?? this.tipo,
       plantaRef: plantaRef ?? this.plantaRef,
@@ -8388,6 +8479,12 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     if (soporteTipo.present) {
       map['soporte_tipo'] = Variable<String>(soporteTipo.value);
     }
+    if (soporteStoragePath.present) {
+      map['soporte_storage_path'] = Variable<String>(soporteStoragePath.value);
+    }
+    if (soporteNombre.present) {
+      map['soporte_nombre'] = Variable<String>(soporteNombre.value);
+    }
     if (idUnico.present) {
       map['id_unico'] = Variable<String>(idUnico.value);
     }
@@ -8433,6 +8530,8 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
           ..write('factura: $factura, ')
           ..write('soportePath: $soportePath, ')
           ..write('soporteTipo: $soporteTipo, ')
+          ..write('soporteStoragePath: $soporteStoragePath, ')
+          ..write('soporteNombre: $soporteNombre, ')
           ..write('idUnico: $idUnico, ')
           ..write('tipo: $tipo, ')
           ..write('plantaRef: $plantaRef, ')
@@ -15835,6 +15934,12 @@ class $PatologiasReportadasTable extends PatologiasReportadas
   late final GeneratedColumn<double> climaHumedadPct = GeneratedColumn<double>(
       'clima_humedad_pct', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _ultimaActividadAtMeta =
+      const VerificationMeta('ultimaActividadAt');
+  @override
+  late final GeneratedColumn<DateTime> ultimaActividadAt =
+      GeneratedColumn<DateTime>('ultima_actividad_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -15877,6 +15982,7 @@ class $PatologiasReportadasTable extends PatologiasReportadas
         municipioNombre,
         climaTempC,
         climaHumedadPct,
+        ultimaActividadAt,
         createdAt,
         updatedAt,
         deletedAt
@@ -15993,6 +16099,12 @@ class $PatologiasReportadasTable extends PatologiasReportadas
           climaHumedadPct.isAcceptableOrUnknown(
               data['clima_humedad_pct']!, _climaHumedadPctMeta));
     }
+    if (data.containsKey('ultima_actividad_at')) {
+      context.handle(
+          _ultimaActividadAtMeta,
+          ultimaActividadAt.isAcceptableOrUnknown(
+              data['ultima_actividad_at']!, _ultimaActividadAtMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -16050,6 +16162,8 @@ class $PatologiasReportadasTable extends PatologiasReportadas
           .read(DriftSqlType.double, data['${effectivePrefix}clima_temp_c']),
       climaHumedadPct: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}clima_humedad_pct']),
+      ultimaActividadAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}ultima_actividad_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -16091,6 +16205,10 @@ class PatologiasReportada extends DataClass
   final String? municipioNombre;
   final double? climaTempC;
   final double? climaHumedadPct;
+
+  /// Última señal de vida del foco (reporte cercano o admin). Alineado con
+  /// `patologias_reportadas.ultima_actividad_at` (migración 0018).
+  final DateTime? ultimaActividadAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -16113,6 +16231,7 @@ class PatologiasReportada extends DataClass
       this.municipioNombre,
       this.climaTempC,
       this.climaHumedadPct,
+      this.ultimaActividadAt,
       required this.createdAt,
       required this.updatedAt,
       this.deletedAt});
@@ -16162,6 +16281,9 @@ class PatologiasReportada extends DataClass
     }
     if (!nullToAbsent || climaHumedadPct != null) {
       map['clima_humedad_pct'] = Variable<double>(climaHumedadPct);
+    }
+    if (!nullToAbsent || ultimaActividadAt != null) {
+      map['ultima_actividad_at'] = Variable<DateTime>(ultimaActividadAt);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -16215,6 +16337,9 @@ class PatologiasReportada extends DataClass
       climaHumedadPct: climaHumedadPct == null && nullToAbsent
           ? const Value.absent()
           : Value(climaHumedadPct),
+      ultimaActividadAt: ultimaActividadAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ultimaActividadAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -16246,6 +16371,8 @@ class PatologiasReportada extends DataClass
       municipioNombre: serializer.fromJson<String?>(json['municipioNombre']),
       climaTempC: serializer.fromJson<double?>(json['climaTempC']),
       climaHumedadPct: serializer.fromJson<double?>(json['climaHumedadPct']),
+      ultimaActividadAt:
+          serializer.fromJson<DateTime?>(json['ultimaActividadAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -16273,6 +16400,7 @@ class PatologiasReportada extends DataClass
       'municipioNombre': serializer.toJson<String?>(municipioNombre),
       'climaTempC': serializer.toJson<double?>(climaTempC),
       'climaHumedadPct': serializer.toJson<double?>(climaHumedadPct),
+      'ultimaActividadAt': serializer.toJson<DateTime?>(ultimaActividadAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -16298,6 +16426,7 @@ class PatologiasReportada extends DataClass
           Value<String?> municipioNombre = const Value.absent(),
           Value<double?> climaTempC = const Value.absent(),
           Value<double?> climaHumedadPct = const Value.absent(),
+          Value<DateTime?> ultimaActividadAt = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           Value<DateTime?> deletedAt = const Value.absent()}) =>
@@ -16332,6 +16461,9 @@ class PatologiasReportada extends DataClass
         climaHumedadPct: climaHumedadPct.present
             ? climaHumedadPct.value
             : this.climaHumedadPct,
+        ultimaActividadAt: ultimaActividadAt.present
+            ? ultimaActividadAt.value
+            : this.ultimaActividadAt,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -16377,6 +16509,9 @@ class PatologiasReportada extends DataClass
       climaHumedadPct: data.climaHumedadPct.present
           ? data.climaHumedadPct.value
           : this.climaHumedadPct,
+      ultimaActividadAt: data.ultimaActividadAt.present
+          ? data.ultimaActividadAt.value
+          : this.ultimaActividadAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -16404,6 +16539,7 @@ class PatologiasReportada extends DataClass
           ..write('municipioNombre: $municipioNombre, ')
           ..write('climaTempC: $climaTempC, ')
           ..write('climaHumedadPct: $climaHumedadPct, ')
+          ..write('ultimaActividadAt: $ultimaActividadAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -16431,6 +16567,7 @@ class PatologiasReportada extends DataClass
         municipioNombre,
         climaTempC,
         climaHumedadPct,
+        ultimaActividadAt,
         createdAt,
         updatedAt,
         deletedAt
@@ -16457,6 +16594,7 @@ class PatologiasReportada extends DataClass
           other.municipioNombre == this.municipioNombre &&
           other.climaTempC == this.climaTempC &&
           other.climaHumedadPct == this.climaHumedadPct &&
+          other.ultimaActividadAt == this.ultimaActividadAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -16482,6 +16620,7 @@ class PatologiasReportadasCompanion
   final Value<String?> municipioNombre;
   final Value<double?> climaTempC;
   final Value<double?> climaHumedadPct;
+  final Value<DateTime?> ultimaActividadAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -16504,6 +16643,7 @@ class PatologiasReportadasCompanion
     this.municipioNombre = const Value.absent(),
     this.climaTempC = const Value.absent(),
     this.climaHumedadPct = const Value.absent(),
+    this.ultimaActividadAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -16527,6 +16667,7 @@ class PatologiasReportadasCompanion
     this.municipioNombre = const Value.absent(),
     this.climaTempC = const Value.absent(),
     this.climaHumedadPct = const Value.absent(),
+    this.ultimaActividadAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -16553,6 +16694,7 @@ class PatologiasReportadasCompanion
     Expression<String>? municipioNombre,
     Expression<double>? climaTempC,
     Expression<double>? climaHumedadPct,
+    Expression<DateTime>? ultimaActividadAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -16578,6 +16720,7 @@ class PatologiasReportadasCompanion
       if (municipioNombre != null) 'municipio_nombre': municipioNombre,
       if (climaTempC != null) 'clima_temp_c': climaTempC,
       if (climaHumedadPct != null) 'clima_humedad_pct': climaHumedadPct,
+      if (ultimaActividadAt != null) 'ultima_actividad_at': ultimaActividadAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -16603,6 +16746,7 @@ class PatologiasReportadasCompanion
       Value<String?>? municipioNombre,
       Value<double?>? climaTempC,
       Value<double?>? climaHumedadPct,
+      Value<DateTime?>? ultimaActividadAt,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<DateTime?>? deletedAt}) {
@@ -16625,6 +16769,7 @@ class PatologiasReportadasCompanion
       municipioNombre: municipioNombre ?? this.municipioNombre,
       climaTempC: climaTempC ?? this.climaTempC,
       climaHumedadPct: climaHumedadPct ?? this.climaHumedadPct,
+      ultimaActividadAt: ultimaActividadAt ?? this.ultimaActividadAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -16688,6 +16833,9 @@ class PatologiasReportadasCompanion
     if (climaHumedadPct.present) {
       map['clima_humedad_pct'] = Variable<double>(climaHumedadPct.value);
     }
+    if (ultimaActividadAt.present) {
+      map['ultima_actividad_at'] = Variable<DateTime>(ultimaActividadAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -16721,6 +16869,7 @@ class PatologiasReportadasCompanion
           ..write('municipioNombre: $municipioNombre, ')
           ..write('climaTempC: $climaTempC, ')
           ..write('climaHumedadPct: $climaHumedadPct, ')
+          ..write('ultimaActividadAt: $ultimaActividadAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -23362,6 +23511,8 @@ typedef $$ComprasTableCreateCompanionBuilder = ComprasCompanion Function({
   Value<String?> factura,
   Value<String?> soportePath,
   Value<String?> soporteTipo,
+  Value<String?> soporteStoragePath,
+  Value<String?> soporteNombre,
   Value<String?> idUnico,
   Value<String?> tipo,
   Value<int?> plantaRef,
@@ -23387,6 +23538,8 @@ typedef $$ComprasTableUpdateCompanionBuilder = ComprasCompanion Function({
   Value<String?> factura,
   Value<String?> soportePath,
   Value<String?> soporteTipo,
+  Value<String?> soporteStoragePath,
+  Value<String?> soporteNombre,
   Value<String?> idUnico,
   Value<String?> tipo,
   Value<int?> plantaRef,
@@ -23452,6 +23605,13 @@ class $$ComprasTableFilterComposer
 
   ColumnFilters<String> get soporteTipo => $composableBuilder(
       column: $table.soporteTipo, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get soporteStoragePath => $composableBuilder(
+      column: $table.soporteStoragePath,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get soporteNombre => $composableBuilder(
+      column: $table.soporteNombre, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get idUnico => $composableBuilder(
       column: $table.idUnico, builder: (column) => ColumnFilters(column));
@@ -23538,6 +23698,14 @@ class $$ComprasTableOrderingComposer
   ColumnOrderings<String> get soporteTipo => $composableBuilder(
       column: $table.soporteTipo, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get soporteStoragePath => $composableBuilder(
+      column: $table.soporteStoragePath,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get soporteNombre => $composableBuilder(
+      column: $table.soporteNombre,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get idUnico => $composableBuilder(
       column: $table.idUnico, builder: (column) => ColumnOrderings(column));
 
@@ -23618,6 +23786,12 @@ class $$ComprasTableAnnotationComposer
   GeneratedColumn<String> get soporteTipo => $composableBuilder(
       column: $table.soporteTipo, builder: (column) => column);
 
+  GeneratedColumn<String> get soporteStoragePath => $composableBuilder(
+      column: $table.soporteStoragePath, builder: (column) => column);
+
+  GeneratedColumn<String> get soporteNombre => $composableBuilder(
+      column: $table.soporteNombre, builder: (column) => column);
+
   GeneratedColumn<String> get idUnico =>
       $composableBuilder(column: $table.idUnico, builder: (column) => column);
 
@@ -23681,6 +23855,8 @@ class $$ComprasTableTableManager extends RootTableManager<
             Value<String?> factura = const Value.absent(),
             Value<String?> soportePath = const Value.absent(),
             Value<String?> soporteTipo = const Value.absent(),
+            Value<String?> soporteStoragePath = const Value.absent(),
+            Value<String?> soporteNombre = const Value.absent(),
             Value<String?> idUnico = const Value.absent(),
             Value<String?> tipo = const Value.absent(),
             Value<int?> plantaRef = const Value.absent(),
@@ -23706,6 +23882,8 @@ class $$ComprasTableTableManager extends RootTableManager<
             factura: factura,
             soportePath: soportePath,
             soporteTipo: soporteTipo,
+            soporteStoragePath: soporteStoragePath,
+            soporteNombre: soporteNombre,
             idUnico: idUnico,
             tipo: tipo,
             plantaRef: plantaRef,
@@ -23731,6 +23909,8 @@ class $$ComprasTableTableManager extends RootTableManager<
             Value<String?> factura = const Value.absent(),
             Value<String?> soportePath = const Value.absent(),
             Value<String?> soporteTipo = const Value.absent(),
+            Value<String?> soporteStoragePath = const Value.absent(),
+            Value<String?> soporteNombre = const Value.absent(),
             Value<String?> idUnico = const Value.absent(),
             Value<String?> tipo = const Value.absent(),
             Value<int?> plantaRef = const Value.absent(),
@@ -23756,6 +23936,8 @@ class $$ComprasTableTableManager extends RootTableManager<
             factura: factura,
             soportePath: soportePath,
             soporteTipo: soporteTipo,
+            soporteStoragePath: soporteStoragePath,
+            soporteNombre: soporteNombre,
             idUnico: idUnico,
             tipo: tipo,
             plantaRef: plantaRef,
@@ -27031,6 +27213,7 @@ typedef $$PatologiasReportadasTableCreateCompanionBuilder
   Value<String?> municipioNombre,
   Value<double?> climaTempC,
   Value<double?> climaHumedadPct,
+  Value<DateTime?> ultimaActividadAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -27055,6 +27238,7 @@ typedef $$PatologiasReportadasTableUpdateCompanionBuilder
   Value<String?> municipioNombre,
   Value<double?> climaTempC,
   Value<double?> climaHumedadPct,
+  Value<DateTime?> ultimaActividadAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -27127,6 +27311,10 @@ class $$PatologiasReportadasTableFilterComposer
 
   ColumnFilters<double> get climaHumedadPct => $composableBuilder(
       column: $table.climaHumedadPct,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get ultimaActividadAt => $composableBuilder(
+      column: $table.ultimaActividadAt,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -27212,6 +27400,10 @@ class $$PatologiasReportadasTableOrderingComposer
       column: $table.climaHumedadPct,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get ultimaActividadAt => $composableBuilder(
+      column: $table.ultimaActividadAt,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -27285,6 +27477,9 @@ class $$PatologiasReportadasTableAnnotationComposer
   GeneratedColumn<double> get climaHumedadPct => $composableBuilder(
       column: $table.climaHumedadPct, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get ultimaActividadAt => $composableBuilder(
+      column: $table.ultimaActividadAt, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -27343,6 +27538,7 @@ class $$PatologiasReportadasTableTableManager extends RootTableManager<
             Value<String?> municipioNombre = const Value.absent(),
             Value<double?> climaTempC = const Value.absent(),
             Value<double?> climaHumedadPct = const Value.absent(),
+            Value<DateTime?> ultimaActividadAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -27366,6 +27562,7 @@ class $$PatologiasReportadasTableTableManager extends RootTableManager<
             municipioNombre: municipioNombre,
             climaTempC: climaTempC,
             climaHumedadPct: climaHumedadPct,
+            ultimaActividadAt: ultimaActividadAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -27389,6 +27586,7 @@ class $$PatologiasReportadasTableTableManager extends RootTableManager<
             Value<String?> municipioNombre = const Value.absent(),
             Value<double?> climaTempC = const Value.absent(),
             Value<double?> climaHumedadPct = const Value.absent(),
+            Value<DateTime?> ultimaActividadAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -27412,6 +27610,7 @@ class $$PatologiasReportadasTableTableManager extends RootTableManager<
             municipioNombre: municipioNombre,
             climaTempC: climaTempC,
             climaHumedadPct: climaHumedadPct,
+            ultimaActividadAt: ultimaActividadAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,

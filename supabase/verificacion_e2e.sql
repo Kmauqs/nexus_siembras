@@ -5,9 +5,9 @@
 -- Cada bloque es independiente: seleccionar el bloque completo entre
 -- los "-- ▓▓▓ BLOQUE N ▓▓▓" y correrlo por separado (Ctrl+Enter).
 --
--- Variables asumidas: ajustar los emails y nombre del predio si cambia.
---   Email propietario:  mauchitoq@gmail.com  (cuenta A)
---   Email colaborador:  camuquisu@outlook.com  (cuenta B)
+-- Variables: sustituir a mano antes de ejecutar (no versionar correos reales).
+--   Email propietario:  'EMAIL_PROPIETARIO@ejemplo.com'  (cuenta A)
+--   Email colaborador:  'EMAIL_COLABORADOR@ejemplo.com'  (cuenta B)
 --   Predio de prueba:   'Finca de Prueba A' (o el que uses)
 -- =============================================================
 
@@ -16,7 +16,7 @@
 -- Confirma que ambas cuentas existen en auth.users.
 SELECT id, email, created_at
 FROM auth.users
-WHERE email IN ('mauchitoq@gmail.com', 'camuquisu@outlook.com')
+WHERE email IN ('EMAIL_PROPIETARIO@ejemplo.com', 'EMAIL_COLABORADOR@ejemplo.com')
 ORDER BY email;
 
 
@@ -44,7 +44,7 @@ ORDER BY p.nombre, ps.rol;
 WITH cfg_a AS (
   SELECT set_config(
     'request.jwt.claim.sub',
-    (SELECT id::text FROM auth.users WHERE email = 'mauchitoq@gmail.com'),
+    (SELECT id::text FROM auth.users WHERE email = 'EMAIL_PROPIETARIO@ejemplo.com'),
     true
   ) AS uid
 )
@@ -62,7 +62,7 @@ FROM public.predios p, cfg_a;
 WITH cfg_b AS (
   SELECT set_config(
     'request.jwt.claim.sub',
-    (SELECT id::text FROM auth.users WHERE email = 'camuquisu@outlook.com'),
+    (SELECT id::text FROM auth.users WHERE email = 'EMAIL_COLABORADOR@ejemplo.com'),
     true
   ) AS uid
 )

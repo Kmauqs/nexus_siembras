@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# El plugin oficial adapta las rutas de Next.js (Server Actions incluidas)
+# a Netlify Functions. Necesario para que la service_role key NUNCA llegue
+# al navegador: toda la lógica administrativa corre del lado servidor.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Cabeceras de seguridad básicas para el sitio público y el backoffice.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"

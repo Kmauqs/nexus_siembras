@@ -7,7 +7,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 -   **Desarrollador:** NEXUS CREATIO
 -   **Package Android:** `com.nexuscreatio.nexus_siembras`
 -   **Versión:** 0.2.8 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
--   **Fase actual:** **Versión abierta funcionalmente completa** (Fase 3 cerrada + sync tombstones multi-dispositivo, Dashboard Windows enriquecido, cronograma→tarea — 2026-08-03). **En espera de pruebas por terceros**, con canal de feedback integrado (micro-encuestas offline-first, menú → «Enviar comentarios»). Próximo: herramienta de gestión web (bandeja de feedback + notificaciones), web de consulta (drift_wasm) y modelo freemium.
+-   **Fase actual:** **Versión abierta funcionalmente completa** (Fase 3 cerrada + sync tombstones multi-dispositivo, Dashboard Windows enriquecido, cronograma→tarea — 2026-08-03). **En espera de pruebas por terceros** — guía de bienvenida: [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md); canal: menú → «Enviar comentarios». Próximo: web de consulta (drift_wasm) y modelo freemium.
 
 ## Alcance funcional
 
@@ -30,7 +30,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 ![](media/ff81b24e5976fba325b858f3d7913e10.png) ![](media/6d97e56d1b7ae2136f602d2a095d7ca5.png)
 
--   Compras por año fiscal con **comprobante adjunto real** (PDF o foto), archivado como `soportes/{año}/{Proveedor}-{factura}.{ext}`. En predios con **co-propietarios**, cada compra muestra **quién la registró** (email). Exportación **CSV/PDF** resumida y paquete **ZIP completo** (reporte extendido con identificación de facturas + carpeta `comprobantes/` con los adjuntos).
+-   Compras por año fiscal con **comprobante adjunto real** (PDF o foto), archivado en local como `soportes/{año}/{Proveedor}-{factura}.{ext}` y sincronizado a Supabase Storage (`compras-soportes`, path `{predio_id}/{compra_id}/…`) para que **co-propietarios** vean y exporten los mismos adjuntos. Cada compra muestra **quién la registró** (email). Exportación **CSV/PDF** resumida y paquete **ZIP completo** (reporte + carpeta `comprobantes/` con soportes de todas las cuentas Propietario).
 
 ![](media/868e26dab2c287c7371f1fb696d41b2d.png) ![](media/ea014fe6203bb96af3ad0ead6df0b29c.png)
 
@@ -224,7 +224,7 @@ nexus_siembras/
 │   └── migrations/         # Fuente canónica (README con orden + 0007 schema_meta)
 ├── tool/                   # eppo_fingerprint.dart, import_excel.dart
 ├── script-install-winx64.ini  # Instalador Inno Setup 7 para Windows x64
-├── docs/                   # Auditoría, parches aplicados, pruebas E2E
+├── docs/                   # Auditoría, guía tester (C2-9b), pruebas E2E
 ├── assets/                 # imágenes, animaciones, .env
 ├── test/
 ├── pubspec.yaml

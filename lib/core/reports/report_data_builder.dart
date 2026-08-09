@@ -8,7 +8,9 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import '../../data/database/database.dart' as drift;
 import '../../data/repositories/cultivo_repository.dart';
+import '../../services/compra_soporte_storage.dart';
 import '../../state/app_state.dart';
 import '../../state/data_state.dart';
 import '../units/units_catalog.dart';
@@ -281,9 +283,13 @@ class CompraAdjuntoEnZip {
 }
 
 /// Reporte completo: factura, código, autor, ruta del comprobante en el ZIP.
+/// Descarga desde Storage los soportes de co-propietarios que no estén en
+/// caché local antes de armar el paquete.
 Future<ComprasPaqueteExport> buildComprasPaqueteExport(WidgetRef ref) async {
   final sistema = ref.read(unitSystemProvider);
   final compras = ref.read(comprasProvider);
+  final db = ref.read(databaseProvider);
+  final storage = CompraSoporteStorage(db);
   final rows = <List<String>>[];
   final adjuntos = <CompraAdjuntoEnZip>[];
   final nombresUsados = <String>{};
@@ -298,11 +304,11 @@ Future<ComprasPaqueteExport> buildComprasPaqueteExport(WidgetRef ref) async {
       registradaPor = email ?? '${uid.substring(0, 8)}…';
     }
     var comprobanteZip = '—';
-    final soporte = c.soporteName;
-    if (soporte != null && soporte.isNotEmpty && await File(soporte).exists()) {
-      final enZip = _rutaComprobanteEnZip(c, nombresUsados);
+    final rutaLocal = await _resolverSoporteLocal(db, storage, c);
+    if (rutaLocal != null && await File(rutaLocal).exists()) {
+      final enZip = _rutaComprobanteEnZip(c, rutaLocal, nombresUsados);
       nombresUsados.add(enZip);
-      adjuntos.add(CompraAdjuntoEnZip(rutaLocal: soporte, rutaEnZip: enZip));
+      adjuntos.add(CompraAdjuntoEnZip(rutaLocal: rutaLocal, rutaEnZip: enZip));
       comprobanteZip = enZip;
     }
     rows.add([
@@ -336,11 +342,31 @@ Future<ComprasPaqueteExport> buildComprasPaqueteExport(WidgetRef ref) async {
   );
 }
 
-String _rutaComprobanteEnZip(Compra c, Set<String> usados) {
+Future<String?> _resolverSoporteLocal(
+  drift.AppDatabase db,
+  CompraSoporteStorage storage,
+  Compra c,
+) async {
+  final local = c.soporteName;
+  if (local != null && local.isNotEmpty && await File(local).exists()) {
+    return local;
+  }
+  if (c.soporteStoragePath == null || c.soporteStoragePath!.isEmpty) {
+    return null;
+  }
+  final row = await (db.select(db.compras)..where((t) => t.id.equals(c.id)))
+      .getSingleOrNull();
+  if (row == null) return null;
+  return storage.asegurarLocal(row);
+}
+
+String _rutaComprobanteEnZip(Compra c, String rutaLocal, Set<String> usados) {
   final factura = _sanitizarNombreArchivo(
       c.factura.trim().isEmpty ? 'sin_factura' : c.factura.trim());
   final fecha = c.fecha.replaceAll('-', '');
-  final ext = p.extension(c.soporteName ?? '').toLowerCase();
+  final ext = p.extension(
+    c.soporteNombre ?? c.soporteName ?? rutaLocal,
+  ).toLowerCase();
   final extSegura =
       ext.isNotEmpty ? ext : '.pdf';
   var base = 'comprobantes/${fecha}_${factura}_id${c.id}$extSegura';

@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS public.feedback_config (
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
 
--- Email inicial del desarrollador (editable a futuro desde la web).
+-- Placeholder deliberado (no commitear el correo real). Sustituir tras
+-- aplicar — ver nexus_backoffice/README.md §2.4 y docs/FEEDBACK_ENCUESTAS.md.
 INSERT INTO public.feedback_config (id, email_notificacion)
 VALUES (1, 'email@domain.com')
 ON CONFLICT (id) DO NOTHING;  -- no pisar si ya fue editado

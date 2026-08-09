@@ -300,8 +300,13 @@ class Compras extends Table {
   IntColumn get unidadDisplayId => integer().nullable().references(UnidadesMedida, #id)();
   TextColumn get codigo => text().nullable()();
   TextColumn get factura => text().nullable()();
+  /// Caché local del comprobante (path absoluto del dispositivo; no se sube).
   TextColumn get soportePath => text().nullable()();
   TextColumn get soporteTipo => text().nullable()(); // application/pdf | image/*
+  /// Object key en bucket `compras-soportes` (sí se sincroniza).
+  TextColumn get soporteStoragePath => text().nullable()();
+  /// Nombre de archivo del comprobante (para UI/ZIP tras sync).
+  TextColumn get soporteNombre => text().nullable()();
   TextColumn get idUnico => text().nullable()(); // Descripción1-YYMMDD
   TextColumn get tipo => text().nullable()(); // semilla|abono|pesticida|herramienta|servicio|otro
   IntColumn get plantaRef => integer().nullable().references(Plantas, #id)();
@@ -586,6 +591,9 @@ class PatologiasReportadas extends Table {
   TextColumn get municipioNombre => text().nullable()();
   RealColumn get climaTempC => real().nullable()();
   RealColumn get climaHumedadPct => real().nullable()();
+  /// Última señal de vida del foco (reporte cercano o admin). Alineado con
+  /// `patologias_reportadas.ultima_actividad_at` (migración 0018).
+  DateTimeColumn get ultimaActividadAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -774,7 +782,7 @@ class AppDatabase extends _$AppDatabase {
   final bool _skipSeed;
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -922,6 +930,23 @@ class AppDatabase extends _$AppDatabase {
           if (from < 21) {
             // v21: cola local de micro-encuestas de feedback (C2-9).
             await m.createTable(feedbackEncuestas);
+          }
+          if (from < 22) {
+            // v22: actividad del foco para estado activa/desatendida (0018).
+            await m.addColumn(
+              patologiasReportadas,
+              patologiasReportadas.ultimaActividadAt,
+            );
+            await customStatement(
+              'UPDATE patologias_reportadas '
+              'SET ultima_actividad_at = COALESCE(updated_at, created_at, fecha_deteccion) '
+              'WHERE ultima_actividad_at IS NULL',
+            );
+          }
+          if (from < 23) {
+            // v23: metadatos de comprobante en Storage (migración 0021).
+            await m.addColumn(compras, compras.soporteStoragePath);
+            await m.addColumn(compras, compras.soporteNombre);
           }
         },
       );

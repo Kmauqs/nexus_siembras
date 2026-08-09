@@ -85,11 +85,13 @@ para la bandeja «sin atender» del backoffice.
 
 | Columna | Valor inicial | Para qué |
 |---|---|---|
-| `email_notificacion` | `mauchito@gmail.com` | destino de los avisos |
+| `email_notificacion` | `email@domain.com` (placeholder) | destino de los avisos |
 | `notificar_activo` | `true` | interruptor global |
 
-Sin policies RLS: solo accesible con `service_role`. **El email es
-editable desde la herramienta web** — ese es el punto de extensión pedido.
+Sin policies RLS: solo accesible con `service_role`. **No se commitea el
+correo real** en el repositorio. Tras aplicar la migración 0016 hay que
+sustituir el placeholder (SQL abajo o panel **Configuración** del
+backoffice). Detalle: `nexus_backoffice/README.md` §2.4.
 
 ---
 
@@ -113,76 +115,42 @@ promedio por versión (útil para ver si una release mejoró la experiencia).
 
 ### 3.2 Edición del email de notificación
 
+Tras aplicar `0016`, sustituir el placeholder (SQL Editor o panel web):
+
 ```sql
 UPDATE public.feedback_config
-SET email_notificacion = $1, notificar_activo = $2, updated_at = now()
+SET email_notificacion = 'TU_EMAIL_ADMIN@ejemplo.com',
+    notificar_activo = true,
+    updated_at = now()
 WHERE id = 1;
 ```
 
-Validar formato de email en el formulario. Este es el único lugar donde se
-cambia el destino — la app **no** conoce ningún correo.
+Desde el backoffice: **Configuración** → parámetro `email_desarrollador`
+(se replica automáticamente a `feedback_config.email_notificacion`).
+
+La app móvil **no** conoce ningún correo de notificación.
 
 ### 3.3 Notificación por email
 
-Diseño recomendado (todo del lado servidor, sin credenciales en la app):
+**Implementado** en `supabase/functions/notify-feedback/` (ver su README).
 
-1. **Edge Function** `notify-feedback` (Deno) en el proyecto Supabase:
+- Destino: `feedback_config.email_notificacion` (configurable en el panel;
+  **nunca** hardcodeado en el repo).
+- Si el destino es el placeholder `email@domain.com`, **no envía**
+  (evita fugas). Sustituir según `nexus_backoffice/README.md` §2.4.
+- Secretos: `RESEND_API_KEY`, `FEEDBACK_FROM` vía `supabase secrets set`.
+- Pendiente operativo: deploy de la función + Database Webhook ON INSERT
+  en `feedback_encuestas`.
 
-```ts
-// supabase/functions/notify-feedback/index.ts (a crear)
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+### 3.4 Checklist
 
-Deno.serve(async (req) => {
-  const { record } = await req.json();           // fila insertada
-  const sb = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,  // secret, no en la app
-  );
-  const { data: cfg } = await sb
-    .from('feedback_config').select('*').single();
-  if (!cfg?.notificar_activo) return new Response('skip');
-
-  await fetch('https://api.resend.com/emails', {   // o SMTP equivalente
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: 'NEXUS Siembras <feedback@tu-dominio>',
-      to: cfg.email_notificacion,
-      subject: `[NEXUS] ${record.tipo} — ${record.calificacion ?? 's/c'}★`,
-      text: `${record.comentario ?? '(sin comentario)'}\n\n`
-          + `Aspectos: ${JSON.stringify(record.respuestas)}\n`
-          + `Versión: ${record.app_version} (${record.plataforma})\n`
-          + `Usuario: ${record.email_usuario ?? 'anónimo'}`,
-    }),
-  });
-  return new Response('ok');
-});
-```
-
-2. **Database Webhook** en el dashboard: tabla `feedback_encuestas`,
-   evento `INSERT` → HTTP Request a la Edge Function.
-
-3. Secretos (`SERVICE_ROLE_KEY`, `RESEND_API_KEY`) solo como *secrets* de
-   la función. **Nunca** en el `.env` de la app.
-
-*Alternativa sin Edge Function:* revisar la bandeja periódicamente desde
-la web, o un `pg_cron` con resumen diario. El webhook es preferible por
-inmediatez durante las pruebas.
-
-### 3.4 Checklist de implementación futura
-
-- [ ] Bandeja con filtros y marcado de atendido.
-- [ ] Formulario de `feedback_config` (email + interruptor).
-- [ ] Edge Function `notify-feedback` + secrets.
+- [x] Bandeja con filtros y marcado de atendido (backoffice).
+- [x] Formulario de email / interruptor (`app_config` → `feedback_config`).
+- [x] Edge Function `notify-feedback` (código + README).
+- [ ] Deploy de la función + secrets Resend.
 - [ ] Database Webhook ON INSERT.
-- [ ] Decidir acceso del backoffice: `service_role` en backend propio
-      (recomendado) o cuenta con claim `gestor` + policy (plantilla
-      comentada en la migración 0016).
-- [ ] Retención: definir si el feedback se conserva indefinidamente o se
-      archiva tras N meses.
+- [x] Escrituras del panel con JWT + `es_admin()` (migración 0020).
+- [ ] Retención: archivar feedback tras N meses (opcional).
 
 ---
 
@@ -190,7 +158,8 @@ inmediatez durante las pruebas.
 
 1. Aplicar `0016_feedback_encuestas.sql` en el dashboard.
 2. Verificar: `SELECT email_notificacion FROM feedback_config;`
-3. Pedir a los testers que usen **Menú → Enviar comentarios** cuando algo
+3. Entregar `docs/GUIA_TESTER.md` (C2-9b) junto al build y pedir que usen
+   **Menú → Enviar comentarios** cuando algo
    les llame la atención (bueno o malo).
 4. Mientras no exista la web, revisar desde el SQL Editor:
 
