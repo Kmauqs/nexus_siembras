@@ -23,8 +23,8 @@
 #define MyAppExeName     "nexus_siembras.exe"
 #define MyAppPublisher   "NEXUS CREATIO"
 #define MyAppURL         "https://github.com/nexuscreatio"
-#define MyAppVersion     "0.2.8"
-#define MyAppVersionFull "0.2.8.0"
+#define MyAppVersion     "0.3.0"
+#define MyAppVersionFull "0.3.0.0"
 #define MyBuildOutput    "build\windows\x64\runner\Release"
 ; GUID fijo: permite actualizar sobre instalaciones previas sin duplicar entradas.
 #define MyAppId          "8F3A2B1C-4D5E-6F70-8192-A3B4C5D6E7F8"
