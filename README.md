@@ -7,7 +7,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 -   **Desarrollador:** NEXUS CREATIO
 -   **Package Android:** `com.nexuscreatio.nexus_siembras`
 -   **Versión:** 0.3.0 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
--   **Fase actual:** **Versión abierta funcionalmente completa** (Fase 3 cerrada + sync tombstones multi-dispositivo, Dashboard Windows enriquecido, cronograma→tarea — 2026-08-03). **En espera de pruebas por terceros** — guía de bienvenida: [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md); canal: menú → «Enviar comentarios». Próximo: web de consulta (drift_wasm) y modelo freemium.
+-   **Fase actual:** **v0.3.0** — app + **sitio web / backoffice** en Netlify ([nexus-siembras.netlify.app](https://nexus-siembras.netlify.app)): estadísticas públicas, panel admin (usuarios, papelera, datos, feedback, config), magic link, comprobantes de compra en Storage entre co-propietarios, patrimonio comunitario. **Pruebas por terceros:** [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md); canal en app: menú → «Enviar comentarios». Próximo: deploy operativo de `notify-feedback`, web de consulta (drift_wasm) y modelo freemium.
 
 ## Alcance funcional
 
@@ -47,9 +47,11 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 ![](media/97ffea595561fc4b72290e5a4cb49aae.png)
 
 -   **Navegación a una mano (0.2.7):** `AppNav` mantiene pila (`push`) para **Volver**; **Inicio** limpia el historial. AppBar con título a la izquierda y menú ☰ a la derecha; Volver / Inicio / Sincronizar en barra inferior al alcance del pulgar. El atrás del sistema fuera de Inicio vuelve al Dashboard en lugar de salir al escritorio.
--   **Web y compras en nube (0.3.0):** backoffice en Netlify (estadísticas + panel admin con magic link); comprobantes de compra sincronizados entre co-propietarios (ZIP completo con todos los adjuntos); patrimonio comunitario y papelera de usuarios.
+-   **Sitio web y backoffice (0.3.0):** Next.js 14 en Netlify (`nexus_backoffice/`). Sitio público con KPIs, usuarios por país y mapa de calor; panel admin con **magic link** (plantilla por defecto de Supabase), usuarios, **papelera** (suspender / recuperar / borrar definitivo), edición de datos comunitarios, bandeja de **feedback** y configuración. Guía: [`nexus_backoffice/README.md`](nexus_backoffice/README.md).
+-   **Feedback de testers (0.3.0 / C2-9):** micro-encuestas en la app (cola local Drift + sync); bandeja web con filtros, notas, marcado masivo y CSV. Guía de una página: [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md).
+-   **Patrimonio comunitario (0.3.0):** al eliminar cuenta se conservan variedades aportadas y reportes de patologías (anonimizados); focos `activa` / `desatendida` según inactividad.
 -   **Sync y escritorio (0.2.8):** soft-delete de cultivos propagado entre dispositivos; Dashboard Windows con muestras en KPI; círculo del cronograma abre Registrar tarea precargada; instalador Inno sin chequeo de `build/` en el PC destino.
--   **Multi-usuario:** un mismo predio puede tener propietario + colaboradores con roles `trabajador` o `consultor`, con permisos diferenciados por RLS de Postgres. **Hidratación garantizada** de recursos compartidos en cada sync (condiciones, suelo, lotes, cultivos, inventario, compras para co-propietarios, eventos, tareas y **proveedores del equipo**). Los co-propietarios pueden crear cultivos y demás recursos editables; todo se sincroniza con el dueño del predio.
+-   **Multi-usuario:** un mismo predio puede tener propietario + colaboradores con roles `trabajador` o `consultor`, con permisos diferenciados por RLS de Postgres. **Hidratación garantizada** de recursos compartidos en cada sync (condiciones, suelo, lotes, cultivos, inventario, compras para co-propietarios, eventos, tareas y **proveedores del equipo**). Los co-propietarios pueden crear cultivos y demás recursos editables; todo se sincroniza con el dueño del predio. Los **comprobantes de compra** se sincronizan por Storage entre cuentas Propietario.
 
 ![](media/626c6089d5f3183a669a07ba7497070a.png)
 
@@ -86,9 +88,10 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 -   **Framework:** Flutter 3.22+ / Dart 3.4+
 -   **Estado:** Riverpod (`flutter_riverpod ^2`)
 -   **Router:** `go_router`
--   **BD local:** Drift 2.x sobre **SQLCipher** (schema **v20**, cifrada) — offline-first. Clave en `flutter_secure_storage` (Keystore/Keychain/DPAPI). Requiere OpenSSL para compilar en Windows.
--   **Sync remoto:** Supabase (Postgres + Auth + Storage + RLS) — pull paginado, push por lotes, cursor con tiempo del servidor, verificación de `schema_meta`.
--   **Auth:** email/password vía `supabase_flutter ^2.16` (publishable key)
+-   **BD local:** Drift 2.x sobre **SQLCipher** (schema **v23**, cifrada) — offline-first. Clave en `flutter_secure_storage` (Keystore/Keychain/DPAPI). Requiere OpenSSL para compilar en Windows.
+-   **Sync remoto:** Supabase (Postgres + Auth + Storage + RLS) — pull paginado, push por lotes, cursor con tiempo del servidor, verificación de `schema_meta`; bucket privado `compras-soportes` para comprobantes.
+-   **Web / backoffice:** Next.js 14 (App Router) + `@netlify/plugin-nextjs` en Netlify; Auth por magic link Supabase.
+-   **Auth (app):** email/password vía `supabase_flutter ^2.16` (publishable key)
 -   **Permisos:** `permission_handler ^11.3`
 -   **GNSS:** `geolocator` vía `core/location/gps_capture.dart` (lat/lng/altitud en formularios + stream en tiempo real en Mapa) · **Geocodificación inversa:** Nominatim (OSM)
 -   **Mapa:** `flutter_map` + `latlong2` (capas, rotación, brújula, seguimiento GPS)
@@ -132,7 +135,7 @@ SYNC_MODE=offline_first
 
 (La `SUPABASE_ANON_KEY` legacy sigue soportada como respaldo, pero conviene rotarla — auditoría S1.)
 
-3.  En el SQL Editor de Supabase, ejecutar en el orden documentado en `supabase/migrations/README.md` (fuente canónica): `schema.sql` → `schema_3e.sql` → `schema_3e_v2..v4.sql` → `schema_3g.sql` → `fix_predio_shares_updated_at.sql` → `migrations/0007_schema_meta_y_triggers_updated_at.sql` (tabla `schema_meta` + triggers `updated_at` del lado servidor), luego `migrations/0008_banco_variedades.sql`, `0009_rls_reportes_privacidad.sql`, `0010_cultivos_tipo_ciclo.sql`, `0011_compras_created_by.sql`, `0012_proveedores_compartidos.sql`, `0013_cultivo_patologias.sql`, `0014_eliminar_cuenta.sql`. El cliente verifica `schema_meta.version` antes de cada sync.
+3.  En el SQL Editor de Supabase, ejecutar en el orden documentado en `supabase/migrations/README.md` (fuente canónica): schemas base (`schema.sql` → `schema_3e*.sql` → `schema_3g.sql` → fixes) → `0007`…`0014`, y para **v0.3.0** también `0015`…`0021` (feedback, backoffice, patrimonio, papelera, RLS admin, soportes de compras en Storage). El cliente verifica `schema_meta.version` antes de cada sync. Configurar emails de admin a mano (placeholders en el repo; ver `nexus_backoffice/README.md` §2.4).
 4.  **Pin TLS de EPPO** (si se usará el token EPPO): ejecutar `dart run tool/eppo_fingerprint.dart` desde una red de confianza y pegar el SHA-256 en `_eppoPins` (`lib/services/eppo_client.dart`). Ya están anclados el certificado hoja y el intermedio Sectigo vigentes.
 
 ### Diagnóstico y mantenimiento
@@ -184,6 +187,7 @@ nexus_siembras/
 ├── android/                # Config Android (compileSdk 36, permisos, firma)
 ├── web/                    # Manifest PWA e íconos
 ├── windows/                # Config Windows desktop
+├── nexus_backoffice/       # Sitio público + panel admin (Next.js → Netlify)
 ├── lib/
 │   ├── main.dart           # Entry point (init dotenv, Supabase, notifs)
 │   ├── app.dart            # MaterialApp + gating de onboarding
@@ -198,7 +202,7 @@ nexus_siembras/
 │   │   ├── widgets/        # AppShell, AppThumbNav, UnitDropdown, DuracionField, AutorLabel…
 │   │   └── reports/        # exportCsv/exportPdf, ZIP compras, reporte integral, export_helpers
 │   ├── data/
-│   │   ├── database/       # Schema Drift (v20), migraciones, conexión SQLCipher
+│   │   ├── database/       # Schema Drift (v23), migraciones, conexión SQLCipher
 │   │   ├── repositories/   # CultivoRepository, PlantaRepository…
 │   │   └── seed/           # Catálogo inicial (idempotente)
 │   ├── features/
@@ -217,15 +221,16 @@ nexus_siembras/
 │   │   ├── reports/        # Central de reportes + logs de diagnóstico
 │   │   └── settings/       # Configuración general
 │   ├── services/           # SupabaseService, SyncService (batch+paginado+hidratación),
-│   │                       # VariedadesComunitariasService, SecureStore, SoporteService,
-│   │                       # GeocodingService, EppoClient (pinning TLS),
-│   │                       # BackupService, NotificationService…
+│   │                       # CompraSoporteStorage, VariedadesComunitariasService, SecureStore,
+│   │                       # SoporteService, FeedbackService, GeocodingService, EppoClient,
+│   │                       # BackupService, NotificationService, AccountService…
 │   └── state/              # Providers Riverpod (auth_state, data_state, app_state)
 ├── supabase/               # Schemas SQL + scripts de diagnóstico
-│   └── migrations/         # Fuente canónica (README con orden + 0007 schema_meta)
+│   ├── migrations/         # Fuente canónica (0007…0021; ver README)
+│   └── functions/          # Edge Functions (p. ej. notify-feedback)
 ├── tool/                   # eppo_fingerprint.dart, import_excel.dart
 ├── script-install-winx64.ini  # Instalador Inno Setup 7 para Windows x64
-├── docs/                   # Auditoría, guía tester (C2-9b), pruebas E2E
+├── docs/                   # WHATS_NEW, GUIA_TESTER, auditoría, pruebas E2E
 ├── assets/                 # imágenes, animaciones, .env
 ├── test/
 ├── pubspec.yaml
@@ -235,9 +240,9 @@ nexus_siembras/
 
 ## Modelo de datos
 
-**Local (Drift sobre SQLCipher, schema v20).** Tablas principales: `predios`, `lotes`, `cultivos`, `plantas`, `plantaFotos`, `inventarios`, `compras` (con `soportePath` y `createdByUserId`), `proveedores`, `analisisSuelo` (con `soportePath`/`soporteTipo`), `condicionesPredio`, `eventosCultivo`, `tareasCompletadas`, `patologias`, `cultivoPatologias` (con `patologiaNombre`/`updatedAt` para sync), `patologiasEspecies`, `tratamientosPatologias`, `predioColaboradores`, `patologiasReportadas`, `variedadesComunitariasCache`, `configs`, `syncMappings`, `syncTables`, `syncOps`.
+**Local (Drift sobre SQLCipher, schema v23).** Tablas principales: `predios`, `lotes`, `cultivos`, `plantas`, `plantaFotos`, `inventarios`, `compras` (con `soportePath`, `soporteStoragePath`, `soporteNombre`, `createdByUserId`), `proveedores`, `analisisSuelo` (con `soportePath`/`soporteTipo`), `condicionesPredio`, `eventosCultivo`, `tareasCompletadas`, `patologias`, `cultivoPatologias` (con `patologiaNombre`/`updatedAt` para sync), `patologiasEspecies`, `tratamientosPatologias`, `predioColaboradores`, `patologiasReportadas` (con `ultimaActividadAt`), `variedadesComunitariasCache`, `feedbackEncuestas`, `configs`, `syncMappings`, `syncTables`, `syncOps`.
 
-Campos relevantes añadidos en **v15–v20**:
+Campos relevantes añadidos en **v15–v23**:
 
 | Versión | Tabla / cambio                        | Uso                                         |
 |---------|---------------------------------------|---------------------------------------------|
@@ -247,8 +252,11 @@ Campos relevantes añadidos en **v15–v20**:
 | v18     | `variedades_comunitarias_cache`       | Espejo local del banco comunitario Supabase |
 | v19     | `compras.createdByUserId`             | Autor de cada compra (co-propietarios)      |
 | v20     | `cultivoPatologias.patologiaNombre` / `updatedAt` | Sync de patologías entre colaboradores |
+| v21     | `feedback_encuestas`                  | Cola local de micro-encuestas (C2-9)        |
+| v22     | `patologiasReportadas.ultimaActividadAt` | Estado activa/desatendida (0018)         |
+| v23     | `compras.soporteStoragePath` / `soporteNombre` | Sync de comprobantes (Storage 0021)  |
 
-**Remoto (Postgres + RLS).** Espejo de las tablas anteriores más `predio_shares`, `variedades_comunitarias`, `schema_meta` (versión de esquema verificada por el cliente) y funciones `SECURITY DEFINER`. Migraciones en `supabase/migrations/`: `0010_cultivos_tipo_ciclo.sql`, `0011_compras_created_by.sql`, `0008_banco_variedades.sql`, etc. (orden completo en `supabase/migrations/README.md`).
+**Remoto (Postgres + RLS).** Espejo de las tablas anteriores más `predio_shares`, `variedades_comunitarias`, `schema_meta`, `feedback_*`, `app_config`, `admin_allowlist`, `usuarios_papelera`, bucket Storage `compras-soportes` y funciones `SECURITY DEFINER` (`es_admin`, stats, admin RPC, `eliminar_mi_cuenta`, …). Orden completo en `supabase/migrations/README.md` (**0007–0021**).
 
 -   `rol_en_predio(predio_id)` → `'propietario' | 'trabajador' | 'consultor' | NULL`
 -   `puede_ver_predio(predio_id)` — cualquier rol
@@ -327,17 +335,21 @@ La columna «Propietario» cubre tanto al **dueño del predio** como a los **col
 -   [x] **3v-fix (2026-07-31)** — Migración v20 corregida: `ALTER TABLE` no acepta defaults no constantes en SQLite («Cannot add a column with non-constant default» al arrancar); `updated_at` se agrega con `DEFAULT 0` + backfill desde `created_at`, con guard por `PRAGMA table_info` para migraciones a medias. `_upsert` (ruta fila a fila) también verifica con `.select('id')` que el UPDATE remoto escribió — cierra el último hueco de "push silenciosamente bloqueado por RLS".
 -   [x] **3w (2026-08-01)** — Navegación a una mano y UX: `AppNav` (`push`/`back`/`home`); AppBar con título a la izquierda + menú; barra inferior Volver / Inicio / Sync (`AppThumbNav`); PopScope evita salir al escritorio fuera de Inicio. Overflows corregidos en Proveedores, Reportes, Inventario y celdas del calendario con muchas actividades. GPS unificado (`core/location/gps_capture.dart`) rellena lat/lng/altitud en predios, lotes, cultivos, onboarding y patologías. Patologías (reporte/intervención/cura) generan eventos de cronograma. Fix sync de planta por nombre (evita Tomate→Yuca entre dispositivos).
 -   [x] **3x (2026-08-01)** — Eliminar cuenta en Cuenta/Sincronización: RPC `eliminar_mi_cuenta` (migración `0014`, `schema_meta` 11) borra datos privados en Supabase y la cuenta Auth; conserva `variedades_comunitarias` y anonimiza `patologias_reportadas` para la comunidad; luego pregunta si borrar o conservar datos locales.
--   [ ] **Futura** — Web de consulta y reportes (drift_wasm + adaptaciones para navegador).
+-   [x] **3y / 0.2.8 (2026-08-03)** — Soft-delete de cultivos entre dispositivos; Dashboard Windows con muestra en KPI; círculo del cronograma → Registrar tarea precargada; instalador Inno sin exigir `build/` en el PC destino.
+-   [x] **0.3.0 / C2 (2026-08-09)** — Sitio web + backoffice (`nexus_backoffice/`, Netlify): KPIs públicos, mapa de calor, panel admin con **magic link**, usuarios, papelera, datos comunitarios, feedback y config. Migraciones `0015`–`0021` (feedback, allowlist, patrimonio, papelera, RLS admin, bucket `compras-soportes`). Drift **v21–v23** (`feedbackEncuestas`, `ultimaActividadAt`, `soporteStoragePath`/`soporteNombre`). Sync de comprobantes entre co-propietarios (`CompraSoporteStorage`); ZIP con adjuntos de todas las cuentas Propietario. Guía [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md); Edge Function `notify-feedback` (código en repo; deploy/Resend pendiente de ops).
+-   [ ] **Ops / post-0.3.0** — Aplicar migraciones 0020–0021 en el proyecto Supabase de producción si faltan; desplegar `notify-feedback` + Resend; emails admin reales fuera de git (`nexus_backoffice/README.md` §2.4).
+-   [ ] **Futura** — Web de consulta y reportes en la app Flutter (drift_wasm + adaptaciones para navegador); modelo freemium.
 
 ## Notas de desarrollo
 
--   **Offline-first.** Todas las mutaciones escriben primero a Drift local. El `SyncService` reconcilia con Supabase respetando `updated_at` (last-write-wins, con timestamps acotados por el servidor vía trigger `cap_updated_at`). Push por lotes de 200 filas con fallback fila-a-fila; pull paginado (500) con cursor basado en el `updated_at` remoto — nunca el reloj del dispositivo.
--   **Seguridad.** BD local cifrada (SQLCipher; la clave vive en el almacén seguro del SO y se genera en el primer arranque). En Android el override de librería debe aplicarse también en el isolate de Drift (`isolateSetup`). TLS a EPPO validado por pinning (hoja + intermedio). `.env` está fuera de git; usar publishable keys.
+-   **Offline-first.** Todas las mutaciones escriben primero a Drift local. El `SyncService` reconcilia con Supabase respetando `updated_at` (last-write-wins, con timestamps acotados por el servidor vía trigger `cap_updated_at`). Push por lotes de 200 filas con fallback fila-a-fila; pull paginado (500) con cursor basado en el `updated_at` remoto — nunca el reloj del dispositivo. Los comprobantes de compra se suben/bajan del bucket privado `compras-soportes` durante el sync.
+-   **Seguridad.** BD local cifrada (SQLCipher; la clave vive en el almacén seguro del SO y se genera en el primer arranque). En Android el override de librería debe aplicarse también en el isolate de Drift (`isolateSetup`). TLS a EPPO validado por pinning (hoja + intermedio). `.env` / `.env.local` están fuera de git; usar publishable keys. Emails de admin del backoffice no se versionan (placeholders en el repo).
 -   **Modo local.** Sin `.env` la app funciona 100% local; el usuario ve el aviso en la pantalla de Cuenta. El backup JSON de Configuración cubre el respaldo para usuarios sin cuenta.
--   **Migraciones locales.** Cada bump de `schemaVersion` en `database.dart` requiere una rama `onUpgrade`; correr `dart run build_runner build` antes de compilar. Versiones recientes: **v15–v20** (cultivos, plantas, patologías, caché comunitaria, autor en compras, sync de patologías por cultivo). El seed es idempotente (puede re-ejecutarse sobre una BD poblada sin duplicar).
--   **Migraciones remotas.** Nuevo esquema = nuevo archivo en `supabase/migrations/` (p. ej. `0011_compras_created_by.sql`) que incremente `schema_meta.version`, y subir `SyncService.schemaRemotoRequerido` en el cliente cuando aplique.
+-   **Migraciones locales.** Cada bump de `schemaVersion` en `database.dart` requiere una rama `onUpgrade`; correr `dart run build_runner build` antes de compilar. Versiones recientes: **v15–v23** (hasta sync de patologías por cultivo, feedback, patrimonio/actividad y soportes de compras en Storage). El seed es idempotente (puede re-ejecutarse sobre una BD poblada sin duplicar).
+-   **Migraciones remotas.** Nuevo esquema = nuevo archivo en `supabase/migrations/` (p. ej. `0021_compras_soportes_storage.sql`) que incremente `schema_meta.version`, y subir `SyncService.schemaRemotoRequerido` en el cliente cuando aplique. Orden canónico hasta **0021** en `supabase/migrations/README.md`.
+-   **Backoffice.** Desarrollo: `cd nexus_backoffice && npm install && npm run dev` (requiere `.env.local`). Deploy: Netlify + `@netlify/plugin-nextjs`. Detalle en [`nexus_backoffice/README.md`](nexus_backoffice/README.md).
 -   **Windows.** Compilar requiere OpenSSL (SQLCipher): instalar el paquete completo de slproweb y definir `OPENSSL_ROOT_DIR`.
--   **Reset total.** El botón en Cuenta borra la BD local en transacción **antes** de `signOut()` — si se invierte, `signOut` desmonta el widget y corta la ejecución.
+-   **Reset total.** El botón en Cuenta borra la BD local en transacción **antes** de `signOut()` — si se invierte, `signOut` desmonta el widget y corta la ejecución. También vacía la cola local de `feedbackEncuestas`.
 -   **Android SDK.** Forzado a compileSdk 36 en `android/build.gradle.kts` para compatibilidad con `file_picker`. Kotlin incremental deshabilitado en Windows para evitar errores de caché.
 -   **Core library desugaring** habilitado en `android/app/build.gradle.kts` para `flutter_local_notifications 17.x`.
 
