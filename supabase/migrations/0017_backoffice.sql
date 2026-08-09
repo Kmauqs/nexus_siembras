@@ -44,7 +44,7 @@ INSERT INTO public.app_config (clave, valor, descripcion, tipo) VALUES
    'Habilita el banco comunitario de variedades en la app.', 'bool'),
   ('mapa_comunitario_activo', 'true',
    'Habilita el mapa de calor comunitario de patologías.', 'bool'),
-  ('github_url', 'https://github.com/nexuscreatio/nexus-siembras',
+  ('github_url', 'https://github.com/Kmauqs/nexus_siembras',
    'Repositorio público mostrado en la web.', 'texto'),
   ('contacto_soporte', 'email@domain.com',
    'Correo de soporte mostrado a los usuarios.', 'email')
@@ -134,7 +134,12 @@ AS $$
 $$;
 
 -- Puntos del mapa de calor (anonimizados: sin owner, sin id de usuario).
-CREATE OR REPLACE FUNCTION public.stats_heatmap_patologias()
+-- DROP obligatorio si ya existe otra firma (p. ej. tras 0018, que añade
+-- columnas estado/dias_sin_actividad): Postgres no permite cambiar el
+-- tipo de retorno con CREATE OR REPLACE.
+DROP FUNCTION IF EXISTS public.stats_heatmap_patologias();
+
+CREATE FUNCTION public.stats_heatmap_patologias()
 RETURNS TABLE (
   lat double precision, lng double precision,
   patologia_nombre text, severidad text,

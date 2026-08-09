@@ -21,7 +21,7 @@ export default async function Home() {
   ]);
 
   const github =
-    config.github_url ?? 'https://github.com/nexuscreatio/nexus-siembras';
+    config.github_url ?? 'https://github.com/Kmauqs/nexus_siembras';
 
   const datosPie = porPais.slice(0, 8).map((p) => ({
     nombre: nombrePais(p.pais_iso2),
