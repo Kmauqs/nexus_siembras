@@ -1,5 +1,5 @@
 # Guía del tester — NEXUS Siembras
-**C2-9b · 1 página · v0.2.8** · Android y Windows
+**C2-9b · 1 página · v0.3.0** · Android y Windows
 
 Bienvenido. Estás probando la **versión abierta** de NEXUS Siembras (control agropecuario offline-first). No hace falta conocimiento técnico: usa la app como en el campo y cuéntanos qué falló o qué faltó.
 

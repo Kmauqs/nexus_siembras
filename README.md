@@ -6,7 +6,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 -   **Desarrollador:** NEXUS CREATIO
 -   **Package Android:** `com.nexuscreatio.nexus_siembras`
--   **Versión:** 0.2.8 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
+-   **Versión:** 0.3.0 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
 -   **Fase actual:** **Versión abierta funcionalmente completa** (Fase 3 cerrada + sync tombstones multi-dispositivo, Dashboard Windows enriquecido, cronograma→tarea — 2026-08-03). **En espera de pruebas por terceros** — guía de bienvenida: [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md); canal: menú → «Enviar comentarios». Próximo: web de consulta (drift_wasm) y modelo freemium.
 
 ## Alcance funcional
@@ -47,6 +47,7 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 ![](media/97ffea595561fc4b72290e5a4cb49aae.png)
 
 -   **Navegación a una mano (0.2.7):** `AppNav` mantiene pila (`push`) para **Volver**; **Inicio** limpia el historial. AppBar con título a la izquierda y menú ☰ a la derecha; Volver / Inicio / Sincronizar en barra inferior al alcance del pulgar. El atrás del sistema fuera de Inicio vuelve al Dashboard en lugar de salir al escritorio.
+-   **Web y compras en nube (0.3.0):** backoffice en Netlify (estadísticas + panel admin con magic link); comprobantes de compra sincronizados entre co-propietarios (ZIP completo con todos los adjuntos); patrimonio comunitario y papelera de usuarios.
 -   **Sync y escritorio (0.2.8):** soft-delete de cultivos propagado entre dispositivos; Dashboard Windows con muestras en KPI; círculo del cronograma abre Registrar tarea precargada; instalador Inno sin chequeo de `build/` en el PC destino.
 -   **Multi-usuario:** un mismo predio puede tener propietario + colaboradores con roles `trabajador` o `consultor`, con permisos diferenciados por RLS de Postgres. **Hidratación garantizada** de recursos compartidos en cada sync (condiciones, suelo, lotes, cultivos, inventario, compras para co-propietarios, eventos, tareas y **proveedores del equipo**). Los co-propietarios pueden crear cultivos y demás recursos editables; todo se sincroniza con el dueño del predio.
 
