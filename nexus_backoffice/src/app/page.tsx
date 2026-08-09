@@ -10,7 +10,7 @@ import { banderaPais, nombrePais, numero } from '@/lib/formato';
 // Datos frescos en cada visita (son agregados livianos).
 export const revalidate = 300;
 
-const VERSION_APP = '0.2.8';
+const VERSION_APP = '0.3.0';
 
 export default async function Home() {
   const [stats, porPais, heat, config] = await Promise.all([
