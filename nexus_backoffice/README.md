@@ -127,19 +127,32 @@ lugares apunten al correo correcto y que Netlify tenga
 
 ## 3. Despliegue en Netlify
 
-1. Subir el repo a GitHub y en Netlify: *Add new site → Import project*.
-2. **Base directory:** `nexus_backoffice` (si el repo incluye la app
-   Flutter). Build y publish los toma de `netlify.toml`.
-3. *Site settings → Environment variables:* cargar las 4 variables.
-4. Deploy. El plugin `@netlify/plugin-nextjs` convierte las rutas y
-   Server Actions en funciones — necesario para que la lógica
-   administrativa corra del lado servidor.
+### Recomendado: build en la nube (Git)
 
-```bash
-# Alternativa por CLI
+En Windows, `netlify deploy --prod` a veces falla en
+`Failed publishing static content` (el plugin renombra `.next` y choca
+con antivirus / archivos bloqueados por el IDE). El build en Linux de
+Netlify no tiene ese problema.
+
+1. Push del repo a GitHub (`nexus_siembras`, sin secretos).
+2. En el sitio Netlify → *Project configuration → Build & deploy*:
+   - **Base directory:** `nexus_backoffice`
+   - Build/publish: los toma de `netlify.toml`
+3. *Environment variables:* las 4 claves (ya cargadas por CLI estánen).
+4. *Trigger deploy* (o push a la rama de producción).
+
+### Alternativa: CLI local
+
+```powershell
 npm i -g netlify-cli
-netlify deploy --build --prod
+# Cerrar Cursor/VS Code en esta carpeta si falla el publish, luego:
+Remove-Item -Recurse -Force .next, .netlify\static, .netlify\functions, .netlify\edge-functions-dist -ErrorAction SilentlyContinue
+# Conservar .netlify\state.json (vinculación del sitio)
+netlify deploy --prod
 ```
+
+Si aparece otra vez `Failed publishing static content`, usá el flujo Git
+de arriba.
 
 ---
 
