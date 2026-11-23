@@ -8,6 +8,7 @@ const ITEMS = [
   { href: '/admin/usuarios', label: 'Usuarios', icono: '👥' },
   { href: '/admin/datos', label: 'Datos', icono: '🗂️' },
   { href: '/admin/feedback', label: 'Feedback', icono: '💬' },
+  { href: '/admin/fincontrol', label: 'FINCONTROL', icono: '🏦' },
   { href: '/admin/config', label: 'Configuración', icono: '⚙️' },
 ];
 

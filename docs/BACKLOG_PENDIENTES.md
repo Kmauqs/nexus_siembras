@@ -1,5 +1,5 @@
 # Backlog de tareas pendientes — NEXUS Siembras
-**Actualizado:** 2026-08-04
+**Actualizado:** 2026-11-23 · **App:** v0.3.1 · **Supabase prod:** migraciones hasta **0022** (`schema_meta` ≥ 19)
 
 ## A. Operativos inmediatos (no requieren código)
 
@@ -8,7 +8,9 @@
 | A1 | Supabase → Authentication → Settings: longitud mínima de contraseña **8** y activar *Leaked password protection* | Auditoría S7 (paso manual 5, sin confirmar) |
 | ~~A2~~ | ~~Borrar el respaldo sin cifrar `nexus_siembras.sqlite.pre-cifrado.bak` (Documentos de la app) tras verificar que los datos están intactos~~ | Auditoría S4 (paso manual 7, sin confirmar) |
 | ~~A3~~ | ~~Probar en Windows **y** Android lo entregado en 3j/3k: comprobante de compra (PDF/foto y carpeta `soportes/{año}/`), exports CSV/PDF de las 5 pantallas, reporte integral del Dashboard (verificar gráfico circular en el PDF), PDF de laboratorio en análisis de suelo, y el Asistente paso a paso completo (incluida la oferta tras un onboarding nuevo)~~ | Fases 3j/3k recién implementadas |
-| A4 | Re-ejecutar el plan E2E multi-usuario (`docs/PRUEBAS_MULTI_USUARIO_E2E.md`) — incluye §3.4 soft-delete/tombstone cultivo y schema_meta ≥ 11 | Auditoría P1-P5 + regresión 2026-08-02 |
+| A4 | Re-ejecutar el plan E2E multi-usuario (`docs/PRUEBAS_MULTI_USUARIO_E2E.md`) — incluye §3.4 soft-delete/tombstone cultivo y **schema_meta ≥ 19** (post-0022) | Auditoría P1-P5 + regresión |
+| ~~A5~~ | ~~Aplicar migraciones remotas hasta `0022` en producción~~ — **HECHO 2026-11** (`schema_meta` ≥ 19) | Ops v0.3.1 |
+| A6 | Deploy operativo de `notify-feedback` + secrets Resend + webhook INSERT | W1 / C2-9 |
 
 ## B. Desarrollo — funcionalidad pendiente
 
@@ -17,6 +19,7 @@
 | ~~B1~~ | ~~Banco comunitario de variedades~~ — **COMPLETADO 2026-07-20** (migración `0008`, `VariedadesComunitariasService`, sugerencias + opt-in en el modal). Pendiente operativo: aplicar `0008_banco_variedades.sql` en el dashboard de Supabase | ✔ |
 | B2 | **Web de consulta y reportes** (solo lectura): migrar BD web a `drift_wasm` (WasmDatabase + IndexedDB) y adaptar servicios con `dart:io` para descarga de archivos | Pospuesta por decisión 2026-07-20 |
 | B3 | **Modelo freemium** (visión del proyecto): gating versión gratuita (alertas y patologías) vs completa. De la versión completa faltan por construir: **presupuestos**, **pronósticos climáticos**, **informes de rendimiento por cosecha** y **control de costos consolidado** (hoy existen HH y compras por separado) | Instrucciones del proyecto |
+| B9 | **Integración NEXUS Siembras ↔ FINCONTROL**: FINCONTROL está en **beta cerrada** (mismo Auth/Supabase). Backoffice ya administra hogares, rendimiento y feedback `fincontrol_*`. Pendiente en producto: vincular costos agropecuarios con finanzas del hogar, deep links y UX cruzada | Roadmap ecosistema NEXUS |
 | B4 | **Infraestructura COMPLETADA 2026-07-20** (`AppLocalizations`: carga ARB en runtime, delegate, fallback a es, `context.t()`; 115 claves con paridad es/en/pt; menú y AppShell migrados). **Queda pendiente incremental**: migrar los literales de las ~30 pantallas restantes (~700 strings) siguiendo `docs/GUIA_I18N.md`. Sin migrar, esas pantallas siguen en español sin errores | Fase 2f — ver guía |
 | ~~B5~~ | ~~Cola persistente de sincronización~~ — **COMPLETADO 2026-07-20** (tabla `sync_ops` Drift v14; deletes remotos offline encolados y procesados al inicio de cada sync). Requiere `dart run build_runner build --delete-conflicting-outputs` | ✔ |
 | B6 | Importador del Excel histórico (`tool/import_excel.dart`): migrar `2026-Control Siembras.xlsx` (plantas, proveedores, compras, inventario) a la BD | TODO Fase 2b |
@@ -40,8 +43,10 @@
 | ~~C2-9b~~ | ~~Guía de 1 página para testers~~ — **COMPLETADO 2026-08-04**: `docs/GUIA_TESTER.md` (bienvenida, canal Enviar comentarios + logs, 9 recorridos mínimos). Entregar junto al build de prueba | ✔ |
 | ~~C2-9c~~ | ~~Gestión web~~ — **COMPLETADO 2026-08-04**: backoffice Next.js en `nexus_backoffice/` (landing pública + panel con usuarios, datos, feedback, papelera y configuración). Migraciones `0017`–`0020`. Código de `notify-feedback` listo (W1); falta deploy operativo | ✔ |
 | ~~W1~~ | ~~Edge Function `notify-feedback`~~ — **COMPLETADO 2026-08-04**: `supabase/functions/notify-feedback/` (lee destino de `feedback_config`, ignora placeholder). Pendiente operativo: deploy + secrets Resend + webhook INSERT (ver README de la función) | ✔ |
+| ~~W4~~ | ~~Panel FINCONTROL en backoffice~~ — **COMPLETADO 2026-11-23**: `/admin/fincontrol` (KPIs hogares/movimientos/feedback), filtro `?app=` en feedback, chip de origen en inicio. Online en Netlify | ✔ |
 | W2 | Paginación server-side en `/admin/usuarios` y `/admin/datos` cuando superen ~1000 filas | Backoffice · baja |
 | W3 | Vista de detalle por usuario (predios, lotes y cultivos individuales) en el backoffice | Backoffice · baja |
+| W5 | Métricas FINCONTROL más ricas (retención hogares, embudo onboarding financiero) cuando el dominio estabilice tablas | Backoffice · media |
 | ~~C3~~ | ~~Ampliar tests: SyncService (mergers/LWW/batch) + widgets~~ — **COMPLETADO 2026-08-02**: `sync_policy.dart` + `test/sync_policy_test.dart`, `test/sync_service_test.dart` (merge/tombstone/cola), `test/widgets/core_widgets_test.dart`; `AppDatabase.forTesting` | ✔ |
 | ~~C4~~ | ~~Renovación del pin TLS de EPPO cuando rote el certificado (síntoma: Android falla, Windows no; correr `dart run tool/eppo_fingerprint.dart`)~~ **COMPLETADO 2026-07-20** | Recurrente, documentado |
 | C5 | Nueva migración remota ⇒ nuevo archivo en `supabase/migrations/` + subir `schema_meta.version` y `schemaRemotoRequerido` | Regla permanente S6 |
@@ -56,7 +61,8 @@
 
 ## Sugerencia de orden
 
-1. **A1** y **A4** (auth settings + E2E actualizado con §3.4 tombstones).
+1. **A1**, **A4** y **A6** (auth settings + E2E post-0022 + notify-feedback).
 2. **D2** cuando haya usuarios reales esperando instalar.
-3. B3 (freemium) cuando el producto esté estable — define el modelo de negocio.
-4. B4 / B6 de forma incremental.
+3. **B9** (integración FINCONTROL) cuando la beta cierre y el dominio financiero esté estable.
+4. B3 (freemium) cuando el producto esté estable — define el modelo de negocio.
+5. B4 / B6 de forma incremental.

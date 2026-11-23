@@ -17,8 +17,9 @@ dispositivo origen y luego en el peer.
 papelera, verificación de tombstones de cultivo tras el pull, Dashboard
 Windows con muestras y cronograma→Registrar tarea).
 
-**Esquema remoto:** `schema_meta.version` ≥ **11** (alineado con
-`SyncService.schemaRemotoRequerido`). Aplicar todas las migraciones en
+**Esquema remoto:** `schema_meta.version` ≥ **19** (alineado con
+`SyncService.schemaRemotoRequerido`; producción hasta migración **0022**).
+Aplicar todas las migraciones en
 `supabase/migrations/` en orden.
 
 ---
@@ -32,7 +33,7 @@ Windows con muestras y cronograma→Registrar tarea).
       `dart run build_runner build --delete-conflicting-outputs` si hubo
       cambios Drift).
 - [ ] En Supabase están aplicadas las migraciones hasta la que sube
-      `schema_meta` a **11** (incl. eliminar cuenta si se va a probar
+      `schema_meta` a **≥ 19** / migración **0022** (incl. eliminar cuenta si se va a probar
       Bloque 10).
 - [ ] Ambas cuentas tienen `consentimientoPatologias = true` (Settings
       → Comunidad NEXUS) para poder probar la contribución opt-in.
@@ -348,7 +349,7 @@ con lo que debería retornar.
 
 Además:
 
-- [ ] `schema_meta.version` ≥ 11.
+- [ ] `schema_meta.version` ≥ 19 (migración 0022 aplicada).
 - [ ] No hay cultivos "vivos" (`deleted_at IS NULL`) que B siga
       mostrando tras un soft-delete sincronizado desde A (ver 3.4).
 

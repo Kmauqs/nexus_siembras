@@ -34,8 +34,8 @@ Haz al menos estos caminos. Marca ✓ / ✗ / n/a y reporta lo que falle.
 | # | Recorrido | Qué mirar |
 |---|-----------|-----------|
 | 1 | **Onboarding + Asistente** | Menú → Asistente: predio → lote → condiciones → suelo → proveedor → variedad → compra → inventario → cultivo → mapa. ¿Se puede avanzar/volver sin perder datos? |
-| 2 | **Ciclo cultivo** | Crear cultivo → registrar tarea (desde cronograma o detalle) → cosecha. ¿Fechas y HH cuadran? |
-| 3 | **Compra con comprobante** | Compra del año con PDF o foto adjunta; abrir el adjunto después. |
+| 2 | **Ciclo cultivo** | Crear cultivo → registrar tarea (desde cronograma o detalle) → cosecha con cantidad/grado. ¿Aparece en Inventario → Poscosecha? |
+| 3 | **Compra + inventario** | Compra con categoría y comprobante; ítems en Insumos / Semillas / Herramientas (con ubicación) / Poscosecha. |
 | 4 | **Mapa y patología** | Mapa con GPS; reportar patología con foto (opcional: compartir a comunidad). |
 | 5 | **Exportes / Reportes** | Dashboard o Reportes: generar PDF/CSV y abrir/compartir. |
 | 6 | **Multi-usuario** *(si aplica)* | Dueño invita colaborador (`trabajador` o `consultor`); el invitado acepta, sincroniza y ve predio/cultivos según el rol. |

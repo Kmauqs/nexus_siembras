@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Card, Chip, Kpi, Vacio } from '@/components/ui';
 import { GraficoBarras, GraficoLineas } from '@/components/charts';
+import { etiquetaApp, esFeedbackFincontrol } from '@/lib/apps';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { supabaseServer } from '@/lib/supabase/server';
 import { obtenerStats, obtenerUsuariosPorPais } from '@/lib/datos';
@@ -95,6 +96,35 @@ export default async function AdminInicio() {
         />
       </div>
 
+      <Card
+        titulo="Ecosistema NEXUS"
+        icono={<span>🔗</span>}
+        accion={
+          <Link href="/admin/fincontrol" className="btn-sutil text-xs">
+            Abrir FINCONTROL →
+          </Link>
+        }
+      >
+        <p className="text-sm text-slate-600">
+          <strong>NEXUS Siembras</strong> (producción) y{' '}
+          <strong>FINCONTROL</strong> (beta cerrada) comparten Auth y Supabase.
+          A futuro se integrarán costos agropecuarios con finanzas del hogar.
+          Usa el panel FINCONTROL para hogares, rendimiento y feedback{' '}
+          <code className="text-xs">fincontrol_*</code>.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link href="/admin/feedback?app=siembras" className="btn-secundario text-sm">
+            Feedback Siembras
+          </Link>
+          <Link href="/admin/feedback?app=fincontrol" className="btn-secundario text-sm">
+            Feedback FINCONTROL
+          </Link>
+          <Link href="/admin/fincontrol" className="btn-primario text-sm">
+            Admin FINCONTROL
+          </Link>
+        </div>
+      </Card>
+
       <Card titulo="Uso de la app — últimos 30 días" icono={<span>📈</span>}>
         {serie.length ? (
           <GraficoLineas
@@ -179,6 +209,7 @@ export default async function AdminInicio() {
               <thead>
                 <tr>
                   <th>Fecha</th>
+                  <th>App</th>
                   <th>Tipo</th>
                   <th>Calif.</th>
                   <th>Comentario</th>
@@ -191,6 +222,19 @@ export default async function AdminInicio() {
                   <tr key={f.id}>
                     <td className="whitespace-nowrap text-xs">
                       {fecha(f.created_at, true)}
+                    </td>
+                    <td>
+                      <Chip
+                        tono={
+                          esFeedbackFincontrol(f.tipo) ? 'azul' : 'verde'
+                        }
+                      >
+                        {etiquetaApp(
+                          esFeedbackFincontrol(f.tipo)
+                            ? 'fincontrol'
+                            : 'siembras'
+                        )}
+                      </Chip>
                     </td>
                     <td><Chip>{f.tipo}</Chip></td>
                     <td className="whitespace-nowrap text-amber-600">

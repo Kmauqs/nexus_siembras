@@ -1,7 +1,7 @@
 # NEXUS Siembras — Notas de versión (What's new)
 
 Texto listo para Play Store / comunicación de release.  
-**Última generación:** 2026-11-22 · **Versión:** 0.3.1  
+**Última generación:** 2026-11-23 · **Versión:** 0.3.1  
 **Versión anterior documentada:** 0.3.0 (2026-08-09)
 
 ---
@@ -16,7 +16,11 @@ Texto listo para Play Store / comunicación de release.
 
 **Nueva compra con categoría:** el formulario incluye Categoría para agrupar el stock al inventariar (los servicios no entran al inventario).
 
-**Sync:** migración remota `0022` (`schema_meta` ≥ 19) con los nuevos campos de inventario y compras.
+**Sync:** migración remota `0022` aplicada en producción (`schema_meta` ≥ 19) con los nuevos campos de inventario y compras.
+
+**Backoffice:** panel online con administración de **FINCONTROL** (beta cerrada): hogares, rendimiento y feedback con tipos `fincontrol_*`. El feedback de Siembras y FINCONTROL se filtra por app. A futuro NEXUS Siembras se integrará con FINCONTROL (mismos Auth/Supabase).
+
+**Android:** onboarding usable mientras arranca la nube; el APK incluye la configuración de entorno empaquetada correctamente.
 
 ---
 
@@ -132,10 +136,11 @@ Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.3.1:
 
 | Área | Qué se corrigió o mejoró |
 |------|--------------------------|
-| **Inventario (0.3.1)** | Categorías desplegables; ubicación herramientas; grado poscosecha; cosecha → stock; categoría en compras; migración 0022. |
-| **Web / backoffice (0.3.0)** | Next.js en Netlify: sitio público + panel admin; magic link; papelera de usuarios; feedback; logo de la app. |
+| **Inventario (0.3.1)** | Categorías desplegables; ubicación herramientas; grado poscosecha; cosecha → stock; categoría en compras; migración 0022 (prod). |
+| **Web / backoffice (0.3.0–0.3.1)** | Next.js en Netlify online: sitio público + panel admin; magic link; papelera; feedback por app; panel FINCONTROL. |
+| **FINCONTROL (roadmap)** | Beta cerrada; admin/rendimiento/feedback en backoffice; integración producto con Siembras a futuro. |
 | **Compras sync (0.3.0)** | Bucket `compras-soportes` + metadatos; ZIP con comprobantes de todos los Propietario. |
-| **Patrimonio (0.3.0)** | Migraciones 0018–0021; estado desatendida; RLS admin; Edge Function `notify-feedback` (código). |
+| **Patrimonio (0.3.0)** | Migraciones 0018–0022; estado desatendida; RLS admin; Edge Function `notify-feedback` (código). |
 | **Sync tombstones (0.2.8)** | Soft-delete remoto al vaciar papelera; verificación post-pull de cultivos ausentes/borrados; no push de hijos de cultivo borrado (evita FK 23503). |
 | **Dashboard Windows (0.2.8)** | KPI con muestra de ítems; navegación alerta→cultivo y compras→pantalla Compras. |
 | **Cronograma (0.2.8)** | Círculos pendientes abren Registrar tarea precargada. |
@@ -151,7 +156,7 @@ Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.3.1:
 | **Cuenta (0.2.7)** | Eliminar cuenta: RPC `eliminar_mi_cuenta`; borra datos privados y Auth; conserva variedades comunitarias y anonimiza patologías compartidas; opción de borrar o conservar datos locales. |
 | **Exportaciones** | Reporte integral, CSV/PDF, adjuntos y ZIP de compras. |
 | **Asistente** | Guía de 10 pasos; mismo AppShell/navegación inferior. |
-| **Migraciones Supabase** | `0011`–`0021` (compras, proveedores, patologías, cuenta, feedback, backoffice, patrimonio, papelera, RLS admin, soportes Storage). |
+| **Migraciones Supabase** | `0011`–`0022` (hasta inventario por categorías); producción aplicada hasta **0022**. |
 
 ---
 

@@ -8,8 +8,13 @@ export const dynamic = 'force-dynamic';
 export default async function FeedbackPage({
   searchParams,
 }: {
-  searchParams: { usuario?: string };
+  searchParams: { usuario?: string; app?: string };
 }) {
+  const appParam = searchParams.app;
+  const filtroAppInicial =
+    appParam === 'fincontrol' || appParam === 'siembras'
+      ? appParam
+      : 'todas';
   const { data } = await supabaseAdmin()
     .from('feedback_encuestas')
     .select('*')
@@ -89,6 +94,7 @@ export default async function FeedbackPage({
         <ListaFeedback
           items={items}
           filtroUsuarioInicial={searchParams.usuario ?? ''}
+          filtroAppInicial={filtroAppInicial}
         />
       </Card>
     </div>

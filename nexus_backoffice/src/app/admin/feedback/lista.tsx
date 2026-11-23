@@ -2,6 +2,11 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { Chip, Vacio } from '@/components/ui';
+import {
+  esFeedbackFincontrol,
+  etiquetaApp,
+  type AppOrigen,
+} from '@/lib/apps';
 import { fecha } from '@/lib/formato';
 import { actualizarFeedback, marcarLoteAtendido } from './acciones';
 
@@ -20,16 +25,20 @@ export type FeedbackItem = {
 };
 
 type Estado = 'todos' | 'pendientes' | 'atendidos';
+type FiltroApp = 'todas' | AppOrigen;
 
 export function ListaFeedback({
   items,
   filtroUsuarioInicial,
+  filtroAppInicial = 'todas',
 }: {
   items: FeedbackItem[];
   filtroUsuarioInicial: string;
+  filtroAppInicial?: FiltroApp;
 }) {
   const [estado, setEstado] = useState<Estado>('pendientes');
   const [tipo, setTipo] = useState('todos');
+  const [app, setApp] = useState<FiltroApp>(filtroAppInicial);
   const [usuario, setUsuario] = useState(filtroUsuarioInicial);
   const [seleccion, setSeleccion] = useState<Set<number>>(new Set());
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
@@ -46,10 +55,12 @@ export function ListaFeedback({
       if (estado === 'pendientes' && f.atendido) return false;
       if (estado === 'atendidos' && !f.atendido) return false;
       if (tipo !== 'todos' && f.tipo !== tipo) return false;
+      if (app === 'fincontrol' && !esFeedbackFincontrol(f.tipo)) return false;
+      if (app === 'siembras' && esFeedbackFincontrol(f.tipo)) return false;
       if (q && !(f.email_usuario ?? '').toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [items, estado, tipo, usuario]);
+  }, [items, estado, tipo, app, usuario]);
 
   const alternar = (id: number) =>
     setSeleccion((prev) => {
@@ -110,6 +121,15 @@ export function ListaFeedback({
           <option value="pendientes">Sin atender</option>
           <option value="atendidos">Atendidos</option>
           <option value="todos">Todos</option>
+        </select>
+        <select
+          className="input max-w-[180px]"
+          value={app}
+          onChange={(e) => setApp(e.target.value as FiltroApp)}
+        >
+          <option value="todas">Todas las apps</option>
+          <option value="siembras">NEXUS Siembras</option>
+          <option value="fincontrol">FINCONTROL</option>
         </select>
         <select
           className="input max-w-[170px]"
@@ -224,6 +244,15 @@ function TarjetaFeedback({
           )}
           <div>
             <div className="flex flex-wrap items-center gap-2">
+              <Chip
+                tono={
+                  esFeedbackFincontrol(item.tipo) ? 'azul' : 'verde'
+                }
+              >
+                {etiquetaApp(
+                  esFeedbackFincontrol(item.tipo) ? 'fincontrol' : 'siembras'
+                )}
+              </Chip>
               <Chip tono={esProblema ? 'rojo' : 'azul'}>{item.tipo}</Chip>
               {item.calificacion !== null && (
                 <span className="text-sm text-amber-600">

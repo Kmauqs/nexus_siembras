@@ -2,7 +2,12 @@
 
 El esquema remoto estaba fragmentado en 7+ archivos aplicados a mano, y el
 cliente compensaba con ramas "por si el servidor no tiene X aplicado".
-Desde la auditoría 2026-07-19 este directorio es la **fuente canónica**:
+Desde la auditoría 2026-07-19 este directorio es la **fuente canónica**.
+
+**Estado producción (2026-11):** aplicadas **hasta `0022_inventario_categorias.sql`**.
+`schema_meta.version` ≥ **19** (requerido por `SyncService.schemaRemotoRequerido`).
+FINCONTROL (beta cerrada) puede añadir tablas propias en el mismo proyecto;
+no sustituyen estas migraciones de Siembras.
 
 ## Orden de aplicación (proyecto Supabase nuevo)
 

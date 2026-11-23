@@ -1,8 +1,14 @@
 # NEXUS Siembras — Backoffice y sitio público
 
 Sitio web público con las estadísticas del proyecto + panel de
-administración de la app. Next.js 14 (App Router) desplegado en Netlify,
-conectado al mismo proyecto Supabase que la app móvil/escritorio.
+administración de **NEXUS Siembras** y de la app hermana **FINCONTROL**
+(beta cerrada). Next.js 14 (App Router) desplegado en Netlify
+([nexus-siembras.netlify.app](https://nexus-siembras.netlify.app)),
+conectado al mismo proyecto Supabase que las apps móviles/escritorio.
+
+A futuro NEXUS Siembras se integrará con FINCONTROL (costos agropecuarios ↔
+finanzas del hogar). El panel ya permite administrar feedback y ver
+rendimiento de ambas.
 
 ---
 
@@ -10,8 +16,10 @@ conectado al mismo proyecto Supabase que la app móvil/escritorio.
 
 ### Requisitos
 - Node.js 20+
-- Proyecto Supabase de NEXUS Siembras con las migraciones aplicadas
-  **hasta la 0020** (panel); **0021** solo si usás sync de comprobantes de compras.
+- Proyecto Supabase de NEXUS con migraciones Siembras aplicadas
+  **hasta la 0022** (producción actual). El panel FINCONTROL lee tablas
+  `households` / `memberships` / `transactions` si existen; si faltan,
+  muestra aviso sin romper el resto del admin.
 
 ### Pasos
 
@@ -54,9 +62,10 @@ a mano en cada entorno (detalle en §2.4).
 ## 2. Configuración de Supabase (una sola vez)
 
 ### 2.1 Migración
-Aplicar en el SQL Editor, en orden: `0016` … `0020` (feedback,
-`app_config`, allowlist, patrimonio, papelera y RLS de escritura admin).
-La `0021` (soportes de compras en Storage) es de la app móvil, no del panel.
+Producción ya tiene **`0007`…`0022`**. Para un proyecto nuevo, aplicar en
+orden hasta `0022` (ver `../supabase/migrations/README.md`). El panel
+requiere como mínimo `0016`…`0020`; `0021`/`0022` son de la app móvil
+(soportes de compras e inventario por categorías).
 
 ### 2.2 Magic link (plan gratuito de Supabase)
 El login usa el **magic link por defecto** de Supabase (plantilla
@@ -163,11 +172,12 @@ de arriba.
 | `/` | público | Card de la app + GitHub, KPIs, usuarios por país (pie), tabla de estadísticas, mapa de calor de patologías |
 | `/login` | público | Solicitud de magic link al correo autorizado |
 | `/auth/callback` | público | Intercambio del código del enlace por sesión |
-| `/admin` | admin | Series de uso 30 días, usuarios por país, feedback con errores, últimos comentarios |
+| `/admin` | admin | Series de uso 30 días, usuarios por país, ecosistema Siembras/FINCONTROL, feedback reciente |
 | `/admin/usuarios` | admin | Listado con país/ciudad, predios, lotes, cultivos, feedback; soft-delete a papelera |
 | `/admin/usuarios/papelera` | admin | Recuperar cuentas suspendidas o eliminarlas definitivamente |
 | `/admin/datos` | admin | Edición de `variedades_comunitarias`, `patologias_reportadas`, `patologia_tratamientos` |
-| `/admin/feedback` | admin | Bandeja con filtros, notas, marcado masivo, respuesta por email, export CSV |
+| `/admin/feedback` | admin | Bandeja con filtros (estado, **app**, tipo, usuario), notas, marcado masivo, CSV. Query `?app=siembras\|fincontrol` |
+| `/admin/fincontrol` | admin | **FINCONTROL (beta):** KPIs hogares/membresías/movimientos 30 d, serie de feedback, recientes, enlaces a bandeja filtrada |
 | `/admin/config` | admin | Parámetros de la app (incluye email del desarrollador) y gestión de administradores |
 
 ### Seguridad en capas
@@ -222,10 +232,21 @@ email real (§2.4), desplegar la función y crear el webhook INSERT
 
 ---
 
-## 6. Pendiente / siguiente etapa
+## 6. FINCONTROL en el panel
+
+- Clasificación por prefijo de `feedback_encuestas.tipo`: `fincontrol_*` →
+  FINCONTROL; el resto → NEXUS Siembras (`src/lib/apps.ts`).
+- Agregados: `src/lib/fincontrol.ts` (cuenta `households` /
+  `memberships` / `transactions` + feedback). Si las tablas no existen,
+  `disponible: false` y el UI lo indica.
+- Ruta dedicada `/admin/fincontrol` + accesos desde Inicio y nav lateral.
+
+## 7. Pendiente / siguiente etapa
 
 - [ ] Deploy operativo de `notify-feedback` + webhook INSERT (código listo).
 - [ ] Paginación real en usuarios y datos si superan ~1000 filas
       (hoy hay límite de 500-1000 por consulta).
-- [ ] Métricas de retención y embudo de onboarding.
+- [ ] Métricas de retención y embudo de onboarding (Siembras y FINCONTROL).
 - [ ] Vista de detalle por usuario (sus predios y cultivos).
+- [ ] Integración de producto Siembras ↔ FINCONTROL (fuera del panel;
+      ver backlog B9).

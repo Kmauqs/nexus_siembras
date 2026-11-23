@@ -1,11 +1,13 @@
 # Micro-encuestas de feedback — arquitectura y guía de implementación
-**Revisión C2-9 · 2026-08-03**
+**Revisión C2-9 · actualizado 2026-11-23 (v0.3.1)**
 
 Canal de retroalimentación para las pruebas por terceros: el tester
 responde una micro-encuesta dentro de la app (3 toques), funciona **sin
 conexión**, y los datos suben a Supabase cuando hay red. La consulta y la
-notificación por correo se harán desde la **herramienta de gestión web**
-(siguiente etapa) — esta guía documenta lo que queda por construir.
+gestión están en el **backoffice** online
+([nexus-siembras.netlify.app](https://nexus-siembras.netlify.app)/admin/feedback).
+La misma tabla recibe feedback de **NEXUS Siembras** y de **FINCONTROL**
+(beta cerrada; tipos `fincontrol_*`).
 
 ---
 
@@ -55,8 +57,12 @@ await mostrarMicroEncuesta(context, tipo: 'wizard',
     titulo: '¿Qué tal el asistente?');
 ```
 
-Tipos previstos: `general`, `wizard`, `reporte`, `bug`. Los chips por tipo
-se definen en `_aspectos` (feedback_screen.dart).
+Tipos previstos (Siembras): `general`, `wizard`, `reporte`, `bug`. Los chips
+por tipo se definen en `_aspectos` (feedback_screen.dart).
+
+FINCONTROL debe enviar tipos con prefijo **`fincontrol_`** (p. ej.
+`fincontrol_general`, `fincontrol_bug`) para que el backoffice los clasifique
+y filtre en `/admin/feedback?app=fincontrol` y `/admin/fincontrol`.
 
 ---
 
@@ -69,7 +75,7 @@ se definen en `_aspectos` (feedback_screen.dart).
 | `id` | bigserial PK | |
 | `user_id` | uuid → auth.users | `ON DELETE SET NULL` (anonimiza) |
 | `email_usuario` | text | copia informativa al enviar |
-| `tipo` | text | `general` \| `wizard` \| `reporte` \| `bug` |
+| `tipo` | text | Siembras: `general` \| `wizard` \| `reporte` \| `bug`; FINCONTROL: `fincontrol_*` |
 | `calificacion` | int 1-5 | nullable |
 | `respuestas` | jsonb | `{"aspectos": ["...", "..."]}` |
 | `comentario` | text | |
@@ -95,11 +101,15 @@ backoffice). Detalle: `nexus_backoffice/README.md` §2.4.
 
 ---
 
-## 3. Pendiente para la herramienta de gestión web (siguiente etapa)
+## 3. Gestión web (implementada) + ops pendientes
 
 ### 3.1 Bandeja de feedback
 
-Consulta base (con `service_role`, nunca desde el navegador del público):
+**Online** en `/admin/feedback`: filtros por estado, **app** (Siembras /
+FINCONTROL), tipo y usuario; notas; marcado masivo; export CSV; chip de
+origen. Panel dedicado FINCONTROL en `/admin/fincontrol`.
+
+Consulta base (SQL / `service_role` solo en servidor):
 
 ```sql
 SELECT id, created_at, tipo, calificacion, comentario,
@@ -109,9 +119,8 @@ FROM public.feedback_encuestas
 ORDER BY atendido ASC, created_at DESC;
 ```
 
-Acciones mínimas: marcar `atendido`, escribir `notas_gestion`, filtrar por
-`tipo` / `plataforma` / `app_version`, y una métrica de calificación
-promedio por versión (útil para ver si una release mejoró la experiencia).
+Acciones: marcar `atendido`, `notas_gestion`, filtrar por app/tipo/
+plataforma/`app_version`.
 
 ### 3.2 Edición del email de notificación
 
@@ -145,23 +154,25 @@ La app móvil **no** conoce ningún correo de notificación.
 ### 3.4 Checklist
 
 - [x] Bandeja con filtros y marcado de atendido (backoffice).
+- [x] Filtro por app (Siembras / FINCONTROL) + panel `/admin/fincontrol`.
 - [x] Formulario de email / interruptor (`app_config` → `feedback_config`).
 - [x] Edge Function `notify-feedback` (código + README).
 - [ ] Deploy de la función + secrets Resend.
 - [ ] Database Webhook ON INSERT.
 - [x] Escrituras del panel con JWT + `es_admin()` (migración 0020).
+- [x] Migraciones remotas hasta **0022** en producción.
 - [ ] Retención: archivar feedback tras N meses (opcional).
 
 ---
 
 ## 4. Operación durante las pruebas por terceros
 
-1. Aplicar `0016_feedback_encuestas.sql` en el dashboard.
+1. Confirmar `0016`+ aplicadas (prod hasta **0022**).
 2. Verificar: `SELECT email_notificacion FROM feedback_config;`
-3. Entregar `docs/GUIA_TESTER.md` (C2-9b) junto al build y pedir que usen
-   **Menú → Enviar comentarios** cuando algo
-   les llame la atención (bueno o malo).
-4. Mientras no exista la web, revisar desde el SQL Editor:
+3. Entregar `docs/GUIA_TESTER.md` junto al build; canal
+   **Menú → Enviar comentarios**.
+4. Revisar en el backoffice: `/admin/feedback` (o
+   `/admin/feedback?app=fincontrol` para la beta FINCONTROL).
 
 ```sql
 SELECT created_at, tipo, calificacion, comentario, app_version, plataforma
@@ -170,5 +181,5 @@ WHERE NOT atendido
 ORDER BY created_at DESC;
 ```
 
-5. Cuando un tester reporte un fallo técnico, complementar con el log
-   exportable desde **Reportes → Logs de diagnóstico → Compartir**.
+5. Fallo técnico: complementar con **Reportes → Logs de diagnóstico →
+   Compartir**.
