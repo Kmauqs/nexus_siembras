@@ -177,8 +177,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         Expanded(
                             child: Text(
                                 'La sincronización en la nube no está configurada. '
-                                'Completa .env con SUPABASE_URL y SUPABASE_ANON_KEY '
-                                'y reinicia la app.',
+                                'Recompila con assets/config/app.env (SUPABASE_URL y '
+                                'clave publishable/anon) e instala de nuevo.',
                                 style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.orange.shade900))),

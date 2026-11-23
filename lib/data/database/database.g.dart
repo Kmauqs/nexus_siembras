@@ -6766,6 +6766,24 @@ class $InventariosTable extends Inventarios
   late final GeneratedColumn<int> unidadDisplayId = GeneratedColumn<int>(
       'unidad_display_id', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _categoriaMeta =
+      const VerificationMeta('categoria');
+  @override
+  late final GeneratedColumn<String> categoria = GeneratedColumn<String>(
+      'categoria', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _ubicacionMeta =
+      const VerificationMeta('ubicacion');
+  @override
+  late final GeneratedColumn<String> ubicacion = GeneratedColumn<String>(
+      'ubicacion', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _gradoPoscosechaMeta =
+      const VerificationMeta('gradoPoscosecha');
+  @override
+  late final GeneratedColumn<String> gradoPoscosecha = GeneratedColumn<String>(
+      'grado_poscosecha', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _notasMeta = const VerificationMeta('notas');
   @override
   late final GeneratedColumn<String> notas = GeneratedColumn<String>(
@@ -6805,6 +6823,9 @@ class $InventariosTable extends Inventarios
         unidadBase,
         cantidadDisplay,
         unidadDisplayId,
+        categoria,
+        ubicacion,
+        gradoPoscosecha,
         notas,
         createdAt,
         updatedAt,
@@ -6881,6 +6902,20 @@ class $InventariosTable extends Inventarios
           unidadDisplayId.isAcceptableOrUnknown(
               data['unidad_display_id']!, _unidadDisplayIdMeta));
     }
+    if (data.containsKey('categoria')) {
+      context.handle(_categoriaMeta,
+          categoria.isAcceptableOrUnknown(data['categoria']!, _categoriaMeta));
+    }
+    if (data.containsKey('ubicacion')) {
+      context.handle(_ubicacionMeta,
+          ubicacion.isAcceptableOrUnknown(data['ubicacion']!, _ubicacionMeta));
+    }
+    if (data.containsKey('grado_poscosecha')) {
+      context.handle(
+          _gradoPoscosechaMeta,
+          gradoPoscosecha.isAcceptableOrUnknown(
+              data['grado_poscosecha']!, _gradoPoscosechaMeta));
+    }
     if (data.containsKey('notas')) {
       context.handle(
           _notasMeta, notas.isAcceptableOrUnknown(data['notas']!, _notasMeta));
@@ -6926,6 +6961,12 @@ class $InventariosTable extends Inventarios
           DriftSqlType.double, data['${effectivePrefix}cantidad_display']),
       unidadDisplayId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}unidad_display_id']),
+      categoria: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}categoria']),
+      ubicacion: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}ubicacion']),
+      gradoPoscosecha: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}grado_poscosecha']),
       notas: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notas']),
       createdAt: attachedDatabase.typeMapping
@@ -6954,6 +6995,15 @@ class Inventario extends DataClass implements Insertable<Inventario> {
   final String unidadBase;
   final double? cantidadDisplay;
   final int? unidadDisplayId;
+
+  /// insumos | semillas_esquejes | herramientas_equipos | poscosecha
+  final String? categoria;
+
+  /// Ubicación actual (herramientas / equipos).
+  final String? ubicacion;
+
+  /// primera | segunda | descarte (solo poscosecha).
+  final String? gradoPoscosecha;
   final String? notas;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -6969,6 +7019,9 @@ class Inventario extends DataClass implements Insertable<Inventario> {
       required this.unidadBase,
       this.cantidadDisplay,
       this.unidadDisplayId,
+      this.categoria,
+      this.ubicacion,
+      this.gradoPoscosecha,
       this.notas,
       required this.createdAt,
       required this.updatedAt,
@@ -6993,6 +7046,15 @@ class Inventario extends DataClass implements Insertable<Inventario> {
     }
     if (!nullToAbsent || unidadDisplayId != null) {
       map['unidad_display_id'] = Variable<int>(unidadDisplayId);
+    }
+    if (!nullToAbsent || categoria != null) {
+      map['categoria'] = Variable<String>(categoria);
+    }
+    if (!nullToAbsent || ubicacion != null) {
+      map['ubicacion'] = Variable<String>(ubicacion);
+    }
+    if (!nullToAbsent || gradoPoscosecha != null) {
+      map['grado_poscosecha'] = Variable<String>(gradoPoscosecha);
     }
     if (!nullToAbsent || notas != null) {
       map['notas'] = Variable<String>(notas);
@@ -7024,6 +7086,15 @@ class Inventario extends DataClass implements Insertable<Inventario> {
       unidadDisplayId: unidadDisplayId == null && nullToAbsent
           ? const Value.absent()
           : Value(unidadDisplayId),
+      categoria: categoria == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoria),
+      ubicacion: ubicacion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ubicacion),
+      gradoPoscosecha: gradoPoscosecha == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gradoPoscosecha),
       notas:
           notas == null && nullToAbsent ? const Value.absent() : Value(notas),
       createdAt: Value(createdAt),
@@ -7048,6 +7119,9 @@ class Inventario extends DataClass implements Insertable<Inventario> {
       unidadBase: serializer.fromJson<String>(json['unidadBase']),
       cantidadDisplay: serializer.fromJson<double?>(json['cantidadDisplay']),
       unidadDisplayId: serializer.fromJson<int?>(json['unidadDisplayId']),
+      categoria: serializer.fromJson<String?>(json['categoria']),
+      ubicacion: serializer.fromJson<String?>(json['ubicacion']),
+      gradoPoscosecha: serializer.fromJson<String?>(json['gradoPoscosecha']),
       notas: serializer.fromJson<String?>(json['notas']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -7068,6 +7142,9 @@ class Inventario extends DataClass implements Insertable<Inventario> {
       'unidadBase': serializer.toJson<String>(unidadBase),
       'cantidadDisplay': serializer.toJson<double?>(cantidadDisplay),
       'unidadDisplayId': serializer.toJson<int?>(unidadDisplayId),
+      'categoria': serializer.toJson<String?>(categoria),
+      'ubicacion': serializer.toJson<String?>(ubicacion),
+      'gradoPoscosecha': serializer.toJson<String?>(gradoPoscosecha),
       'notas': serializer.toJson<String?>(notas),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -7086,6 +7163,9 @@ class Inventario extends DataClass implements Insertable<Inventario> {
           String? unidadBase,
           Value<double?> cantidadDisplay = const Value.absent(),
           Value<int?> unidadDisplayId = const Value.absent(),
+          Value<String?> categoria = const Value.absent(),
+          Value<String?> ubicacion = const Value.absent(),
+          Value<String?> gradoPoscosecha = const Value.absent(),
           Value<String?> notas = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
@@ -7105,6 +7185,11 @@ class Inventario extends DataClass implements Insertable<Inventario> {
         unidadDisplayId: unidadDisplayId.present
             ? unidadDisplayId.value
             : this.unidadDisplayId,
+        categoria: categoria.present ? categoria.value : this.categoria,
+        ubicacion: ubicacion.present ? ubicacion.value : this.ubicacion,
+        gradoPoscosecha: gradoPoscosecha.present
+            ? gradoPoscosecha.value
+            : this.gradoPoscosecha,
         notas: notas.present ? notas.value : this.notas,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -7131,6 +7216,11 @@ class Inventario extends DataClass implements Insertable<Inventario> {
       unidadDisplayId: data.unidadDisplayId.present
           ? data.unidadDisplayId.value
           : this.unidadDisplayId,
+      categoria: data.categoria.present ? data.categoria.value : this.categoria,
+      ubicacion: data.ubicacion.present ? data.ubicacion.value : this.ubicacion,
+      gradoPoscosecha: data.gradoPoscosecha.present
+          ? data.gradoPoscosecha.value
+          : this.gradoPoscosecha,
       notas: data.notas.present ? data.notas.value : this.notas,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -7151,6 +7241,9 @@ class Inventario extends DataClass implements Insertable<Inventario> {
           ..write('unidadBase: $unidadBase, ')
           ..write('cantidadDisplay: $cantidadDisplay, ')
           ..write('unidadDisplayId: $unidadDisplayId, ')
+          ..write('categoria: $categoria, ')
+          ..write('ubicacion: $ubicacion, ')
+          ..write('gradoPoscosecha: $gradoPoscosecha, ')
           ..write('notas: $notas, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7171,6 +7264,9 @@ class Inventario extends DataClass implements Insertable<Inventario> {
       unidadBase,
       cantidadDisplay,
       unidadDisplayId,
+      categoria,
+      ubicacion,
+      gradoPoscosecha,
       notas,
       createdAt,
       updatedAt,
@@ -7189,6 +7285,9 @@ class Inventario extends DataClass implements Insertable<Inventario> {
           other.unidadBase == this.unidadBase &&
           other.cantidadDisplay == this.cantidadDisplay &&
           other.unidadDisplayId == this.unidadDisplayId &&
+          other.categoria == this.categoria &&
+          other.ubicacion == this.ubicacion &&
+          other.gradoPoscosecha == this.gradoPoscosecha &&
           other.notas == this.notas &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -7206,6 +7305,9 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
   final Value<String> unidadBase;
   final Value<double?> cantidadDisplay;
   final Value<int?> unidadDisplayId;
+  final Value<String?> categoria;
+  final Value<String?> ubicacion;
+  final Value<String?> gradoPoscosecha;
   final Value<String?> notas;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -7221,6 +7323,9 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
     this.unidadBase = const Value.absent(),
     this.cantidadDisplay = const Value.absent(),
     this.unidadDisplayId = const Value.absent(),
+    this.categoria = const Value.absent(),
+    this.ubicacion = const Value.absent(),
+    this.gradoPoscosecha = const Value.absent(),
     this.notas = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -7237,6 +7342,9 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
     required String unidadBase,
     this.cantidadDisplay = const Value.absent(),
     this.unidadDisplayId = const Value.absent(),
+    this.categoria = const Value.absent(),
+    this.ubicacion = const Value.absent(),
+    this.gradoPoscosecha = const Value.absent(),
     this.notas = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -7257,6 +7365,9 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
     Expression<String>? unidadBase,
     Expression<double>? cantidadDisplay,
     Expression<int>? unidadDisplayId,
+    Expression<String>? categoria,
+    Expression<String>? ubicacion,
+    Expression<String>? gradoPoscosecha,
     Expression<String>? notas,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -7273,6 +7384,9 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
       if (unidadBase != null) 'unidad_base': unidadBase,
       if (cantidadDisplay != null) 'cantidad_display': cantidadDisplay,
       if (unidadDisplayId != null) 'unidad_display_id': unidadDisplayId,
+      if (categoria != null) 'categoria': categoria,
+      if (ubicacion != null) 'ubicacion': ubicacion,
+      if (gradoPoscosecha != null) 'grado_poscosecha': gradoPoscosecha,
       if (notas != null) 'notas': notas,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -7291,6 +7405,9 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
       Value<String>? unidadBase,
       Value<double?>? cantidadDisplay,
       Value<int?>? unidadDisplayId,
+      Value<String?>? categoria,
+      Value<String?>? ubicacion,
+      Value<String?>? gradoPoscosecha,
       Value<String?>? notas,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -7306,6 +7423,9 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
       unidadBase: unidadBase ?? this.unidadBase,
       cantidadDisplay: cantidadDisplay ?? this.cantidadDisplay,
       unidadDisplayId: unidadDisplayId ?? this.unidadDisplayId,
+      categoria: categoria ?? this.categoria,
+      ubicacion: ubicacion ?? this.ubicacion,
+      gradoPoscosecha: gradoPoscosecha ?? this.gradoPoscosecha,
       notas: notas ?? this.notas,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -7346,6 +7466,15 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
     if (unidadDisplayId.present) {
       map['unidad_display_id'] = Variable<int>(unidadDisplayId.value);
     }
+    if (categoria.present) {
+      map['categoria'] = Variable<String>(categoria.value);
+    }
+    if (ubicacion.present) {
+      map['ubicacion'] = Variable<String>(ubicacion.value);
+    }
+    if (gradoPoscosecha.present) {
+      map['grado_poscosecha'] = Variable<String>(gradoPoscosecha.value);
+    }
     if (notas.present) {
       map['notas'] = Variable<String>(notas.value);
     }
@@ -7374,6 +7503,9 @@ class InventariosCompanion extends UpdateCompanion<Inventario> {
           ..write('unidadBase: $unidadBase, ')
           ..write('cantidadDisplay: $cantidadDisplay, ')
           ..write('unidadDisplayId: $unidadDisplayId, ')
+          ..write('categoria: $categoria, ')
+          ..write('ubicacion: $ubicacion, ')
+          ..write('gradoPoscosecha: $gradoPoscosecha, ')
           ..write('notas: $notas, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7502,6 +7634,12 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
   late final GeneratedColumn<String> tipo = GeneratedColumn<String>(
       'tipo', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _categoriaMeta =
+      const VerificationMeta('categoria');
+  @override
+  late final GeneratedColumn<String> categoria = GeneratedColumn<String>(
+      'categoria', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _plantaRefMeta =
       const VerificationMeta('plantaRef');
   @override
@@ -7562,6 +7700,7 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
         soporteNombre,
         idUnico,
         tipo,
+        categoria,
         plantaRef,
         notas,
         createdByUserId,
@@ -7690,6 +7829,10 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
       context.handle(
           _tipoMeta, tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta));
     }
+    if (data.containsKey('categoria')) {
+      context.handle(_categoriaMeta,
+          categoria.isAcceptableOrUnknown(data['categoria']!, _categoriaMeta));
+    }
     if (data.containsKey('planta_ref')) {
       context.handle(_plantaRefMeta,
           plantaRef.isAcceptableOrUnknown(data['planta_ref']!, _plantaRefMeta));
@@ -7763,6 +7906,8 @@ class $ComprasTable extends Compras with TableInfo<$ComprasTable, Compra> {
           .read(DriftSqlType.string, data['${effectivePrefix}id_unico']),
       tipo: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}tipo']),
+      categoria: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}categoria']),
       plantaRef: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}planta_ref']),
       notas: attachedDatabase.typeMapping
@@ -7810,6 +7955,9 @@ class Compra extends DataClass implements Insertable<Compra> {
   final String? soporteNombre;
   final String? idUnico;
   final String? tipo;
+
+  /// Misma taxonomía que inventarios.categoria (agrupa al subir stock).
+  final String? categoria;
   final int? plantaRef;
   final String? notas;
 
@@ -7838,6 +7986,7 @@ class Compra extends DataClass implements Insertable<Compra> {
       this.soporteNombre,
       this.idUnico,
       this.tipo,
+      this.categoria,
       this.plantaRef,
       this.notas,
       this.createdByUserId,
@@ -7889,6 +8038,9 @@ class Compra extends DataClass implements Insertable<Compra> {
     }
     if (!nullToAbsent || tipo != null) {
       map['tipo'] = Variable<String>(tipo);
+    }
+    if (!nullToAbsent || categoria != null) {
+      map['categoria'] = Variable<String>(categoria);
     }
     if (!nullToAbsent || plantaRef != null) {
       map['planta_ref'] = Variable<int>(plantaRef);
@@ -7949,6 +8101,9 @@ class Compra extends DataClass implements Insertable<Compra> {
           ? const Value.absent()
           : Value(idUnico),
       tipo: tipo == null && nullToAbsent ? const Value.absent() : Value(tipo),
+      categoria: categoria == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoria),
       plantaRef: plantaRef == null && nullToAbsent
           ? const Value.absent()
           : Value(plantaRef),
@@ -7989,6 +8144,7 @@ class Compra extends DataClass implements Insertable<Compra> {
       soporteNombre: serializer.fromJson<String?>(json['soporteNombre']),
       idUnico: serializer.fromJson<String?>(json['idUnico']),
       tipo: serializer.fromJson<String?>(json['tipo']),
+      categoria: serializer.fromJson<String?>(json['categoria']),
       plantaRef: serializer.fromJson<int?>(json['plantaRef']),
       notas: serializer.fromJson<String?>(json['notas']),
       createdByUserId: serializer.fromJson<String?>(json['createdByUserId']),
@@ -8020,6 +8176,7 @@ class Compra extends DataClass implements Insertable<Compra> {
       'soporteNombre': serializer.toJson<String?>(soporteNombre),
       'idUnico': serializer.toJson<String?>(idUnico),
       'tipo': serializer.toJson<String?>(tipo),
+      'categoria': serializer.toJson<String?>(categoria),
       'plantaRef': serializer.toJson<int?>(plantaRef),
       'notas': serializer.toJson<String?>(notas),
       'createdByUserId': serializer.toJson<String?>(createdByUserId),
@@ -8049,6 +8206,7 @@ class Compra extends DataClass implements Insertable<Compra> {
           Value<String?> soporteNombre = const Value.absent(),
           Value<String?> idUnico = const Value.absent(),
           Value<String?> tipo = const Value.absent(),
+          Value<String?> categoria = const Value.absent(),
           Value<int?> plantaRef = const Value.absent(),
           Value<String?> notas = const Value.absent(),
           Value<String?> createdByUserId = const Value.absent(),
@@ -8083,6 +8241,7 @@ class Compra extends DataClass implements Insertable<Compra> {
             soporteNombre.present ? soporteNombre.value : this.soporteNombre,
         idUnico: idUnico.present ? idUnico.value : this.idUnico,
         tipo: tipo.present ? tipo.value : this.tipo,
+        categoria: categoria.present ? categoria.value : this.categoria,
         plantaRef: plantaRef.present ? plantaRef.value : this.plantaRef,
         notas: notas.present ? notas.value : this.notas,
         createdByUserId: createdByUserId.present
@@ -8132,6 +8291,7 @@ class Compra extends DataClass implements Insertable<Compra> {
           : this.soporteNombre,
       idUnico: data.idUnico.present ? data.idUnico.value : this.idUnico,
       tipo: data.tipo.present ? data.tipo.value : this.tipo,
+      categoria: data.categoria.present ? data.categoria.value : this.categoria,
       plantaRef: data.plantaRef.present ? data.plantaRef.value : this.plantaRef,
       notas: data.notas.present ? data.notas.value : this.notas,
       createdByUserId: data.createdByUserId.present
@@ -8165,6 +8325,7 @@ class Compra extends DataClass implements Insertable<Compra> {
           ..write('soporteNombre: $soporteNombre, ')
           ..write('idUnico: $idUnico, ')
           ..write('tipo: $tipo, ')
+          ..write('categoria: $categoria, ')
           ..write('plantaRef: $plantaRef, ')
           ..write('notas: $notas, ')
           ..write('createdByUserId: $createdByUserId, ')
@@ -8196,6 +8357,7 @@ class Compra extends DataClass implements Insertable<Compra> {
         soporteNombre,
         idUnico,
         tipo,
+        categoria,
         plantaRef,
         notas,
         createdByUserId,
@@ -8226,6 +8388,7 @@ class Compra extends DataClass implements Insertable<Compra> {
           other.soporteNombre == this.soporteNombre &&
           other.idUnico == this.idUnico &&
           other.tipo == this.tipo &&
+          other.categoria == this.categoria &&
           other.plantaRef == this.plantaRef &&
           other.notas == this.notas &&
           other.createdByUserId == this.createdByUserId &&
@@ -8254,6 +8417,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
   final Value<String?> soporteNombre;
   final Value<String?> idUnico;
   final Value<String?> tipo;
+  final Value<String?> categoria;
   final Value<int?> plantaRef;
   final Value<String?> notas;
   final Value<String?> createdByUserId;
@@ -8280,6 +8444,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     this.soporteNombre = const Value.absent(),
     this.idUnico = const Value.absent(),
     this.tipo = const Value.absent(),
+    this.categoria = const Value.absent(),
     this.plantaRef = const Value.absent(),
     this.notas = const Value.absent(),
     this.createdByUserId = const Value.absent(),
@@ -8307,6 +8472,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     this.soporteNombre = const Value.absent(),
     this.idUnico = const Value.absent(),
     this.tipo = const Value.absent(),
+    this.categoria = const Value.absent(),
     this.plantaRef = const Value.absent(),
     this.notas = const Value.absent(),
     this.createdByUserId = const Value.absent(),
@@ -8339,6 +8505,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     Expression<String>? soporteNombre,
     Expression<String>? idUnico,
     Expression<String>? tipo,
+    Expression<String>? categoria,
     Expression<int>? plantaRef,
     Expression<String>? notas,
     Expression<String>? createdByUserId,
@@ -8367,6 +8534,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       if (soporteNombre != null) 'soporte_nombre': soporteNombre,
       if (idUnico != null) 'id_unico': idUnico,
       if (tipo != null) 'tipo': tipo,
+      if (categoria != null) 'categoria': categoria,
       if (plantaRef != null) 'planta_ref': plantaRef,
       if (notas != null) 'notas': notas,
       if (createdByUserId != null) 'created_by_user_id': createdByUserId,
@@ -8396,6 +8564,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       Value<String?>? soporteNombre,
       Value<String?>? idUnico,
       Value<String?>? tipo,
+      Value<String?>? categoria,
       Value<int?>? plantaRef,
       Value<String?>? notas,
       Value<String?>? createdByUserId,
@@ -8422,6 +8591,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
       soporteNombre: soporteNombre ?? this.soporteNombre,
       idUnico: idUnico ?? this.idUnico,
       tipo: tipo ?? this.tipo,
+      categoria: categoria ?? this.categoria,
       plantaRef: plantaRef ?? this.plantaRef,
       notas: notas ?? this.notas,
       createdByUserId: createdByUserId ?? this.createdByUserId,
@@ -8491,6 +8661,9 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
     if (tipo.present) {
       map['tipo'] = Variable<String>(tipo.value);
     }
+    if (categoria.present) {
+      map['categoria'] = Variable<String>(categoria.value);
+    }
     if (plantaRef.present) {
       map['planta_ref'] = Variable<int>(plantaRef.value);
     }
@@ -8534,6 +8707,7 @@ class ComprasCompanion extends UpdateCompanion<Compra> {
           ..write('soporteNombre: $soporteNombre, ')
           ..write('idUnico: $idUnico, ')
           ..write('tipo: $tipo, ')
+          ..write('categoria: $categoria, ')
           ..write('plantaRef: $plantaRef, ')
           ..write('notas: $notas, ')
           ..write('createdByUserId: $createdByUserId, ')
@@ -23206,6 +23380,9 @@ typedef $$InventariosTableCreateCompanionBuilder = InventariosCompanion
   required String unidadBase,
   Value<double?> cantidadDisplay,
   Value<int?> unidadDisplayId,
+  Value<String?> categoria,
+  Value<String?> ubicacion,
+  Value<String?> gradoPoscosecha,
   Value<String?> notas,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -23223,6 +23400,9 @@ typedef $$InventariosTableUpdateCompanionBuilder = InventariosCompanion
   Value<String> unidadBase,
   Value<double?> cantidadDisplay,
   Value<int?> unidadDisplayId,
+  Value<String?> categoria,
+  Value<String?> ubicacion,
+  Value<String?> gradoPoscosecha,
   Value<String?> notas,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -23268,6 +23448,16 @@ class $$InventariosTableFilterComposer
 
   ColumnFilters<int> get unidadDisplayId => $composableBuilder(
       column: $table.unidadDisplayId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get categoria => $composableBuilder(
+      column: $table.categoria, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ubicacion => $composableBuilder(
+      column: $table.ubicacion, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get gradoPoscosecha => $composableBuilder(
+      column: $table.gradoPoscosecha,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get notas => $composableBuilder(
@@ -23325,6 +23515,16 @@ class $$InventariosTableOrderingComposer
       column: $table.unidadDisplayId,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get categoria => $composableBuilder(
+      column: $table.categoria, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ubicacion => $composableBuilder(
+      column: $table.ubicacion, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get gradoPoscosecha => $composableBuilder(
+      column: $table.gradoPoscosecha,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get notas => $composableBuilder(
       column: $table.notas, builder: (column) => ColumnOrderings(column));
 
@@ -23377,6 +23577,15 @@ class $$InventariosTableAnnotationComposer
   GeneratedColumn<int> get unidadDisplayId => $composableBuilder(
       column: $table.unidadDisplayId, builder: (column) => column);
 
+  GeneratedColumn<String> get categoria =>
+      $composableBuilder(column: $table.categoria, builder: (column) => column);
+
+  GeneratedColumn<String> get ubicacion =>
+      $composableBuilder(column: $table.ubicacion, builder: (column) => column);
+
+  GeneratedColumn<String> get gradoPoscosecha => $composableBuilder(
+      column: $table.gradoPoscosecha, builder: (column) => column);
+
   GeneratedColumn<String> get notas =>
       $composableBuilder(column: $table.notas, builder: (column) => column);
 
@@ -23423,6 +23632,9 @@ class $$InventariosTableTableManager extends RootTableManager<
             Value<String> unidadBase = const Value.absent(),
             Value<double?> cantidadDisplay = const Value.absent(),
             Value<int?> unidadDisplayId = const Value.absent(),
+            Value<String?> categoria = const Value.absent(),
+            Value<String?> ubicacion = const Value.absent(),
+            Value<String?> gradoPoscosecha = const Value.absent(),
             Value<String?> notas = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -23439,6 +23651,9 @@ class $$InventariosTableTableManager extends RootTableManager<
             unidadBase: unidadBase,
             cantidadDisplay: cantidadDisplay,
             unidadDisplayId: unidadDisplayId,
+            categoria: categoria,
+            ubicacion: ubicacion,
+            gradoPoscosecha: gradoPoscosecha,
             notas: notas,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -23455,6 +23670,9 @@ class $$InventariosTableTableManager extends RootTableManager<
             required String unidadBase,
             Value<double?> cantidadDisplay = const Value.absent(),
             Value<int?> unidadDisplayId = const Value.absent(),
+            Value<String?> categoria = const Value.absent(),
+            Value<String?> ubicacion = const Value.absent(),
+            Value<String?> gradoPoscosecha = const Value.absent(),
             Value<String?> notas = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -23471,6 +23689,9 @@ class $$InventariosTableTableManager extends RootTableManager<
             unidadBase: unidadBase,
             cantidadDisplay: cantidadDisplay,
             unidadDisplayId: unidadDisplayId,
+            categoria: categoria,
+            ubicacion: ubicacion,
+            gradoPoscosecha: gradoPoscosecha,
             notas: notas,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -23515,6 +23736,7 @@ typedef $$ComprasTableCreateCompanionBuilder = ComprasCompanion Function({
   Value<String?> soporteNombre,
   Value<String?> idUnico,
   Value<String?> tipo,
+  Value<String?> categoria,
   Value<int?> plantaRef,
   Value<String?> notas,
   Value<String?> createdByUserId,
@@ -23542,6 +23764,7 @@ typedef $$ComprasTableUpdateCompanionBuilder = ComprasCompanion Function({
   Value<String?> soporteNombre,
   Value<String?> idUnico,
   Value<String?> tipo,
+  Value<String?> categoria,
   Value<int?> plantaRef,
   Value<String?> notas,
   Value<String?> createdByUserId,
@@ -23618,6 +23841,9 @@ class $$ComprasTableFilterComposer
 
   ColumnFilters<String> get tipo => $composableBuilder(
       column: $table.tipo, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get categoria => $composableBuilder(
+      column: $table.categoria, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get plantaRef => $composableBuilder(
       column: $table.plantaRef, builder: (column) => ColumnFilters(column));
@@ -23712,6 +23938,9 @@ class $$ComprasTableOrderingComposer
   ColumnOrderings<String> get tipo => $composableBuilder(
       column: $table.tipo, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get categoria => $composableBuilder(
+      column: $table.categoria, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get plantaRef => $composableBuilder(
       column: $table.plantaRef, builder: (column) => ColumnOrderings(column));
 
@@ -23798,6 +24027,9 @@ class $$ComprasTableAnnotationComposer
   GeneratedColumn<String> get tipo =>
       $composableBuilder(column: $table.tipo, builder: (column) => column);
 
+  GeneratedColumn<String> get categoria =>
+      $composableBuilder(column: $table.categoria, builder: (column) => column);
+
   GeneratedColumn<int> get plantaRef =>
       $composableBuilder(column: $table.plantaRef, builder: (column) => column);
 
@@ -23859,6 +24091,7 @@ class $$ComprasTableTableManager extends RootTableManager<
             Value<String?> soporteNombre = const Value.absent(),
             Value<String?> idUnico = const Value.absent(),
             Value<String?> tipo = const Value.absent(),
+            Value<String?> categoria = const Value.absent(),
             Value<int?> plantaRef = const Value.absent(),
             Value<String?> notas = const Value.absent(),
             Value<String?> createdByUserId = const Value.absent(),
@@ -23886,6 +24119,7 @@ class $$ComprasTableTableManager extends RootTableManager<
             soporteNombre: soporteNombre,
             idUnico: idUnico,
             tipo: tipo,
+            categoria: categoria,
             plantaRef: plantaRef,
             notas: notas,
             createdByUserId: createdByUserId,
@@ -23913,6 +24147,7 @@ class $$ComprasTableTableManager extends RootTableManager<
             Value<String?> soporteNombre = const Value.absent(),
             Value<String?> idUnico = const Value.absent(),
             Value<String?> tipo = const Value.absent(),
+            Value<String?> categoria = const Value.absent(),
             Value<int?> plantaRef = const Value.absent(),
             Value<String?> notas = const Value.absent(),
             Value<String?> createdByUserId = const Value.absent(),
@@ -23940,6 +24175,7 @@ class $$ComprasTableTableManager extends RootTableManager<
             soporteNombre: soporteNombre,
             idUnico: idUnico,
             tipo: tipo,
+            categoria: categoria,
             plantaRef: plantaRef,
             notas: notas,
             createdByUserId: createdByUserId,

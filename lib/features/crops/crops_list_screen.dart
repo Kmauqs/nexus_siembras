@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/inventory/inventory_categories.dart';
 import '../../core/navigation/app_nav.dart';
 import '../../core/reports/export_helpers.dart';
 import '../../core/reports/report_data_builder.dart';
@@ -8,6 +9,7 @@ import '../../core/units/units_catalog.dart';
 import '../../core/widgets/app_shell.dart';
 import '../../core/widgets/duracion_field.dart';
 import '../../core/widgets/status_dot.dart';
+import '../../core/widgets/unit_dropdown.dart';
 import '../../data/repositories/cultivo_repository.dart';
 import '../../state/app_state.dart';
 import '../../state/data_state.dart';
@@ -369,6 +371,12 @@ const _actividadesCicloUnico = ['Cosecha1', 'Cosecha2'];
 const _actividadesPerenne = ['Cosecha periódica', 'Renovación'];
 const _actividadesGerminador = ['Semillero', 'Trasplante'];
 
+bool _esActividadCosecha(String? act) =>
+    act == 'Cosecha1' ||
+    act == 'Cosecha2' ||
+    act == 'Cosecha periódica' ||
+    (act != null && act.toLowerCase().startsWith('cosecha'));
+
 class _RegistrarTareaModal extends ConsumerStatefulWidget {
   const _RegistrarTareaModal({
     required this.cultivoId,
@@ -397,17 +405,22 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
   final _hh = TextEditingController(text: '1');
   final _notas = TextEditingController();
   final _periodicidadCosecha = DuracionController();
+  final _cantCosecha = TextEditingController();
   String? _act1;
   String? _act2;
   final List<_InsumoRow> _insumos = [];
+  late String _unidadCosecha;
+  String _gradoCosecha = GradosPoscosecha.primera;
 
   bool _periodicidadInicializada = false;
+  bool _unidadCosechaInit = false;
 
   @override
   void initState() {
     super.initState();
     _fecha = widget.fechaInicial ?? DateTime.now();
     _act1 = widget.actividadInicial;
+    _unidadCosecha = 'kg';
   }
 
   @override
@@ -415,6 +428,7 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
     _hh.dispose();
     _notas.dispose();
     _periodicidadCosecha.dispose();
+    _cantCosecha.dispose();
     super.dispose();
   }
 
@@ -422,6 +436,9 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
 
   bool get _muestraPeriodicidad =>
       _requierePeriodicidad(_act1) || _requierePeriodicidad(_act2);
+
+  bool get _muestraCosecha =>
+      _esActividadCosecha(_act1) || _esActividadCosecha(_act2);
 
   @override
   Widget build(BuildContext context) {
@@ -447,6 +464,12 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
       if (_act1 != null) _act1!,
     }.toList();
     final act1Value = opts.contains(_act1) ? _act1 : null;
+
+    if (!_unidadCosechaInit) {
+      _unidadCosechaInit = true;
+      final sistema = ref.read(unitSystemProvider);
+      _unidadCosecha = preferredUnitFor(sistema, 'kg');
+    }
 
     final firstDate = DateTime(2020);
     final lastDate = DateTime.now().add(const Duration(days: 366));
@@ -532,6 +555,51 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
               label: 'Periodicidad de cosecha',
               helperText:
                   'Se programan cosechas periódicas hasta el fin del ciclo de vida',
+            ),
+          ],
+          if (_muestraCosecha) ...[
+            const SizedBox(height: 12),
+            const Text('Cantidad recogida (Poscosecha)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 4),
+            Text(
+              'Se carga a inventario · ${widget.plantaNombre}',
+              style: TextStyle(
+                  fontSize: 12, color: Theme.of(context).hintColor),
+            ),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(
+                child: TextField(
+                  controller: _cantCosecha,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                      labelText: 'Cantidad', border: OutlineInputBorder()),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: UnitDropdown(
+                  value: _unidadCosecha,
+                  dimensions: const ['peso'],
+                  onChanged: (v) =>
+                      setState(() => _unidadCosecha = v ?? _unidadCosecha),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _gradoCosecha,
+              decoration: const InputDecoration(
+                  labelText: 'Clasificación', border: OutlineInputBorder()),
+              items: GradosPoscosecha.all
+                  .map((g) => DropdownMenuItem(
+                        value: g,
+                        child: Text(GradosPoscosecha.label(g)),
+                      ))
+                  .toList(),
+              onChanged: (v) => setState(
+                  () => _gradoCosecha = v ?? GradosPoscosecha.primera),
             ),
           ],
           const SizedBox(height: 12),
@@ -696,11 +764,27 @@ class _RegistrarTareaModalState extends ConsumerState<_RegistrarTareaModal> {
       await mut.consumeInventoryBase(
           descripcion: ins.desc, cantidadBase: ins.cantidad);
     }
+    var poscosechaMsg = '';
+    if (_muestraCosecha) {
+      final cant = double.tryParse(_cantCosecha.text.trim()) ?? 0;
+      if (cant > 0) {
+        await mut.addOrIncrementInventory(
+          descripcion: widget.plantaNombre,
+          cantidad: cant,
+          unidad: _unidadCosecha,
+          categoria: InventoryCategories.poscosecha,
+          gradoPoscosecha: _gradoCosecha,
+        );
+        poscosechaMsg =
+            ' · +$cant $_unidadCosecha a Poscosecha (${GradosPoscosecha.label(_gradoCosecha)})';
+      }
+    }
     if (!mounted) return;
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Tarea registrada · +${hh}h · ${acts.join(", ")}'
-          '${insumosBase.isNotEmpty ? " · ${insumosBase.length} insumo(s) descontados" : ""}'),
+          '${insumosBase.isNotEmpty ? " · ${insumosBase.length} insumo(s) descontados" : ""}'
+          '$poscosechaMsg'),
     ));
   }
 }

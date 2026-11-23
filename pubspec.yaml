@@ -1,7 +1,7 @@
 name: nexus_siembras
 description: NEXUS Siembras — Control agropecuario para pequeños productores.
 publish_to: 'none'
-version: 0.3.0
+version: 0.3.1
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -106,7 +106,9 @@ flutter:
   # cargador propio de ARB) en Fase 2f. Por ahora los strings quedan en español.
 
   assets:
-    - .env
+    # Android (aapt) omite archivos cuyo nombre empieza por '.' — no usar `.env`
+    # como asset. Fuente canónica empaquetada:
+    - assets/config/app.env
     - assets/images/
     - assets/animations/
     - assets/data/

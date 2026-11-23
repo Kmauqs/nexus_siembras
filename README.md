@@ -6,8 +6,8 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 -   **Desarrollador:** NEXUS CREATIO
 -   **Package Android:** `com.nexuscreatio.nexus_siembras`
--   **Versión:** 0.3.0 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
--   **Fase actual:** **v0.3.0** — app + **sitio web / backoffice** en Netlify ([nexus-siembras.netlify.app](https://nexus-siembras.netlify.app)): estadísticas públicas, panel admin (usuarios, papelera, datos, feedback, config), magic link, comprobantes de compra en Storage entre co-propietarios, patrimonio comunitario. **Pruebas por terceros:** [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md); canal en app: menú → «Enviar comentarios». Próximo: deploy operativo de `notify-feedback`, web de consulta (drift_wasm) y modelo freemium.
+-   **Versión:** 0.3.1 · [Notas de versión (What's new)](docs/WHATS_NEW.md)
+-   **Fase actual:** **v0.3.1** — inventario por categorías (Insumos, Semillas/esquejes, Herramientas con ubicación, Poscosecha con grado); cosecha registra cantidad al inventario; compras con categoría. App + **sitio web / backoffice** en Netlify ([nexus-siembras.netlify.app](https://nexus-siembras.netlify.app)). **Pruebas por terceros:** [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md); canal en app: menú → «Enviar comentarios». Próximo: deploy operativo de `notify-feedback`, web de consulta (drift_wasm) y modelo freemium.
 
 ## Alcance funcional
 
@@ -26,7 +26,8 @@ Aplicación de control agropecuario para pequeños productores. Un solo código 
 
 ![](media/8621c3396c400e4c7d53d1d49e3fcc50.png) ![](media/834457152c8088540b88b204b303c8fc.png) ![](media/3b3f74bc8a90d845ac642706a709b494.png)
 
--   Registro de tareas completadas con acumulación de HH e insumos consumidos del inventario. Actividades base ampliadas para perennes: **Cosecha periódica** (con periodicidad configurable; extiende eventos futuros) y **Renovación** (marca el cultivo como finalizado).
+-   Registro de tareas completadas con acumulación de HH e insumos consumidos del inventario. En tareas de **cosecha** se puede indicar la **cantidad recogida** (peso) y clasificación (primera/segunda/descarte), que se carga al inventario en **Poscosecha** bajo la variedad. Actividades base ampliadas para perennes: **Cosecha periódica** (con periodicidad configurable; extiende eventos futuros) y **Renovación** (marca el cultivo como finalizado).
+-   **Inventario por categorías** (secciones desplegables): Insumos; Semillas y esquejes; Herramientas, equipos y consumibles (con **ubicación**); Poscosecha (con **grado**). Las compras incluyen campo **Categoría** para agrupar al inventariar.
 
 ![](media/ff81b24e5976fba325b858f3d7913e10.png) ![](media/6d97e56d1b7ae2136f602d2a095d7ca5.png)
 
@@ -135,7 +136,7 @@ SYNC_MODE=offline_first
 
 (La `SUPABASE_ANON_KEY` legacy sigue soportada como respaldo, pero conviene rotarla — auditoría S1.)
 
-3.  En el SQL Editor de Supabase, ejecutar en el orden documentado en `supabase/migrations/README.md` (fuente canónica): schemas base (`schema.sql` → `schema_3e*.sql` → `schema_3g.sql` → fixes) → `0007`…`0014`, y para **v0.3.0** también `0015`…`0021` (feedback, backoffice, patrimonio, papelera, RLS admin, soportes de compras en Storage). El cliente verifica `schema_meta.version` antes de cada sync. Configurar emails de admin a mano (placeholders en el repo; ver `nexus_backoffice/README.md` §2.4).
+3.  En el SQL Editor de Supabase, ejecutar en el orden documentado en `supabase/migrations/README.md` (fuente canónica): schemas base (`schema.sql` → `schema_3e*.sql` → `schema_3g.sql` → fixes) → `0007`…`0014`, y para **v0.3.x** también `0015`…`0022` (feedback, backoffice, patrimonio, papelera, RLS admin, soportes de compras, categorías de inventario). El cliente verifica `schema_meta.version` (≥ 19) antes de cada sync. Configurar emails de admin a mano (placeholders en el repo; ver `nexus_backoffice/README.md` §2.4).
 4.  **Pin TLS de EPPO** (si se usará el token EPPO): ejecutar `dart run tool/eppo_fingerprint.dart` desde una red de confianza y pegar el SHA-256 en `_eppoPins` (`lib/services/eppo_client.dart`). Ya están anclados el certificado hoja y el intermedio Sectigo vigentes.
 
 ### Diagnóstico y mantenimiento
@@ -337,7 +338,8 @@ La columna «Propietario» cubre tanto al **dueño del predio** como a los **col
 -   [x] **3x (2026-08-01)** — Eliminar cuenta en Cuenta/Sincronización: RPC `eliminar_mi_cuenta` (migración `0014`, `schema_meta` 11) borra datos privados en Supabase y la cuenta Auth; conserva `variedades_comunitarias` y anonimiza `patologias_reportadas` para la comunidad; luego pregunta si borrar o conservar datos locales.
 -   [x] **3y / 0.2.8 (2026-08-03)** — Soft-delete de cultivos entre dispositivos; Dashboard Windows con muestra en KPI; círculo del cronograma → Registrar tarea precargada; instalador Inno sin exigir `build/` en el PC destino.
 -   [x] **0.3.0 / C2 (2026-08-09)** — Sitio web + backoffice (`nexus_backoffice/`, Netlify): KPIs públicos, mapa de calor, panel admin con **magic link**, usuarios, papelera, datos comunitarios, feedback y config. Migraciones `0015`–`0021` (feedback, allowlist, patrimonio, papelera, RLS admin, bucket `compras-soportes`). Drift **v21–v23** (`feedbackEncuestas`, `ultimaActividadAt`, `soporteStoragePath`/`soporteNombre`). Sync de comprobantes entre co-propietarios (`CompraSoporteStorage`); ZIP con adjuntos de todas las cuentas Propietario. Guía [`docs/GUIA_TESTER.md`](docs/GUIA_TESTER.md); Edge Function `notify-feedback` (código en repo; deploy/Resend pendiente de ops).
--   [ ] **Ops / post-0.3.0** — Aplicar migraciones 0020–0021 en el proyecto Supabase de producción si faltan; desplegar `notify-feedback` + Resend; emails admin reales fuera de git (`nexus_backoffice/README.md` §2.4).
+-   [x] **0.3.1 (2026-11-22)** — Inventario por categorías (Drift **v24**, migración remota `0022` / `schema_meta` ≥ 19): secciones desplegables; ubicación en herramientas; grado poscosecha; cantidad de cosecha → stock Poscosecha; categoría en Nueva compra.
+-   [ ] **Ops / post-0.3.1** — Aplicar migraciones 0020–0022 en el proyecto Supabase de producción si faltan; desplegar `notify-feedback` + Resend; emails admin reales fuera de git (`nexus_backoffice/README.md` §2.4).
 -   [ ] **Futura** — Web de consulta y reportes en la app Flutter (drift_wasm + adaptaciones para navegador); modelo freemium.
 
 ## Notas de desarrollo

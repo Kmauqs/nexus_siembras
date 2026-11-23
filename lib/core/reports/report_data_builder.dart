@@ -218,6 +218,9 @@ TablaReporte buildInventarioReporte(WidgetRef ref) {
     return [
       i.desc,
       i.cod,
+      i.categoria ?? '',
+      i.gradoPoscosecha ?? '',
+      i.ubicacion ?? '',
       i.fabricante ?? '',
       d.value.toStringAsFixed(dec),
       d.codigo,
@@ -229,8 +232,8 @@ TablaReporte buildInventarioReporte(WidgetRef ref) {
     scope: 'inventario',
     titulo: 'Inventario del predio',
     columns: const [
-      'Descripción', 'Código', 'Fabricante', 'Cantidad', 'Unidad',
-      'Última fecha', 'Estado'
+      'Descripción', 'Código', 'Categoría', 'Grado', 'Ubicación',
+      'Fabricante', 'Cantidad', 'Unidad', 'Última fecha', 'Estado'
     ],
     rows: rows,
   );
@@ -247,6 +250,7 @@ TablaReporte buildComprasReporte(WidgetRef ref) {
       c.fecha,
       c.desc,
       c.tipo,
+      c.categoria ?? '',
       c.proveedor,
       c.factura,
       d.value.toStringAsFixed(dec),
@@ -258,7 +262,7 @@ TablaReporte buildComprasReporte(WidgetRef ref) {
     scope: 'compras',
     titulo: 'Compras del predio',
     columns: const [
-      'Fecha', 'Descripción', 'Tipo', 'Proveedor', 'Factura',
+      'Fecha', 'Descripción', 'Tipo', 'Categoría', 'Proveedor', 'Factura',
       'Cant.', 'Und.', 'Valor',
     ],
     rows: rows,

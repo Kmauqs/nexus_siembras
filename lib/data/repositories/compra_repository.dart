@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
+import '../../core/inventory/inventory_categories.dart';
 import '../../core/units/units_catalog.dart';
 import '../database/database.dart';
 import 'inventory_repository.dart';
@@ -20,7 +21,16 @@ class CompraRepository {
         .watch();
   }
 
-  static const _consumibles = {'semilla', 'abono', 'pesticida'};
+  static const _tiposLegacyConsumibles = {'semilla', 'abono', 'pesticida'};
+
+  bool _entraInventario(String tipo, String? categoria) {
+    if (tipo == 'servicio') return false;
+    if (categoria != null && InventoryCategories.vaAlInventario(categoria)) {
+      return true;
+    }
+    // Herramienta ahora también entra al inventario (ubicación editable).
+    return _tiposLegacyConsumibles.contains(tipo) || tipo == 'herramienta';
+  }
 
   Future<int> add({
     required int predioId,
@@ -35,13 +45,16 @@ class CompraRepository {
     int? proveedorId,
     String? proveedorNombre,  // Nombre del proveedor para inventario
     required String tipo,
+    String? categoria,
     int? plantaRef,
     String? soporteName,
     String? soporteTipo,
     String? createdByUserId,
+    String? ubicacion,
   }) async {
     // Conversión a unidad base SI antes de persistir.
     final (baseVal, baseCode) = toBase(cantidad, unidad);
+    final cat = categoria ?? InventoryCategories.fromCompraTipo(tipo);
     final idUnico =
         '$desc-${fecha.year.toString().substring(2)}${fecha.month.toString().padLeft(2, "0")}${fecha.day.toString().padLeft(2, "0")}';
     final id = await db.into(db.compras).insert(ComprasCompanion.insert(
@@ -57,6 +70,7 @@ class CompraRepository {
           codigo: Value(codigo),
           factura: Value(factura),
           tipo: Value(tipo),
+          categoria: Value(cat),
           plantaRef: Value(plantaRef),
           soportePath: Value(soporteName),
           soporteTipo: Value(soporteTipo),
@@ -64,7 +78,7 @@ class CompraRepository {
           idUnico: Value(idUnico),
           createdByUserId: Value(createdByUserId),
         ));
-    if (_consumibles.contains(tipo)) {
+    if (_entraInventario(tipo, cat)) {
       await inv.addOrIncrement(
         predioId: predioId,
         descripcion: desc,
@@ -73,6 +87,8 @@ class CompraRepository {
         codigo: codigo,
         fabricante: proveedorNombre,
         fecha: fecha,
+        categoria: cat,
+        ubicacion: ubicacion,
       );
     }
     return id;
@@ -102,9 +118,11 @@ class CompraRepository {
     int? proveedorId,
     String? proveedorNombre,
     required String tipo,
+    String? categoria,
     int? plantaRef,
     String? soporteName,
     String? soporteTipo,
+    String? ubicacion,
     /// true = el usuario quitó el comprobante (también si solo existía en nube).
     bool limpiarSoporte = false,
   }) async {
@@ -112,8 +130,10 @@ class CompraRepository {
         .getSingleOrNull();
     if (old == null) return;
 
+    final oldCat =
+        old.categoria ?? InventoryCategories.fromCompraTipo(old.tipo);
     // Revertir efecto viejo en inventario (usa cantidadBase, ya en unidad base)
-    if (_consumibles.contains(old.tipo)) {
+    if (_entraInventario(old.tipo ?? 'otro', oldCat)) {
       await inv.consumeBase(
         predioId: predioId,
         descripcion: old.descripcion1,
@@ -121,6 +141,7 @@ class CompraRepository {
       );
     }
 
+    final cat = categoria ?? InventoryCategories.fromCompraTipo(tipo);
     final (baseVal, baseCode) = toBase(cantidad, unidad);
     final idUnico =
         '$desc-${fecha.year.toString().substring(2)}${fecha.month.toString().padLeft(2, "0")}${fecha.day.toString().padLeft(2, "0")}';
@@ -142,6 +163,7 @@ class CompraRepository {
         codigo: Value(codigo),
         factura: Value(factura),
         tipo: Value(tipo),
+        categoria: Value(cat),
         plantaRef: Value(plantaRef),
         soportePath: soporteCambio
             ? Value(pathFinal)
@@ -162,7 +184,7 @@ class CompraRepository {
       ),
     );
 
-    if (_consumibles.contains(tipo)) {
+    if (_entraInventario(tipo, cat)) {
       await inv.addOrIncrement(
         predioId: predioId,
         descripcion: desc,
@@ -171,6 +193,8 @@ class CompraRepository {
         codigo: codigo,
         fabricante: proveedorNombre,
         fecha: fecha,
+        categoria: cat,
+        ubicacion: ubicacion,
       );
     }
   }

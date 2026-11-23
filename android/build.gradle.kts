@@ -5,16 +5,12 @@ allprojects {
     }
 }
 
-// Fuerza compileSdk = 36 en TODOS los subproyectos (plugins Flutter).
-// Necesario porque file_picker 8.x depende de flutter_plugin_android_lifecycle
-// que exige compileSdk >= 36. Sin esto, cada plugin se compila con su propio
-// default (34) y falla el checkDebugAarMetadata.
+// Forzar compileSdk 36 en plugins Android (file_picker, etc.) antes/al aplicar
+// el plugin — mismo patrón que FINCONTROL (más estable con AGP 9.x que afterEvaluate).
 subprojects {
-    afterEvaluate {
-        if (extensions.findByName("android") != null) {
-            @Suppress("UNCHECKED_CAST")
-            val androidExt = extensions.getByName("android") as com.android.build.gradle.BaseExtension
-            androidExt.compileSdkVersion(36)
+    pluginManager.withPlugin("com.android.library") {
+        extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
+            compileSdk = 36
         }
     }
 }

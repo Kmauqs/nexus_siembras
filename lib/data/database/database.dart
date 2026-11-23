@@ -276,6 +276,12 @@ class Inventarios extends Table {
   TextColumn get unidadBase => text()();
   RealColumn get cantidadDisplay => real().nullable()();
   IntColumn get unidadDisplayId => integer().nullable().references(UnidadesMedida, #id)();
+  /// insumos | semillas_esquejes | herramientas_equipos | poscosecha
+  TextColumn get categoria => text().nullable()();
+  /// Ubicación actual (herramientas / equipos).
+  TextColumn get ubicacion => text().nullable()();
+  /// primera | segunda | descarte (solo poscosecha).
+  TextColumn get gradoPoscosecha => text().nullable()();
   TextColumn get notas => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -309,6 +315,8 @@ class Compras extends Table {
   TextColumn get soporteNombre => text().nullable()();
   TextColumn get idUnico => text().nullable()(); // Descripción1-YYMMDD
   TextColumn get tipo => text().nullable()(); // semilla|abono|pesticida|herramienta|servicio|otro
+  /// Misma taxonomía que inventarios.categoria (agrupa al subir stock).
+  TextColumn get categoria => text().nullable()();
   IntColumn get plantaRef => integer().nullable().references(Plantas, #id)();
   TextColumn get notas => text().nullable()();
   /// UUID Supabase del usuario que registró la compra (co-propietarios).
@@ -782,7 +790,7 @@ class AppDatabase extends _$AppDatabase {
   final bool _skipSeed;
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -947,6 +955,14 @@ class AppDatabase extends _$AppDatabase {
             // v23: metadatos de comprobante en Storage (migración 0021).
             await m.addColumn(compras, compras.soporteStoragePath);
             await m.addColumn(compras, compras.soporteNombre);
+          }
+          if (from < 24) {
+            // v24: categorías de inventario / compras + ubicación y grado
+            // poscosecha (migración remota 0022).
+            await m.addColumn(inventarios, inventarios.categoria);
+            await m.addColumn(inventarios, inventarios.ubicacion);
+            await m.addColumn(inventarios, inventarios.gradoPoscosecha);
+            await m.addColumn(compras, compras.categoria);
           }
         },
       );

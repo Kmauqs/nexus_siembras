@@ -28,6 +28,7 @@ Ejecutar en el SQL Editor, en este orden exacto:
 | 19 | `migrations/0019_usuarios_papelera.sql` | **Papelera de usuarios** del backoffice: soft-delete (ban + registro) con recuperación o borrado definitivo |
 | 20 | `migrations/0020_admin_rls_escrituras.sql` | **P2**: RLS `es_admin()` sobre `admin_allowlist` y `feedback_config` para escrituras del panel con JWT (sin service_role) |
 | 21 | `migrations/0021_compras_soportes_storage.sql` | **Soportes de compras**: columnas `soporte_storage_path/nombre/tipo` + bucket privado `compras-soportes` (RLS = `es_propietario_predio`) para sync entre co-propietarios y ZIP completo |
+| 22 | `migrations/0022_inventario_categorias.sql` | **Inventario por categorías**: `inventarios.categoria/ubicacion/grado_poscosecha`, `compras.categoria`; `schema_meta` → 19 |
 | 11 | `migrations/0010_cultivos_tipo_ciclo.sql` | Tipo de ciclo y periodos en `cultivos` (ciclo único / perenne) |
 | 12 | `migrations/0011_compras_created_by.sql` | Autor (`created_by_user_id`) en compras para co-propietarios |
 | 13 | `migrations/0012_proveedores_compartidos.sql` | **Proveedores compartidos**: lectura para colaboradores propietario/trabajador del predio |

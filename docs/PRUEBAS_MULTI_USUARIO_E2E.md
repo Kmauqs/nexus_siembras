@@ -155,12 +155,14 @@ Devuelve rol de trabajador a B para continuar.
 
 ### 3.2 Inventario
 
-- [ ] A crea inventario "Gallinaza 50kg" con cantidad_base=50.
+- [ ] A crea inventario "Gallinaza 50kg" con cantidad_base=50 (categoría Insumos).
 - [ ] A sincroniza → B sincroniza.
-- [ ] B ve el inventario con cantidad 50.
+- [ ] B ve el inventario con cantidad 50 en la sección Insumos.
 - [ ] B registra tarea consumiendo 10 kg de gallinaza.
 - [ ] B sincroniza → A sincroniza.
 - [ ] A ve inventario con cantidad 40 (no duplicado, no reset).
+- [ ] A registra cosecha con cantidad y grado «primera» → aparece en Poscosecha.
+- [ ] A registra compra con categoría Herramientas + ubicación → B la ve agrupada.
 
 ### 3.3 Sin duplicados tras reset
 

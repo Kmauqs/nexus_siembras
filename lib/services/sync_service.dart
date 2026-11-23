@@ -73,7 +73,7 @@ class SyncService {
   /// Versión mínima de esquema remoto requerida por este cliente
   /// (auditoría S6). Se compara contra `public.schema_meta.version`.
   /// Ver supabase/migrations/README.md.
-  static const int schemaRemotoRequerido = 11;
+  static const int schemaRemotoRequerido = 19;
 
   /// Columnas `soporte_*` de compras + bucket Storage (migración 0021).
   static const int _schemaSoportesCompras = 18;
@@ -1043,6 +1043,9 @@ class SyncService {
           'fabricante': r.fabricante,
           'cantidad_base': r.cantidadBase,
           'unidad_base': r.unidadBase,
+          'categoria': r.categoria,
+          'ubicacion': r.ubicacion,
+          'grado_poscosecha': r.gradoPoscosecha,
           'notas': r.notas,
           'updated_at': r.updatedAt.toUtc().toIso8601String(),
           'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
@@ -1125,6 +1128,7 @@ class SyncService {
         'codigo': r.codigo,
         'factura': r.factura,
         'tipo': r.tipo,
+        'categoria': r.categoria,
         'notas': r.notas,
         'created_by_user_id': r.createdByUserId,
         'updated_at': r.updatedAt.toUtc().toIso8601String(),
@@ -2722,6 +2726,9 @@ class SyncService {
       fabricante: Value(row['fabricante'] as String?),
       cantidadBase: Value((row['cantidad_base'] as num).toDouble()),
       unidadBase: Value(row['unidad_base'] as String),
+      categoria: Value(row['categoria'] as String?),
+      ubicacion: Value(row['ubicacion'] as String?),
+      gradoPoscosecha: Value(row['grado_poscosecha'] as String?),
       notas: Value(row['notas'] as String?),
       updatedAt: Value(updatedRemote),
       deletedAt: Value(_parseDateOrNull(row['deleted_at'])),
@@ -2815,6 +2822,7 @@ class SyncService {
       codigo: Value(row['codigo'] as String?),
       factura: Value(row['factura'] as String?),
       tipo: Value(row['tipo'] as String?),
+      categoria: Value(row['categoria'] as String?),
       notas: Value(row['notas'] as String?),
       createdByUserId: Value(row['created_by_user_id'] as String?),
       soporteStoragePath: Value(soporteStorage),

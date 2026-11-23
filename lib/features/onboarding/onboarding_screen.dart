@@ -646,6 +646,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final logged = ref.watch(isLoggedInProvider);
     final user = ref.watch(currentUserProvider);
     final supabaseListo = ref.watch(supabaseInitProvider);
+    final initDone = ref.watch(supabaseInitDoneProvider);
+    final conectando = !initDone && !supabaseListo;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -706,7 +708,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           )
         else ...[
-          if (!supabaseListo)
+          if (conectando)
+            Card(
+              color: Colors.blue.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: Text(
+                          'Conectando con la nube… Puedes ir escribiendo '
+                          'tu correo y contraseña.',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.blue.shade900))),
+                ]),
+              ),
+            ),
+          if (conectando) const SizedBox(height: 12),
+          if (initDone && !supabaseListo)
             Card(
               color: Colors.orange.shade50,
               child: Padding(
@@ -724,12 +748,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ]),
               ),
             ),
-          if (!supabaseListo) const SizedBox(height: 12),
+          if (initDone && !supabaseListo) const SizedBox(height: 12),
 
-          // Formulario email + password
+          // Formulario siempre editable (no bloquear por init diferida
+          // de Supabase — regresión Android v0.3.1).
           TextField(
             controller: _emailAuth,
-            enabled: supabaseListo && !_authProcesando,
+            enabled: !_authProcesando,
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
             decoration: const InputDecoration(
@@ -740,7 +765,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           const SizedBox(height: 10),
           TextField(
             controller: _passwordAuth,
-            enabled: supabaseListo && !_authProcesando,
+            enabled: !_authProcesando,
             obscureText: true,
             autofillHints: _authEsRegistro
                 ? const [AutofillHints.newPassword]
@@ -749,7 +774,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               labelText: 'Contraseña',
               prefixIcon: const Icon(Icons.lock_outline),
               border: const OutlineInputBorder(),
-              helperText: _authEsRegistro ? 'Mínimo 6 caracteres' : null,
+              helperText: _authEsRegistro ? 'Mínimo 8 caracteres' : null,
             ),
           ),
           if (_authMensaje != null) ...[
@@ -778,7 +803,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
           const SizedBox(height: 14),
           FilledButton.icon(
-            onPressed: (_authProcesando || !supabaseListo) ? null : _authSubmit,
+            onPressed: _authProcesando
+                ? null
+                : () => _authSubmit(esperarNube: conectando),
             icon: _authProcesando
                 ? const SizedBox(
                     width: 14,
@@ -823,7 +850,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  Future<void> _authSubmit() async {
+  Future<void> _authSubmit({bool esperarNube = false}) async {
     final email = _emailAuth.text.trim().toLowerCase();
     final password = _passwordAuth.text;
     if (email.isEmpty || !email.contains('@')) {
@@ -850,6 +877,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       _authMensaje = null;
     });
     try {
+      // Si la init diferida aún no terminó (típico en Android recién
+      // instalado), espera un momento antes de fallar.
+      if (esperarNube || !ref.read(supabaseInitProvider)) {
+        for (var i = 0; i < 40; i++) {
+          if (ref.read(supabaseInitProvider)) break;
+          if (ref.read(supabaseInitDoneProvider) &&
+              !ref.read(supabaseInitProvider)) {
+            break;
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+      }
+      if (!ref.read(supabaseInitProvider)) {
+        setState(() {
+          _authMensaje =
+              'La nube aún no está lista. Espera un momento o continúa '
+              'en modo local con «Siguiente».';
+          _authExito = false;
+        });
+        return;
+      }
       final client = Supabase.instance.client;
       if (_authEsRegistro) {
         final res =

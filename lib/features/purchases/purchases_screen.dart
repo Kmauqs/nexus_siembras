@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
+import '../../core/inventory/inventory_categories.dart';
 import '../../core/reports/adjunto_viewer.dart';
 import '../../core/reports/compras_zip_export.dart';
 import '../../core/reports/export_helpers.dart';
@@ -188,6 +189,9 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
   late final _proveedor = TextEditingController(text: widget.existing?.proveedor ?? '');
   late String _unidad = widget.existing?.unidad ?? 'kg';
   late String _tipo = widget.existing?.tipo ?? 'semilla';
+  late String _categoria = widget.existing?.categoria ??
+      InventoryCategories.fromCompraTipo(widget.existing?.tipo ?? 'semilla');
+  late final _ubicacion = TextEditingController();
   late String? _soporteName = widget.existing?.soporteName;
   late String? _soporteRemotoEtiqueta =
       widget.existing?.tieneSoporte == true &&
@@ -196,6 +200,20 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
           ? widget.existing?.etiquetaSoporte
           : null;
   bool _quitarSoporteRemoto = false;
+
+  @override
+  void dispose() {
+    _fecha.dispose();
+    _desc.dispose();
+    _desc2.dispose();
+    _valor.dispose();
+    _cantidad.dispose();
+    _cod.dispose();
+    _factura.dispose();
+    _proveedor.dispose();
+    _ubicacion.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -366,8 +384,45 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
               DropdownMenuItem(value: 'servicio', child: Text('Servicio')),
               DropdownMenuItem(value: 'otro', child: Text('Otro')),
             ],
-            onChanged: (v) => setState(() => _tipo = v ?? 'semilla'),
+            onChanged: (v) => setState(() {
+              _tipo = v ?? 'semilla';
+              // Sugerir categoría al cambiar tipo (el usuario puede override).
+              if (_tipo != 'servicio') {
+                _categoria = InventoryCategories.fromCompraTipo(_tipo);
+              }
+            }),
           ),
+          if (_tipo != 'servicio') ...[
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: InventoryCategories.all.contains(_categoria)
+                  ? _categoria
+                  : InventoryCategories.insumos,
+              decoration: const InputDecoration(
+                  labelText: 'Categoría (inventario)',
+                  border: OutlineInputBorder()),
+              items: InventoryCategories.all
+                  .where((c) => c != InventoryCategories.poscosecha)
+                  .map((c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(InventoryCategories.label(c)),
+                      ))
+                  .toList(),
+              onChanged: (v) => setState(
+                  () => _categoria = v ?? InventoryCategories.insumos),
+            ),
+            if (_categoria == InventoryCategories.herramientasEquipos) ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _ubicacion,
+                decoration: const InputDecoration(
+                  labelText: 'Ubicación actual',
+                  hintText: 'Ej. Bodega, tractor, lote 3…',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ],
           const SizedBox(height: 12),
           // Adjuntar comprobante real (2026-07-20). El archivo se copia a
           // Documents/soportes/{año}/{Proveedor}-{factura}.{ext} y el path
@@ -487,12 +542,19 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
     final valor = double.tryParse(_valor.text) ?? 0;
     final mut = ref.read(dataMutationsProvider);
     final desc2 = _desc2.text.trim().isEmpty ? null : _desc2.text.trim();
+    final cat = _tipo == 'servicio' ? null : _categoria;
+    final ubic = cat == InventoryCategories.herramientasEquipos &&
+            _ubicacion.text.trim().isNotEmpty
+        ? _ubicacion.text.trim()
+        : null;
     if (widget.existing == null) {
       await mut.addCompra(
         fecha: _fecha.text, desc: _desc.text.trim(), desc2: desc2,
         valor: valor, cantidad: cantidad, unidad: _unidad,
         cod: _cod.text.trim(), factura: _factura.text.trim(),
         proveedor: _proveedor.text.trim(), tipo: _tipo,
+        categoria: cat,
+        ubicacion: ubic,
         soporteName: _soporteName,
       );
     } else {
@@ -502,16 +564,18 @@ class _NuevaCompraModalState extends ConsumerState<_NuevaCompraModal> {
         valor: valor, cantidad: cantidad, unidad: _unidad,
         cod: _cod.text.trim(), factura: _factura.text.trim(),
         proveedor: _proveedor.text.trim(), tipo: _tipo,
+        categoria: cat,
+        ubicacion: ubic,
         soporteName: _soporteName,
         limpiarSoporte: _quitarSoporteRemoto && _soporteName == null,
       );
     }
     if (!mounted) return;
     Navigator.pop(context);
-    final isConsumible = const ['semilla', 'abono', 'pesticida'].contains(_tipo);
+    final entraInv = _tipo != 'servicio' && cat != null;
     final msg = widget.existing == null
-        ? (isConsumible ? 'Compra guardada y agregada al inventario' : 'Compra guardada')
-        : (isConsumible ? 'Compra actualizada · inventario ajustado' : 'Compra actualizada');
+        ? (entraInv ? 'Compra guardada y agregada al inventario' : 'Compra guardada')
+        : (entraInv ? 'Compra actualizada · inventario ajustado' : 'Compra actualizada');
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 }
@@ -537,6 +601,10 @@ class _CompraTile extends ConsumerWidget {
               Text(item.desc2!,
                   style: TextStyle(color: Theme.of(context).hintColor)),
             Text('${item.proveedor} · ${item.factura} · ${item.fecha}'),
+            if (item.categoria != null && item.categoria!.isNotEmpty)
+              Text(InventoryCategories.label(item.categoria),
+                  style: TextStyle(
+                      fontSize: 12, color: Theme.of(context).hintColor)),
             if (item.createdByUserId != null &&
                 item.createdByUserId!.isNotEmpty)
               AutorLabel(

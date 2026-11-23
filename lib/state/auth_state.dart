@@ -19,6 +19,11 @@ import '../services/supabase_service.dart';
 final supabaseReadyProvider =
     StateProvider<bool>((ref) => SupabaseService.instance.isInitialized);
 
+/// True cuando ya terminó el intento de init (éxito o no). Distingue
+/// «aún conectando» de «modo local / sin .env» para no bloquear los
+/// campos del onboarding en Android mientras la init diferida corre.
+final supabaseInitDoneProvider = StateProvider<bool>((ref) => false);
+
 /// True si Supabase se inicializó correctamente.
 /// Si es false, la app funciona 100% local (sin sync ni auth).
 /// (Conserva el tipo `Provider<bool>` para no tocar los call sites.)

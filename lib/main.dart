@@ -14,10 +14,21 @@ import 'state/auth_state.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Config (.env es opcional — la app funciona si no existe)
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (_) {}
+  // Config empaquetada. Android no incluye assets cuyo nombre empieza por
+  // '.' (p. ej. `.env` en la raíz), así que la fuente canónica es
+  // `assets/config/app.env`. `.env` en la raíz queda como respaldo en
+  // desarrollo (Windows/desktop). Sin config → modo 100% local.
+  var envCargado = false;
+  for (final nombre in const ['assets/config/app.env', '.env']) {
+    try {
+      await dotenv.load(fileName: nombre);
+      envCargado = true;
+      break;
+    } catch (_) {}
+  }
+  if (!envCargado) {
+    // Sin archivo: la app arranca en modo local.
+  }
 
   // Auditoría P8: pintar la UI primero. Supabase y notificaciones se
   // inicializan DESPUÉS del primer frame para no bloquear el arranque
@@ -44,6 +55,10 @@ Future<void> main() async {
         }
       } catch (e) {
         Log.e('[main] init Supabase diferida falló', e);
+      } finally {
+        // Marca fin del intento aunque falle: la UI deja de tratar
+        // "pendiente" como "sin nube" y no bloquea los TextField.
+        container.read(supabaseInitDoneProvider.notifier).state = true;
       }
       try {
         // Notificaciones locales (no-op en Windows/Web/macOS Desktop)

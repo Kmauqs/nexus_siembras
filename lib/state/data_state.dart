@@ -43,6 +43,7 @@ class InvItem {
     required this.id, required this.desc, required this.cod,
     required this.cantidad, required this.unidad,
     this.fabricante, required this.fecha,
+    this.categoria, this.ubicacion, this.gradoPoscosecha,
   });
   int id;
   String desc;
@@ -51,12 +52,18 @@ class InvItem {
   String unidad;
   String? fabricante;
   String fecha;
+  String? categoria;
+  String? ubicacion;
+  String? gradoPoscosecha;
 
   factory InvItem.fromDrift(drift.Inventario i) => InvItem(
         id: i.id, desc: i.descripcion, cod: i.codigo ?? '',
         cantidad: i.cantidadBase, unidad: i.unidadBase,
         fabricante: i.fabricante,
         fecha: _iso(i.fecha),
+        categoria: i.categoria,
+        ubicacion: i.ubicacion,
+        gradoPoscosecha: i.gradoPoscosecha,
       );
 }
 
@@ -66,12 +73,12 @@ class Compra {
     this.desc2, required this.valor, required this.cantidad,
     required this.unidad, required this.cod, required this.factura,
     required this.proveedor, required this.tipo,
-    this.plantaRef, this.soporteName, this.soporteStoragePath,
+    this.categoria, this.plantaRef, this.soporteName, this.soporteStoragePath,
     this.soporteNombre, this.createdByUserId,
   });
   final int id;
   final String fecha, desc, cod, factura, proveedor, tipo, unidad;
-  final String? desc2, soporteName;
+  final String? desc2, soporteName, categoria;
   /// Object key remoto (bucket compras-soportes); null si aún no sync.
   final String? soporteStoragePath;
   /// Nombre de archivo del comprobante (UI / ZIP).
@@ -97,6 +104,7 @@ class Compra {
         unidad: c.unidadBase, cod: c.codigo ?? '',
         factura: c.factura ?? '', proveedor: proveedorNombre,
         tipo: c.tipo ?? 'otro',
+        categoria: c.categoria,
         plantaRef: c.plantaRef,
         soporteName: c.soportePath,
         soporteStoragePath: c.soporteStoragePath,
@@ -1378,8 +1386,10 @@ class DataMutations {
     required String factura,
     required String proveedor,
     required String tipo,
+    String? categoria,
     int? plantaRef,
     String? soporteName,
+    String? ubicacion,
   }) async {
     if (!ref.read(permisosPredioActivoProvider).puedeEditarCompras) {
       throw StateError('Sin permiso para registrar compras en este predio');
@@ -1408,12 +1418,14 @@ class DataMutations {
           proveedorId: proveedorId,
           proveedorNombre: proveedor.trim().isEmpty ? null : proveedor.trim(),
           tipo: tipo,
+          categoria: categoria,
           plantaRef: plantaRef,
           soporteName: soporteName,
           soporteTipo: soporteName?.toLowerCase().endsWith('.pdf') == true
               ? 'application/pdf'
               : (soporteName != null ? 'image/*' : null),
           createdByUserId: autorUserId,
+          ubicacion: ubicacion,
         );
   }
 
@@ -1429,8 +1441,10 @@ class DataMutations {
     required String factura,
     required String proveedor,
     required String tipo,
+    String? categoria,
     int? plantaRef,
     String? soporteName,
+    String? ubicacion,
     bool limpiarSoporte = false,
   }) async {
     if (!ref.read(permisosPredioActivoProvider).puedeEditarCompras) {
@@ -1455,11 +1469,13 @@ class DataMutations {
           proveedorId: proveedorId,
           proveedorNombre: proveedor.trim().isEmpty ? null : proveedor.trim(),
           tipo: tipo,
+          categoria: categoria,
           plantaRef: plantaRef,
           soporteName: soporteName,
           soporteTipo: soporteName?.toLowerCase().endsWith('.pdf') == true
               ? 'application/pdf'
               : (soporteName != null ? 'image/*' : null),
+          ubicacion: ubicacion,
           limpiarSoporte: limpiarSoporte,
         );
   }
@@ -1470,6 +1486,9 @@ class DataMutations {
     required String unidad,
     String? codigo,
     String? fabricante,
+    String? categoria,
+    String? ubicacion,
+    String? gradoPoscosecha,
   }) async {
     final predioId = await _getPredioIdAsync();
     // Si el proveedor es nuevo, agrégalo al catálogo automáticamente
@@ -1483,6 +1502,9 @@ class DataMutations {
           unidad: unidad,
           codigo: codigo,
           fabricante: fabricante,
+          categoria: categoria,
+          ubicacion: ubicacion,
+          gradoPoscosecha: gradoPoscosecha,
         );
   }
 
@@ -2097,6 +2119,9 @@ class DataMutations {
     String? fabricante,
     double? cantidadBase,
     String? unidadBase,
+    String? categoria,
+    String? ubicacion,
+    String? gradoPoscosecha,
   }) async {
     // Auto-registro de proveedor nuevo
     if (fabricante != null && fabricante.trim().isNotEmpty) {
@@ -2109,6 +2134,9 @@ class DataMutations {
           fabricante: fabricante,
           cantidadBase: cantidadBase,
           unidadBase: unidadBase,
+          categoria: categoria,
+          ubicacion: ubicacion,
+          gradoPoscosecha: gradoPoscosecha,
         );
   }
 

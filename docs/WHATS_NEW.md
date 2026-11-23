@@ -1,8 +1,22 @@
 # NEXUS Siembras — Notas de versión (What's new)
 
 Texto listo para Play Store / comunicación de release.  
-**Última generación:** 2026-08-09 · **Versión:** 0.3.0  
-**Versión anterior documentada:** 0.2.8 (2026-08-03)
+**Última generación:** 2026-11-22 · **Versión:** 0.3.1  
+**Versión anterior documentada:** 0.3.0 (2026-08-09)
+
+---
+
+## Novedades (What's new) — v0.3.1
+
+**Inventario por categorías:** la pantalla se organiza en secciones desplegables — Insumos, Semillas y esquejes, Herramientas/equipos/consumibles y Poscosecha. Al cargar un ítem o una compra se elige la categoría.
+
+**Herramientas con ubicación:** en la categoría de herramientas/equipos puedes registrar dónde está cada ítem.
+
+**Cosecha → Poscosecha:** al registrar una tarea de cosecha puedes indicar la cantidad recogida (peso según tu sistema de unidades) y la clasificación (primera, segunda o descarte); se suma al inventario de la variedad en Poscosecha.
+
+**Nueva compra con categoría:** el formulario incluye Categoría para agrupar el stock al inventariar (los servicios no entran al inventario).
+
+**Sync:** migración remota `0022` (`schema_meta` ≥ 19) con los nuevos campos de inventario y compras.
 
 ---
 
@@ -114,10 +128,11 @@ Sigue funcionando **offline** con base de datos cifrada; sincroniza con la nube 
 
 ## Cambios y correcciones acumulados (post v0.2.2)
 
-Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.3.0:
+Resumen técnico-usuario de mejoras incluidas desde 0.2.5 hasta 0.3.1:
 
 | Área | Qué se corrigió o mejoró |
 |------|--------------------------|
+| **Inventario (0.3.1)** | Categorías desplegables; ubicación herramientas; grado poscosecha; cosecha → stock; categoría en compras; migración 0022. |
 | **Web / backoffice (0.3.0)** | Next.js en Netlify: sitio público + panel admin; magic link; papelera de usuarios; feedback; logo de la app. |
 | **Compras sync (0.3.0)** | Bucket `compras-soportes` + metadatos; ZIP con comprobantes de todos los Propietario. |
 | **Patrimonio (0.3.0)** | Migraciones 0018–0021; estado desatendida; RLS admin; Edge Function `notify-feedback` (código). |
